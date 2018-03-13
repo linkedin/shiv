@@ -1,0 +1,4 @@
+# DO NOT REMOVE - ADDED BY DISTGRADLE
+include *pinned.txt
+# DO NOT REMOVE - ADDED BY DISTGRADLE
+include product-spec.json
