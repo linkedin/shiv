@@ -19,10 +19,12 @@ class SOFinder:
 
     def find_spec(self, name, paths, module=None):
         origin = self.so_map.get(name)
+
         if origin is None:
             return None
 
         extracted_path = Path(self.cache_root) / origin
+
         if not extracted_path.exists():
             self.archive.extract(origin, self.cache_root)
 
@@ -111,8 +113,14 @@ def extract_site_packages(archive, target_path):
 
 def bootstrap():
     """Actually bootstrap our shiv environment."""
+
+    # get a handle of the currently executing zip file
     archive = current_zipfile()
+
+    # create an environment object (a combination of env vars and json metadata)
     env = Environment.from_json(archive.read('environment.json').decode())
+
+    # get a site-packages directory (from env var or via build id)
     site_packages = env.site_packages or cache_path(archive, env.build_id)
 
     if env.zip_safe is True:
@@ -122,12 +130,19 @@ def bootstrap():
 
         # process pth files
         process_zipped_pths(archive, site_packages)
+
+        # add the zipped site-packages to sys.path
         sys.path.append(Path(archive.filename, 'site-packages'))
+
     else:
+        # determine if first run or forcing extract
         if not site_packages.exists() or env.force_extract:
             extract_site_packages(archive, site_packages)
+
+        # stdlib blessed way of extending path
         addsitedir(site_packages / 'site-packages')
 
+    # do entry point import and call
     if env.entry_point is not None and env.interpreter is None:
         mod = import_string(env.entry_point)
         try:
@@ -138,6 +153,7 @@ def bootstrap():
             # e.g. "from foo.bar import bar; bar()"
             getattr(mod, env.entry_point.replace(':', '.').split('.')[1])()
     else:
+        # drop into interactive mode
         execute_interpreter()
 
 

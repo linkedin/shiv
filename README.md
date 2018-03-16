@@ -4,9 +4,9 @@
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
 
 # shiv 🔪
-Shiv is a command line utility for building fully self contained Python zipapps as outlined in [PEP 441](http://legacy.python.org/dev/peps/pep-0441/), but with all their dependencies included.
+Shiv is a command line utility for building fully self-contained Python zipapps as outlined in [PEP 441](http://legacy.python.org/dev/peps/pep-0441/), but with all their dependencies included!
 
-While similar to tools like [pex](https://github.com/pantsbuild/pex), Shiv's primary goal is cli startup speed. A command line utility generated with Shiv will usually outperform one that was installed via `pip` thanks to the fact that Shiv completely avoids use of `pkg_resources` and the infamous [Issue 510](https://github.com/pypa/setuptools/issues/510).
+Shiv's primary goal is ease-of-use (Python cli's reduced to a single file that can be easily distributed) and cli startup speed. An executable generated with Shiv will usually outperform one that was installed via `pip` thanks to the fact that Shiv completely avoids use of `pkg_resources` and the infamous [Issue 510](https://github.com/pypa/setuptools/issues/510).
 
 ### how to
 
@@ -60,7 +60,7 @@ You can even create a pyz _of_ shiv _using_ shiv!
 python3 -m venv shiv
 source shiv/bin/activate
 pip install shiv
-shiv -e shiv.cli:main -o shiv shiv
+shiv -c shiv -o shiv shiv
 ```
 
 ### developing
@@ -81,3 +81,7 @@ Run and write tests
 pip install tox
 tox
 ```
+
+### Gotchas
+
+Zipapps created with Shiv are not cross-compatible with other architectures. For example, a `pyz` file built on a Mac will only work on other Macs, likewise for RHEL, etc. If this sort of portability is something you are interested in, check out [pex](https://github.com/pantsbuild/pex), which aims to provide cross-platform support.

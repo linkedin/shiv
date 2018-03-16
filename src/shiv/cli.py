@@ -55,6 +55,7 @@ def validate_interpreter(interpreter_path=None):
     """
     real_path = Path(sys.executable if interpreter_path is None else interpreter_path)
 
+    # fall back to /usr/bin/env if the interp path is too long
     if interpreter_path is None or len(real_path.as_posix()) > BINPRM_BUF_SIZE:
         return f'/usr/bin/env {real_path.name}'
 
@@ -92,6 +93,8 @@ def copy_bootstrap(bootstrap_target):
     First check if this instance of shiv is in fact already a (zip-safe) zipapp, and then
     copy the bootstrap files over accordingly.
 
+    TODO: use importlib.resources for this!
+
     :param Path bootstrap_target: The temporary directory where we are staging pyz contents.
     """
     if loaded_from_zipfile(bootstrap):
@@ -128,7 +131,7 @@ def main(
     compressed,
     pip_args,
 ):
-    """ Shiv creates portable python executables!"""
+    """ Shiv creates python executables! """
     quiet = '-q' in pip_args
 
     if not quiet:
