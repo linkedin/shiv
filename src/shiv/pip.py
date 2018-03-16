@@ -1,14 +1,15 @@
 import contextlib
 import os
+import subprocess
+import sys
 
-from pip import check_isolated
-from pip.commands.install import InstallCommand
+from typing import Generator, List
 
-from .constants import PIP_REQUIRE_VIRTUALENV
+from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR
 
 
 @contextlib.contextmanager
-def clean_pip_env():
+def clean_pip_env() -> Generator[None, None, None]:
     """A context manager for temporarily removing 'PIP_REQUIRE_VIRTUALENV' from the environment.
 
     Since shiv installs via `--target`, we need to ignore venv requirements if they exist.
@@ -22,7 +23,7 @@ def clean_pip_env():
             os.environ[PIP_REQUIRE_VIRTUALENV] = require_venv
 
 
-def install(args):
+def install(interpreter_path: str, args: List[str]) -> None:
     """`pip install` as a function.
 
     Accepts a list of pip arguments.
@@ -38,5 +39,16 @@ def install(args):
 
     """
     with clean_pip_env():
-        cmd = InstallCommand(isolated=check_isolated(args))
-        cmd.main(args)
+
+        process = subprocess.Popen(
+            [interpreter_path, '-m', 'pip', 'install'] + args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+
+        for output in process.stdout:
+            if output:
+                print(output.decode().rstrip())
+
+        if process.wait() > 0:
+            sys.exit(PIP_INSTALL_ERROR)

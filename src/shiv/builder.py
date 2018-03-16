@@ -6,12 +6,19 @@ import contextlib
 import zipfile
 import stat
 import sys
+import zipapp
 
 from pathlib import Path
-from zipapp import MAIN_TEMPLATE, ZipAppError
+from typing import Any, IO, Generator, Union
+
+MAIN_TEMPLATE = """\
+# -*- coding: utf-8 -*-
+import {module}
+{module}.{fn}()
+"""
 
 
-def write_file_prefix(f, interpreter):
+def write_file_prefix(f: IO[Any], interpreter: str) -> None:
     """Write a shebang line.
 
     :param file f: An open file handle.
@@ -22,7 +29,7 @@ def write_file_prefix(f, interpreter):
 
 
 @contextlib.contextmanager
-def maybe_open(archive, mode):
+def maybe_open(archive: Union[str, Path], mode: str) -> Generator[IO[Any], None, None]:
     if isinstance(archive, (str, Path)):
         with Path(archive).open(mode=mode) as f:
             yield f
@@ -30,7 +37,13 @@ def maybe_open(archive, mode):
         yield archive
 
 
-def create_archive(source, target, interpreter, main, compressed=True):
+def create_archive(
+    source: Path,
+    target: Path,
+    interpreter: str,
+    main: str,
+    compressed: bool=True,
+) -> None:
     """Create an application archive from SOURCE."""
 
     # Check that main has the right format.
@@ -38,15 +51,9 @@ def create_archive(source, target, interpreter, main, compressed=True):
     mod_ok = all(part.isidentifier() for part in mod.split('.'))
     fn_ok = all(part.isidentifier() for part in fn.split('.'))
     if not (sep == ':' and mod_ok and fn_ok):
-        raise ZipAppError("Invalid entry point: " + main)
+        raise zipapp.ZipAppError("Invalid entry point: " + main)
 
     main_py = MAIN_TEMPLATE.format(module=mod, fn=fn)
-
-    if not hasattr(target, 'write'):
-        target = Path(target)
-
-    if not hasattr(source, 'rglob'):
-        source = Path(source)
 
     with maybe_open(target, 'wb') as fd:
         # write shebang
@@ -59,7 +66,7 @@ def create_archive(source, target, interpreter, main, compressed=True):
         with zipfile.ZipFile(fd, 'w', compression=compression) as z:
             for child in source.rglob('*'):
                 arcname = child.relative_to(source)
-                z.write(child, arcname.as_posix())
+                z.write(child.as_posix(), arcname.as_posix())
 
             # write main
             z.writestr('__main__.py', main_py.encode('utf-8'))

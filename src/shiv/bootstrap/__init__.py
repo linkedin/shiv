@@ -1,10 +1,10 @@
 import os
+import site
 import sys
 
 from importlib import import_module
 from importlib.machinery import ExtensionFileLoader, ModuleSpec
 from pathlib import Path
-from site import makepath, addsitedir
 
 from .environment import Environment
 from .interpreter import execute_interpreter
@@ -83,7 +83,7 @@ def process_zipped_pths(archive, sitedir):
                 exec(line)
                 continue
             line = line.rstrip()
-            dir, dircase = makepath(sitedir, line)
+            dir, dircase = site.makepath(sitedir, line)
             if dircase not in known_paths and Path(dir).exists():
                 sys.path.append(dir)
                 known_paths.add(dircase)
@@ -140,7 +140,7 @@ def bootstrap():
             extract_site_packages(archive, site_packages)
 
         # stdlib blessed way of extending path
-        addsitedir(site_packages / 'site-packages')
+        site.addsitedir(site_packages / 'site-packages')
 
     # do entry point import and call
     if env.entry_point is not None and env.interpreter is None:

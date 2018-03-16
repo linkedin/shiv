@@ -6,6 +6,7 @@ import uuid
 from configparser import ConfigParser
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Dict, Optional, List
 
 import click
 
@@ -31,7 +32,7 @@ SHIV = u'\U0001F52A'
 BINPRM_BUF_SIZE = 128
 
 
-def find_entry_point(site_packages, console_script):
+def find_entry_point(site_packages: Path, console_script: str) -> str:
     """Find a console_script in a site-packages directory.
 
     Console script metadata is stored in entry_points.txt per setuptools
@@ -46,14 +47,14 @@ def find_entry_point(site_packages, console_script):
     return config_parser['console_scripts'][console_script]
 
 
-def validate_interpreter(interpreter_path=None):
+def validate_interpreter(interpreter_path: Optional[str]=None) -> str:
     """Ensure that the interpreter is a real path, not a symlink.
 
     If no interpreter is given, default to `sys.exectuable`
 
     :param Path interpreter_path: A path to a Python interpreter.
     """
-    real_path = Path(sys.executable if interpreter_path is None else interpreter_path)
+    real_path = Path(sys.executable) if interpreter_path is None else Path(interpreter_path)
 
     # fall back to /usr/bin/env if the interp path is too long
     if interpreter_path is None or len(real_path.as_posix()) > BINPRM_BUF_SIZE:
@@ -65,29 +66,37 @@ def validate_interpreter(interpreter_path=None):
         sys.exit(INVALID_PYTHON.format(path=real_path))
 
 
-def map_shared_objects(site_packages):
+def map_shared_objects(site_packages: Path) -> Dict[str, str]:
     """Given a site-packages dir, map all of the shared objects to their namespaces.
 
     :param Path site_packages: A path to a custom site-packages directory.
     """
-    somap = {}
+    somap: Dict[str, str] = {}
 
-    for dirpath, dirnames, filenames in os.walk(site_packages):
+    for parent_dir, _, filenames in os.walk(site_packages):
         for filename in filenames:
-            fullpath = Path(dirpath) / Path(filename)
+
+            # get full path to file
+            fullpath = Path(parent_dir) / filename
+
+            # check if the file is a shared object (skipping if not)
             if fullpath.suffix not in ['.so', '.dylib']:
                 continue
+
+            # assemble the mapping of import path to file
             index = fullpath.parts.index('site-packages') + 1
             contributors = list(fullpath.parts[index:-1])
             module_name, import_tag, extension = fullpath.parts[-1].split('.')
             contributors.append(module_name)
             import_path = '.'.join(contributors)
-            somap[import_path] = str(fullpath.relative_to(site_packages))
+
+            # finally, add the import path to the shared object map
+            somap[import_path] = fullpath.relative_to(site_packages).as_posix()
 
     return somap
 
 
-def copy_bootstrap(bootstrap_target):
+def copy_bootstrap(bootstrap_target: Path) -> None:
     """Copy bootstrap code from shiv into the pyz.
 
     First check if this instance of shiv is in fact already a (zip-safe) zipapp, and then
@@ -123,14 +132,14 @@ def copy_bootstrap(bootstrap_target):
 @click.option('--compressed/--uncompressed', default=True, help='whether or not to compress your zip')
 @click.argument('pip_args', nargs=-1, type=click.UNPROCESSED)
 def main(
-    output_file,
-    entry_point,
-    console_script,
-    python,
-    zip_safe,
-    compressed,
-    pip_args,
-):
+    output_file: str,
+    entry_point: Optional[str],
+    console_script: Optional[str],
+    python: Optional[str],
+    zip_safe: bool,
+    compressed: bool,
+    pip_args: List[str],
+) -> None:
     """ Shiv creates python executables! """
     quiet = '-q' in pip_args
 
@@ -155,14 +164,14 @@ def main(
                 )
 
     # validate supplied python (if any)
-    python = validate_interpreter(python)
+    shebang = validate_interpreter(python)
 
     with TemporaryDirectory() as working_path:
         site_packages = Path(working_path, 'site-packages')
         site_packages.mkdir(parents=True, exist_ok=True)
 
         # install deps into staged site-packages
-        pip.install(['--target', site_packages] + list(pip_args))
+        pip.install(python or sys.executable, ['--target', site_packages.as_posix()] + list(pip_args))
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
@@ -176,7 +185,7 @@ def main(
             build_id=str(uuid.uuid4()),
             zip_safe=zip_safe,
             entry_point=entry_point,
-            shared_object_map=map_shared_objects(working_path),
+            shared_object_map=map_shared_objects(Path(working_path)),
         )
 
         Path(working_path, 'environment.json').write_text(env.to_json())
@@ -190,9 +199,9 @@ def main(
 
         # create the zip
         builder.create_archive(
-            working_path,
-            target=output_file,
-            interpreter=python,
+            Path(working_path),
+            target=Path(output_file),
+            interpreter=shebang,
             main='_bootstrap:bootstrap',
             compressed=compressed,
         )
