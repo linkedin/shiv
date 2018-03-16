@@ -6,7 +6,7 @@
 # shiv 🔪
 Shiv is a command line utility for building fully self-contained Python zipapps as outlined in [PEP 441](http://legacy.python.org/dev/peps/pep-0441/), but with all their dependencies included!
 
-Shiv's primary goal is ease-of-use (Python cli's reduced to a single file that can be easily distributed) and cli startup speed. An executable generated with Shiv will usually outperform one that was installed via `pip` thanks to the fact that Shiv completely avoids use of `pkg_resources` and the infamous [Issue 510](https://github.com/pypa/setuptools/issues/510).
+Shiv's primary goal is making distributing Python applications fast & easy.
 
 ### how to
 
@@ -48,7 +48,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ### installing
 
-You can install shiv via `pip`/`pypi`
+You can install shiv via `pip` / `pypi`
 
 ```sh
 pip install shiv
@@ -65,17 +65,17 @@ shiv -c shiv -o shiv shiv
 
 ### developing
 
-Get bootstrapped
+We'd love contributions! Getting bootstrapped to develop is easy:
 
 ```sh
-git clone git@gitli.corp.linkedin.com:loren/shiv.git
+git clone git@github.com:linkedin/shiv.git
 cd shiv
 python3 setup.py venv
 . activate
 python3 setup.py develop
 ```
 
-Run and write tests
+Don't forget to run and write tests:
 
 ```sh
 pip install tox

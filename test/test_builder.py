@@ -18,12 +18,12 @@ UGOX = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 class TestBuilder:
     def test_file_prefix(self):
         with tempfile.TemporaryFile() as fd:
-            python = validate_interpreter(sys.executable)
+            python = validate_interpreter(Path(sys.executable))
             write_file_prefix(fd, python)
             fd.seek(0)
             written = fd.read()
 
-        assert written == b'#!' + python.encode(sys.getdefaultencoding()) + b'\n'
+        assert written == b'#!' + python.as_posix().encode(sys.getdefaultencoding()) + b'\n'
 
     def test_create_archive(self, sp):
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -14,6 +14,7 @@ if sys.version_info < (3, 6):
 requirements = [
     'click==6.7',
     'pip',
+    'importlib_resources',
 ]
 
 # The following template and classmethod are copied from

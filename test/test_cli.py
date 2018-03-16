@@ -47,29 +47,29 @@ class TestCLI:
 
     def test_hello_world(self, tmpdir, runner, package_location):
         with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
-            output_file = Path(tmpdir, 'test.pyz').as_posix()
+            output_file = Path(tmpdir, 'test.pyz')
 
-            result = runner(['-e', 'hello:main', '-o', output_file, package_location])
-
-            # ensure the created file actually exists
-            assert Path(output_file).exists()
+            result = runner(['-e', 'hello:main', '-o', output_file.as_posix(), package_location.as_posix()])
 
             # check that the command successfully completed
             assert result.exit_code == 0
+
+            # ensure the created file actually exists
+            assert output_file.exists()
 
             # now run the produced zipapp
             with subprocess.Popen([output_file], stdout=subprocess.PIPE) as proc:
                 assert proc.stdout.read().decode() == 'hello world\n'
 
     def test_interpreter(self):
-        assert validate_interpreter(None) == validate_interpreter() == f'/usr/bin/env {Path(sys.executable).name}'
+        assert validate_interpreter(None) == validate_interpreter() == Path(sys.executable)
 
         with pytest.raises(SystemExit):
-            validate_interpreter('/usr/local/bogus_python')
+            validate_interpreter(Path('/usr/local/bogus_python'))
 
     @pytest.mark.skipif(len(sys.executable) > 128, reason='only run this test is the shebang is not too long')
     def test_real_interpreter(self):
-        assert validate_interpreter(sys.executable) == sys.executable
+        assert validate_interpreter(Path(sys.executable)) == Path(sys.executable)
 
     def test_so_map(self, sp):
         assert map_shared_objects(sp) == {
