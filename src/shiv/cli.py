@@ -150,7 +150,7 @@ def main(
         site_packages.mkdir(parents=True, exist_ok=True)
 
         # install deps into staged site-packages
-        pip.install(interpreter.as_posix(), ['--target', site_packages.as_posix()] + list(pip_args))
+        pip.install(python or sys.executable, ['--target', site_packages.as_posix()] + list(pip_args))
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
