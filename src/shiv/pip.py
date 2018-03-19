@@ -16,6 +16,7 @@ def clean_pip_env() -> Generator[None, None, None]:
 
     """
     require_venv = os.environ.pop(PIP_REQUIRE_VIRTUALENV, None)
+
     try:
         yield
     finally:
@@ -30,7 +31,7 @@ def install(interpreter_path: str, args: List[str]) -> None:
 
     .. example::
 
-        >>> install(['numpy', '--target', 'site-packages'])
+        >>> install('/usr/local/bin/python3', ['numpy', '--target', 'site-packages'])
         Collecting numpy
         Downloading numpy-1.13.3-cp35-cp35m-manylinux1_x86_64.whl (16.9MB)
             100% || 16.9MB 53kB/s

@@ -51,25 +51,29 @@ class TestCLI:
 
             result = runner(['-e', 'hello:main', '-o', output_file.as_posix(), package_location.as_posix()])
 
-            # ensure the created file actually exists
-            assert output_file.exists()
-
             # check that the command successfully completed
             assert result.exit_code == 0
+
+            # ensure the created file actually exists
+            assert output_file.exists()
 
             # now run the produced zipapp
             with subprocess.Popen([output_file], stdout=subprocess.PIPE) as proc:
                 assert proc.stdout.read().decode() == 'hello world\n'
 
     def test_interpreter(self):
-        assert validate_interpreter(None) == validate_interpreter() == f'/usr/bin/env {Path(sys.executable).name}'
+        assert validate_interpreter(None) == validate_interpreter() == Path(sys.executable)
 
         with pytest.raises(SystemExit):
             validate_interpreter(Path('/usr/local/bogus_python'))
 
     @pytest.mark.skipif(len(sys.executable) > 128, reason='only run this test is the shebang is not too long')
     def test_real_interpreter(self):
+<<<<<<< HEAD
+        assert validate_interpreter(Path(sys.executable)) == Path(sys.executable)
+=======
         assert validate_interpreter(Path(sys.executable)) == sys.executable
+>>>>>>> master
 
     def test_so_map(self, sp):
         assert map_shared_objects(sp) == {

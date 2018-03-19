@@ -1,3 +1,4 @@
+import importlib_resources  # type: ignore
 import os
 import shutil
 import sys
@@ -14,22 +15,17 @@ from . import pip
 from . import builder
 from . import bootstrap
 from .bootstrap.environment import Environment
-from .bootstrap.utils import current_zipfile, loaded_from_zipfile
 from .constants import (
     BLACKLISTED_ARGS,
     DISALLOWED_PIP_ARGS,
     NO_PIP_ARGS,
     NO_OUTFILE,
     NO_ENTRY_POINT,
-    PY_SUFFIX,
     INVALID_PYTHON,
 )
 
 # This is the 'knife' emoji
 SHIV = u'\U0001F52A'
-
-# Typical maximum length for a shebang line
-BINPRM_BUF_SIZE = 128
 
 
 def find_entry_point(site_packages: Path, console_script: str) -> str:
@@ -39,29 +35,25 @@ def find_entry_point(site_packages: Path, console_script: str) -> str:
     convention. This function searches all entry_points.txt files and
     returns the import string for a given console_script argument.
 
-    :param Path site_packages: A path to a site-packages directory on disk.
-    :param str console_script: A console_script string.
+    :param site_packages: A path to a site-packages directory on disk.
+    :param console_script: A console_script string.
     """
     config_parser = ConfigParser()
     config_parser.read(site_packages.rglob('entry_points.txt'))
     return config_parser['console_scripts'][console_script]
 
 
-def validate_interpreter(interpreter_path: Optional[str]=None) -> str:
+def validate_interpreter(interpreter_path: Optional[str] = None) -> Path:
     """Ensure that the interpreter is a real path, not a symlink.
 
     If no interpreter is given, default to `sys.exectuable`
 
-    :param Path interpreter_path: A path to a Python interpreter.
+    :param interpreter_path: A path to a Python interpreter.
     """
     real_path = Path(sys.executable) if interpreter_path is None else Path(interpreter_path)
 
-    # fall back to /usr/bin/env if the interp path is too long
-    if interpreter_path is None or len(real_path.as_posix()) > BINPRM_BUF_SIZE:
-        return f'/usr/bin/env {real_path.name}'
-
     if real_path.exists():
-        return real_path.as_posix()
+        return real_path
     else:
         sys.exit(INVALID_PYTHON.format(path=real_path))
 
@@ -69,7 +61,7 @@ def validate_interpreter(interpreter_path: Optional[str]=None) -> str:
 def map_shared_objects(site_packages: Path) -> Dict[str, str]:
     """Given a site-packages dir, map all of the shared objects to their namespaces.
 
-    :param Path site_packages: A path to a custom site-packages directory.
+    :param site_packages: A path to a custom site-packages directory.
     """
     somap: Dict[str, str] = {}
 
@@ -102,25 +94,12 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
     First check if this instance of shiv is in fact already a (zip-safe) zipapp, and then
     copy the bootstrap files over accordingly.
 
-    TODO: use importlib.resources for this!
-
-    :param Path bootstrap_target: The temporary directory where we are staging pyz contents.
+    :param bootstrap_target: The temporary directory where we are staging pyz contents.
     """
-    if loaded_from_zipfile(bootstrap):
-        archive = current_zipfile()
-        bootstrap_zip_root = str(
-            Path(bootstrap.__file__).relative_to(Path(archive.filename)).parent
-        )
-        for f in [Path(f) for f in archive.namelist() if f.startswith(bootstrap_zip_root)]:
-            if f.suffix == PY_SUFFIX:
-                with TemporaryDirectory() as zip_move_dir:
-                    archive.extract(str(f), zip_move_dir)
-                    shutil.move(Path(zip_move_dir, f), Path(bootstrap_target, f.name))
-    else:
-        bootstrap_src = Path(bootstrap.__file__).absolute().parent
-        for f in bootstrap_src.iterdir():
-            if f.suffix == PY_SUFFIX:
-                shutil.copyfile(f.absolute(), Path(bootstrap_target, f.name))
+    for bootstrap_file in importlib_resources.contents(bootstrap):
+        if importlib_resources.is_resource(bootstrap, bootstrap_file):
+            with importlib_resources.path(bootstrap, bootstrap_file) as f:
+                shutil.copyfile(f.absolute(), bootstrap_target / f.name)
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help'], ignore_unknown_options=True))
@@ -164,7 +143,7 @@ def main(
                 )
 
     # validate supplied python (if any)
-    shebang = validate_interpreter(python)
+    interpreter = validate_interpreter(python)
 
     with TemporaryDirectory() as working_path:
         site_packages = Path(working_path, 'site-packages')
@@ -201,7 +180,7 @@ def main(
         builder.create_archive(
             Path(working_path),
             target=Path(output_file),
-            interpreter=shebang,
+            interpreter=interpreter,
             main='_bootstrap:bootstrap',
             compressed=compressed,
         )

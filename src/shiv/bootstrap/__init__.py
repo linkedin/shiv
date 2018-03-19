@@ -36,7 +36,7 @@ class SOFinder:
 def import_string(import_name):
     """Returns a callable for a given setuptools style import string
 
-    :param str import_name: A console_scripts style import string
+    :param import_name: A console_scripts style import string
     """
     import_name = str(import_name).replace(':', '.')
     try:

@@ -11,6 +11,10 @@ import zipapp
 from pathlib import Path
 from typing import Any, IO, Generator, Union
 
+# Typical maximum length for a shebang line
+BINPRM_BUF_SIZE = 128
+
+# zipapp __main__.py template
 MAIN_TEMPLATE = """\
 # -*- coding: utf-8 -*-
 import {module}
@@ -18,14 +22,22 @@ import {module}
 """
 
 
-def write_file_prefix(f: IO[Any], interpreter: str) -> None:
+def write_file_prefix(f: IO[Any], interpreter_path: Path) -> None:
     """Write a shebang line.
 
-    :param file f: An open file handle.
-    :param str interpreter: A path to a python interpreter.
+    :param f: An open file handle.
+    :param interpreter_path: A path to a python interpreter.
     """
-    shebang = b'#!' + interpreter.encode(sys.getfilesystemencoding()) + b'\n'
-    f.write(shebang)
+
+    # fall back to /usr/bin/env if the interp path is too long
+    if len(interpreter_path.as_posix()) > BINPRM_BUF_SIZE:
+        shebang = f'/usr/bin/env {interpreter_path.name}'
+    else:
+        shebang = interpreter_path.as_posix()
+
+    f.write(
+        b'#!' + shebang.encode(sys.getfilesystemencoding()) + b'\n'
+    )
 
 
 @contextlib.contextmanager
@@ -40,9 +52,9 @@ def maybe_open(archive: Union[str, Path], mode: str) -> Generator[IO[Any], None,
 def create_archive(
     source: Path,
     target: Path,
-    interpreter: str,
+    interpreter: Path,
     main: str,
-    compressed: bool=True,
+    compressed: bool = True,
 ) -> None:
     """Create an application archive from SOURCE."""
 

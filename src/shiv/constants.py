@@ -9,6 +9,7 @@ NO_ENTRY_POINT = "\nNo entry point '{entry_point}' found in the console_scripts!
 PIP_INSTALL_ERROR = "\nPip install failed!\n"
 
 # pip
+PIP_INSTALL_ERROR = "\nPip install failed!\n"
 PIP_REQUIRE_VIRTUALENV = 'PIP_REQUIRE_VIRTUALENV'
 BLACKLISTED_ARGS: Dict[Tuple[str, ...], str] = {
     ('-t', '--target'): "Shiv already supplies a target internally, so overriding is not allowed.",
@@ -16,6 +17,3 @@ BLACKLISTED_ARGS: Dict[Tuple[str, ...], str] = {
     ('-d', '--download'): "Shiv needs to actually perform an install, not merely a download.",
     ('--user', '--root', '--prefix'): "Which conflicts with Shiv's internal use of '--target'.",
 }
-
-# misc
-PY_SUFFIX = '.py'

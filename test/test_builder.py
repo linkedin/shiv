@@ -23,7 +23,7 @@ class TestBuilder:
             fd.seek(0)
             written = fd.read()
 
-        assert written == b'#!' + python.encode(sys.getdefaultencoding()) + b'\n'
+        assert written == b'#!' + python.as_posix().encode(sys.getdefaultencoding()) + b'\n'
 
     def test_create_archive(self, sp):
         with tempfile.TemporaryDirectory() as tmpdir:
