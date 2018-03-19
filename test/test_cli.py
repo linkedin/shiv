@@ -69,11 +69,7 @@ class TestCLI:
 
     @pytest.mark.skipif(len(sys.executable) > 128, reason='only run this test is the shebang is not too long')
     def test_real_interpreter(self):
-<<<<<<< HEAD
         assert validate_interpreter(Path(sys.executable)) == Path(sys.executable)
-=======
-        assert validate_interpreter(Path(sys.executable)) == sys.executable
->>>>>>> master
 
     def test_so_map(self, sp):
         assert map_shared_objects(sp) == {

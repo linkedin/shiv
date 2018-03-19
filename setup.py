@@ -95,7 +95,7 @@ class Venv(setuptools.Command):
 
 setuptools.setup(
     name='shiv',
-    version='0.0.2',
+    version='0.0.3',
     description="A command line utility for building fully self contained Python zipapps.",
     packages=setuptools.find_packages('src'),
     package_dir={'': 'src'},
