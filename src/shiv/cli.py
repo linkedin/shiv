@@ -91,9 +91,6 @@ def map_shared_objects(site_packages: Path) -> Dict[str, str]:
 def copy_bootstrap(bootstrap_target: Path) -> None:
     """Copy bootstrap code from shiv into the pyz.
 
-    First check if this instance of shiv is in fact already a (zip-safe) zipapp, and then
-    copy the bootstrap files over accordingly.
-
     :param bootstrap_target: The temporary directory where we are staging pyz contents.
     """
     for bootstrap_file in importlib_resources.contents(bootstrap):
@@ -102,13 +99,13 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
                 shutil.copyfile(f.absolute(), bootstrap_target / f.name)
 
 
-@click.command(context_settings=dict(help_option_names=['-h', '--help'], ignore_unknown_options=True))
-@click.option('--entry-point', '-e', default=None, help='the entry point to bake into your executable')
-@click.option('--console-script', '-c', default=None, help='the console_script to bake into your executable')
-@click.option('--output-file', '-o', help='the file for shiv to create')
-@click.option('--python', '-p', help='path to your python interpreter')
-@click.option('--zip-safe/--not-zip-safe', default=False, help='whether or not your shiv-file is zip-safe')
-@click.option('--compressed/--uncompressed', default=True, help='whether or not to compress your zip')
+@click.command(context_settings=dict(help_option_names=['-h', '--help', '--halp'], ignore_unknown_options=True))
+@click.option('--entry-point', '-e', default=None, help='The entry point to invoke.')
+@click.option('--console-script', '-c', default=None, help='The console_script to invoke.')
+@click.option('--output-file', '-o', help='The file for shiv to create.')
+@click.option('--python', '-p', help='The path to a python interpreter to use.')
+@click.option('--zip-safe/--not-zip-safe', default=False, help='Whether or not your zipapp is zip-safe')
+@click.option('--compressed/--uncompressed', default=True, help='Whether or not to compress your zip.')
 @click.argument('pip_args', nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
@@ -119,7 +116,10 @@ def main(
     compressed: bool,
     pip_args: List[str],
 ) -> None:
-    """ Shiv creates python executables! """
+    """
+    Shiv is a command line utility for building fully self-contained Python zipapps
+    as outlined in PEP 441, but with all their dependencies included!
+    """
     quiet = '-q' in pip_args
 
     if not quiet:
