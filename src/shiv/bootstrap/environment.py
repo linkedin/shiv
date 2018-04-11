@@ -46,7 +46,7 @@ class Environment:
 
     @property
     def zip_safe(self):
-        return os.environ.get(self.ZIP_SAFE, self._entry_point)
+        return os.environ.get(self.ZIP_SAFE, self._zip_safe)
 
     @property
     def interpreter(self):
