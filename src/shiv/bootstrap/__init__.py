@@ -89,15 +89,15 @@ def process_zipped_pths(archive, sitedir):
                 known_paths.add(dircase)
 
 
-def cache_path(archive, build_id):
+def cache_path(archive, root_dir, build_id):
     """Returns a ~/.shiv cache directory for unzipping site-packages during bootstrap.
 
     :param ZipFile archive: The zipfile object we are bootstrapping from.
     :param str buidl_id: The build id generated at zip creation.
     """
-    dot_shiv = Path('~/.shiv').expanduser()
+    root = root_dir or Path('~/.shiv').expanduser()
     name = Path(archive.filename).stem
-    return dot_shiv / f"{name}_{build_id}"
+    return root / f"{name}_{build_id}"
 
 
 def extract_site_packages(archive, target_path):
@@ -121,7 +121,7 @@ def bootstrap():
     env = Environment.from_json(archive.read('environment.json').decode())
 
     # get a site-packages directory (from env var or via build id)
-    site_packages = env.site_packages or cache_path(archive, env.build_id)
+    site_packages = cache_path(archive, env.root, env.build_id)
 
     if env.zip_safe is True:
         # add shared object finder

@@ -8,7 +8,7 @@ from pathlib import Path
 class Environment:
     INTERPRETER = 'SHIV_INTERPRETER'
     ENTRY_POINT = 'SHIV_ENTRY_POINT'
-    SITE_PACKAGES = 'SHIV_SITE_PACKAGES'
+    ROOT = 'SHIV_ROOT'
     FORCE_EXTRACT = 'SHIV_FORCE_EXTRACT'
     ZIP_SAFE = 'SHIV_ZIP_SAFE'
 
@@ -53,9 +53,9 @@ class Environment:
         return os.environ.get(self.INTERPRETER, None)
 
     @property
-    def site_packages(self):
-        sp = os.environ.get(self.SITE_PACKAGES)
-        return Path(sp) if sp is not None else None
+    def root(self):
+        root = os.environ.get(self.ROOT)
+        return Path(root) if root is not None else None
 
     @property
     def force_extract(self):

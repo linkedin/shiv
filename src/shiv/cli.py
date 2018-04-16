@@ -25,7 +25,7 @@ from .constants import (
 )
 
 # This is the 'knife' emoji
-SHIV = u'\U0001F52A'
+SHIV = u"\U0001F52A"
 
 
 def find_entry_point(site_packages: Path, console_script: str) -> str:
@@ -39,8 +39,8 @@ def find_entry_point(site_packages: Path, console_script: str) -> str:
     :param console_script: A console_script string.
     """
     config_parser = ConfigParser()
-    config_parser.read(site_packages.rglob('entry_points.txt'))
-    return config_parser['console_scripts'][console_script]
+    config_parser.read(site_packages.rglob("entry_points.txt"))
+    return config_parser["console_scripts"][console_script]
 
 
 def validate_interpreter(interpreter_path: Optional[str] = None) -> Path:
@@ -50,10 +50,13 @@ def validate_interpreter(interpreter_path: Optional[str] = None) -> Path:
 
     :param interpreter_path: A path to a Python interpreter.
     """
-    real_path = Path(sys.executable) if interpreter_path is None else Path(interpreter_path)
+    real_path = Path(sys.executable) if interpreter_path is None else Path(
+        interpreter_path
+    )
 
     if real_path.exists():
         return real_path
+
     else:
         sys.exit(INVALID_PYTHON.format(path=real_path))
 
@@ -72,15 +75,15 @@ def map_shared_objects(site_packages: Path) -> Dict[str, str]:
             fullpath = Path(parent_dir) / filename
 
             # check if the file is a shared object (skipping if not)
-            if fullpath.suffix not in ['.so', '.dylib']:
+            if fullpath.suffix not in [".so", ".dylib"]:
                 continue
 
             # assemble the mapping of import path to file
-            index = fullpath.parts.index('site-packages') + 1
+            index = fullpath.parts.index("site-packages") + 1
             contributors = list(fullpath.parts[index:-1])
-            module_name, import_tag, extension = fullpath.parts[-1].split('.')
+            module_name, import_tag, extension = fullpath.parts[-1].split(".")
             contributors.append(module_name)
-            import_path = '.'.join(contributors)
+            import_path = ".".join(contributors)
 
             # finally, add the import path to the shared object map
             somap[import_path] = fullpath.relative_to(site_packages).as_posix()
@@ -99,14 +102,28 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
                 shutil.copyfile(f.absolute(), bootstrap_target / f.name)
 
 
-@click.command(context_settings=dict(help_option_names=['-h', '--help', '--halp'], ignore_unknown_options=True))
-@click.option('--entry-point', '-e', default=None, help='The entry point to invoke.')
-@click.option('--console-script', '-c', default=None, help='The console_script to invoke.')
-@click.option('--output-file', '-o', help='The file for shiv to create.')
-@click.option('--python', '-p', help='The path to a python interpreter to use.')
-@click.option('--zip-safe/--not-zip-safe', default=False, help='Whether or not your zipapp is zip-safe')
-@click.option('--compressed/--uncompressed', default=True, help='Whether or not to compress your zip.')
-@click.argument('pip_args', nargs=-1, type=click.UNPROCESSED)
+@click.command(
+    context_settings=dict(
+        help_option_names=["-h", "--help", "--halp"], ignore_unknown_options=True
+    )
+)
+@click.option("--entry-point", "-e", default=None, help="The entry point to invoke.")
+@click.option(
+    "--console-script", "-c", default=None, help="The console_script to invoke."
+)
+@click.option("--output-file", "-o", help="The file for shiv to create.")
+@click.option("--python", "-p", help="The path to a python interpreter to use.")
+@click.option(
+    "--zip-safe/--not-zip-safe",
+    default=False,
+    help="Whether or not your zipapp is zip-safe",
+)
+@click.option(
+    "--compressed/--uncompressed",
+    default=True,
+    help="Whether or not to compress your zip.",
+)
+@click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
     entry_point: Optional[str],
@@ -120,7 +137,7 @@ def main(
     Shiv is a command line utility for building fully self-contained Python zipapps
     as outlined in PEP 441, but with all their dependencies included!
     """
-    quiet = '-q' in pip_args
+    quiet = "-q" in pip_args
 
     if not quiet:
         click.secho(" shiv! " + SHIV, bold=True)
@@ -137,8 +154,7 @@ def main(
             if supplied_arg in blacklisted_arg:
                 sys.exit(
                     DISALLOWED_PIP_ARGS.format(
-                        arg=supplied_arg,
-                        reason=BLACKLISTED_ARGS[blacklisted_arg],
+                        arg=supplied_arg, reason=BLACKLISTED_ARGS[blacklisted_arg]
                     )
                 )
 
@@ -146,11 +162,14 @@ def main(
     interpreter = validate_interpreter(python)
 
     with TemporaryDirectory() as working_path:
-        site_packages = Path(working_path, 'site-packages')
+        site_packages = Path(working_path, "site-packages")
         site_packages.mkdir(parents=True, exist_ok=True)
 
         # install deps into staged site-packages
-        pip.install(python or sys.executable, ['--target', site_packages.as_posix()] + list(pip_args))
+        pip.install(
+            python or sys.executable,
+            ["--target", site_packages.as_posix()] + list(pip_args),
+        )
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
@@ -167,10 +186,10 @@ def main(
             shared_object_map=map_shared_objects(Path(working_path)),
         )
 
-        Path(working_path, 'environment.json').write_text(env.to_json())
+        Path(working_path, "environment.json").write_text(env.to_json())
 
         # create bootstrapping directory in working path
-        bootstrap_target = Path(working_path, '_bootstrap')
+        bootstrap_target = Path(working_path, "_bootstrap")
         bootstrap_target.mkdir(parents=True, exist_ok=True)
 
         # copy bootstrap code
@@ -181,7 +200,7 @@ def main(
             Path(working_path),
             target=Path(output_file),
             interpreter=interpreter,
-            main='_bootstrap:bootstrap',
+            main="_bootstrap:bootstrap",
             compressed=compressed,
         )
 
