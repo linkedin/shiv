@@ -13,7 +13,7 @@ if sys.version_info < (3, 6):
 
 requirements = [
     'click==6.7',
-    'pip>=10.0.0',
+    'pip>=9.0.1',
     'importlib_resources>=0.4',
 ]
 
@@ -95,7 +95,7 @@ class Venv(setuptools.Command):
 
 setuptools.setup(
     name='shiv',
-    version='0.0.7',
+    version='0.0.8',
     description="A command line utility for building fully self contained Python zipapps.",
     packages=setuptools.find_packages('src'),
     package_dir={'': 'src'},
