@@ -10,25 +10,27 @@ def _exec_function(ast, globals_map):
 
 def execute_content(name, content):
     try:
-        ast = compile(content, name, 'exec', flags=0, dont_inherit=1)
+        ast = compile(content, name, "exec", flags=0, dont_inherit=1)
     except SyntaxError:
-        raise RuntimeError('Unable to parse {}. Is it a Python script? Syntax correct?'.format(name))
+        raise RuntimeError(
+            "Unable to parse {}. Is it a Python script? Syntax correct?".format(name)
+        )
 
-    old_name, old_file = globals().get('__name__'), globals().get('__file__')
+    old_name, old_file = globals().get("__name__"), globals().get("__file__")
 
     try:
-        globals()['__name__'] = '__main__'
-        globals()['__file__'] = name
+        globals()["__name__"] = "__main__"
+        globals()["__file__"] = name
         _exec_function(ast, globals())
     finally:
         if old_name:
-            globals()['__name__'] = old_name
+            globals()["__name__"] = old_name
         else:
-            globals().pop('__name__')
+            globals().pop("__name__")
         if old_file:
-            globals()['__file__'] = old_file
+            globals()["__file__"] = old_file
         else:
-            globals().pop('__file__')
+            globals().pop("__file__")
 
 
 def execute_interpreter():
@@ -38,7 +40,9 @@ def execute_interpreter():
                 name, content = sys.argv[1], fp.read()
         except (FileNotFoundError, IsADirectoryError, PermissionError) as e:
             raise RuntimeError(
-                "Could not open {} in the environment [{}]: {}".format(sys.argv[1], sys.argv[0], e)
+                "Could not open {} in the environment [{}]: {}".format(
+                    sys.argv[1], sys.argv[0], e
+                )
             )
 
         sys.argv = sys.argv[1:]

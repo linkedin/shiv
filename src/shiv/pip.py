@@ -19,6 +19,7 @@ def clean_pip_env() -> Generator[None, None, None]:
 
     try:
         yield
+
     finally:
         if require_venv is not None:
             os.environ[PIP_REQUIRE_VIRTUALENV] = require_venv
@@ -42,7 +43,7 @@ def install(interpreter_path: str, args: List[str]) -> None:
     with clean_pip_env():
 
         process = subprocess.Popen(
-            [interpreter_path, '-m', 'pip', 'install'] + args,
+            [interpreter_path, "-m", "pip", "install"] + args,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
