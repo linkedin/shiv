@@ -69,6 +69,7 @@ def map_shared_objects(site_packages: Path) -> Dict[str, str]:
     somap: Dict[str, str] = {}
 
     for parent_dir, _, filenames in os.walk(site_packages):
+
         for filename in filenames:
 
             # get full path to file
@@ -114,11 +115,6 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
 @click.option("--output-file", "-o", help="The file for shiv to create.")
 @click.option("--python", "-p", help="The path to a python interpreter to use.")
 @click.option(
-    "--zip-safe/--not-zip-safe",
-    default=False,
-    help="Whether or not your zipapp is zip-safe",
-)
-@click.option(
     "--compressed/--uncompressed",
     default=True,
     help="Whether or not to compress your zip.",
@@ -129,7 +125,6 @@ def main(
     entry_point: Optional[str],
     console_script: Optional[str],
     python: Optional[str],
-    zip_safe: bool,
     compressed: bool,
     pip_args: List[str],
 ) -> None:
@@ -181,9 +176,8 @@ def main(
         # create runtime environment metadata
         env = Environment(
             build_id=str(uuid.uuid4()),
-            zip_safe=zip_safe,
             entry_point=entry_point,
-            shared_object_map=map_shared_objects(Path(working_path)),
+            shared_object_map=map_shared_objects(site_packages),
         )
 
         Path(working_path, "environment.json").write_text(env.to_json())
