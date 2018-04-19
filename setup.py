@@ -17,6 +17,9 @@ requirements = [
     'importlib_resources>=0.4',
 ]
 
+with Path('README.md').open() as f:
+    readme = f.read()
+
 # The following template and classmethod are copied from
 # fast entry points, Copyright (c) 2016, Aaron Christianson
 # https://github.com/ninjaaron/fast-entry_point
@@ -95,8 +98,11 @@ class Venv(setuptools.Command):
 
 setuptools.setup(
     name='shiv',
-    version='0.0.9',
+    version='0.0.10',
     description="A command line utility for building fully self contained Python zipapps.",
+    long_description=readme,
+    long_description_content_type='text/markdown',
+    url="http://github.com/linkedin/shiv",
     packages=setuptools.find_packages('src'),
     package_dir={'': 'src'},
     install_requires=requirements,
