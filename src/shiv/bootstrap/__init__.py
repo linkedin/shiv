@@ -2,9 +2,9 @@ import site
 import sys
 import shutil
 
-from compileall import compile_dir
 from importlib import import_module
 from pathlib import Path
+from py_compile import compile
 
 from .environment import Environment
 from .interpreter import execute_interpreter
@@ -70,7 +70,8 @@ def extract_site_packages(archive, target_path):
             archive.extract(filename, target_path_tmp)
 
     # compile pyc
-    compile_dir(target_path_tmp, quiet=1)
+    for py_file in target_path_tmp.glob('**/*.py'):
+        compile(py_file)
 
     # atomic move
     shutil.move(target_path_tmp.as_posix(), target_path.as_posix())
