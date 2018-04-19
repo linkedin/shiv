@@ -25,6 +25,10 @@ import {module}
 def write_file_prefix(f: IO[Any], interpreter_path: Path) -> None:
     """Write a shebang line.
 
+    .. note::
+
+        Shiv explicitly uses `-sE` as start up flags to prevent contamination of sys.path.
+
     :param f: An open file handle.
     :param interpreter_path: A path to a python interpreter.
     """
@@ -35,7 +39,7 @@ def write_file_prefix(f: IO[Any], interpreter_path: Path) -> None:
     else:
         shebang = interpreter_path.as_posix()
 
-    f.write(b"#!" + shebang.encode(sys.getfilesystemencoding()) + b"\n")
+    f.write(b"#!" + shebang.encode(sys.getfilesystemencoding()) + b" -sE\n")
 
 
 @contextlib.contextmanager
