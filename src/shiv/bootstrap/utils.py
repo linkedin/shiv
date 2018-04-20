@@ -1,5 +1,17 @@
+import os
 import sys
 import zipfile
+
+from contextlib import contextmanager
+
+
+@contextmanager
+def silence_stderr():
+    with open(os.devnull, 'w') as devnull:
+        stderr = sys.stderr
+        sys.stderr = devnull
+        yield
+        sys.stderr = stderr
 
 
 def current_zipfile():
