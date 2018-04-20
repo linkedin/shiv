@@ -8,7 +8,7 @@ from py_compile import compile
 
 from .environment import Environment
 from .interpreter import execute_interpreter
-from .utils import current_zipfile
+from .utils import current_zipfile, silence_stderr
 
 
 def import_string(import_name):
@@ -69,9 +69,10 @@ def extract_site_packages(archive, target_path):
         if filename.startswith("site-packages"):
             archive.extract(filename, target_path_tmp)
 
-    # compile pyc
-    for py_file in target_path_tmp.glob('**/*.py'):
-        compile(py_file)
+    # compile pyc with stderr silenced
+    with silence_stderr():
+        for py_file in target_path_tmp.glob('**/*.py'):
+            compile(py_file)
 
     # atomic move
     shutil.move(target_path_tmp.as_posix(), target_path.as_posix())
