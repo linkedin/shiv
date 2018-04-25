@@ -84,4 +84,4 @@ tox
 
 ### gotchas
 
-Zipapps created with Shiv are not cross-compatible with other architectures. For example, a `pyz` file built on a Mac will only work on other Macs, likewise for RHEL, etc. If this sort of portability is something you are interested in, check out [pex](https://github.com/pantsbuild/pex), which aims to provide cross-platform support.
+Zipapps created with Shiv are not cross-compatible with other architectures. For example, a `pyz` file built on a Mac will only work on other Macs, likewise for RHEL, etc.
