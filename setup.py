@@ -16,6 +16,7 @@ requirements = [
     'click==6.7',
     'pip>=9.0.1',
     'importlib_resources>=0.4',
+    'wheel',
 ]
 
 # The following template and classmethod are copied from
