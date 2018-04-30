@@ -1,5 +1,4 @@
 import importlib_resources  # type: ignore
-import os
 import shutil
 import sys
 import uuid
@@ -7,7 +6,7 @@ import uuid
 from configparser import ConfigParser
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Dict, Optional, List
+from typing import Optional, List
 
 import click
 
@@ -59,37 +58,6 @@ def validate_interpreter(interpreter_path: Optional[str] = None) -> Path:
 
     else:
         sys.exit(INVALID_PYTHON.format(path=real_path))
-
-
-def map_shared_objects(site_packages: Path) -> Dict[str, str]:
-    """Given a site-packages dir, map all of the shared objects to their namespaces.
-
-    :param site_packages: A path to a custom site-packages directory.
-    """
-    somap: Dict[str, str] = {}
-
-    for parent_dir, _, filenames in os.walk(site_packages):
-
-        for filename in filenames:
-
-            # get full path to file
-            fullpath = Path(parent_dir) / filename
-
-            # check if the file is a shared object (skipping if not)
-            if fullpath.suffix not in [".so", ".dylib"]:
-                continue
-
-            # assemble the mapping of import path to file
-            index = fullpath.parts.index("site-packages") + 1
-            contributors = list(fullpath.parts[index:-1])
-            module_name, import_tag, extension = fullpath.parts[-1].split(".")
-            contributors.append(module_name)
-            import_path = ".".join(contributors)
-
-            # finally, add the import path to the shared object map
-            somap[import_path] = fullpath.relative_to(site_packages).as_posix()
-
-    return somap
 
 
 def copy_bootstrap(bootstrap_target: Path) -> None:
@@ -177,7 +145,6 @@ def main(
         env = Environment(
             build_id=str(uuid.uuid4()),
             entry_point=entry_point,
-            shared_object_map=map_shared_objects(site_packages),
         )
 
         Path(working_path, "environment.json").write_text(env.to_json())
