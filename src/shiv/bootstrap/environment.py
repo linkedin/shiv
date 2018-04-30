@@ -15,11 +15,9 @@ class Environment:
         self,
         build_id=None,
         entry_point=None,
-        shared_object_map=None,
         always_write_cache=False,
     ):
         self.build_id = build_id
-        self.shared_object_map = shared_object_map
         self.always_write_cache = always_write_cache
 
         # properties

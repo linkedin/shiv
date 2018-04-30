@@ -8,7 +8,7 @@ import pytest
 
 from click.testing import CliRunner
 
-from shiv.cli import main, validate_interpreter, map_shared_objects
+from shiv.cli import main, validate_interpreter
 from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS, NO_OUTFILE, BLACKLISTED_ARGS
 
 
@@ -70,9 +70,3 @@ class TestCLI:
     @pytest.mark.skipif(len(sys.executable) > 128, reason='only run this test is the shebang is not too long')
     def test_real_interpreter(self):
         assert validate_interpreter(Path(sys.executable)) == Path(sys.executable)
-
-    def test_so_map(self, sp):
-        assert map_shared_objects(sp) == {
-            'fake_c_extension._extern': 'fake_c_extension/_extern.cpython-36m-x86_64-linux-gnu.so',
-            'other_fake_c_extension_darwin.foobar': 'other_fake_c_extension_darwin/foobar.cpython-36m-darwin.so',
-        }
