@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
 
 # shiv 🔪
-Shiv is a command line utility for building fully self-contained Python zipapps as outlined in [PEP 441](http://legacy.python.org/dev/peps/pep-0441/), but with all their dependencies included!
+Shiv is a command line utility for building fully self-contained Python zipapps as outlined in [PEP 441](https://www.python.org/dev/peps/pep-0441/), but with all their dependencies included!
 
 Shiv's primary goal is making distributing Python applications fast & easy.
 
