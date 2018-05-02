@@ -1,9 +1,6 @@
 Shiv API
 ========
 
-Module contents
----------------
-
 .. automodule:: shiv
     :members:
     :show-inheritance:
@@ -15,17 +12,17 @@ cli
     :members:
     :show-inheritance:
 
+constants
+---
+
+.. automodule:: shiv.constants
+    :members:
+    :show-inheritance:
+
 builder
 -------
 
 .. automodule:: shiv.builder
-    :members:
-    :show-inheritance:
-
-constants
----------
-
-.. automodule:: shiv.constants
     :members:
     :show-inheritance:
 

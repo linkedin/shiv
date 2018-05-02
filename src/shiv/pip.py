@@ -30,7 +30,7 @@ def install(interpreter_path: str, args: List[str]) -> None:
 
     Accepts a list of pip arguments.
 
-    .. example::
+    .. code-block:: py
 
         >>> install('/usr/local/bin/python3', ['numpy', '--target', 'site-packages'])
         Collecting numpy

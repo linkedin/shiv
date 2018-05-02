@@ -1,3 +1,4 @@
+"""This module contains various error messages."""
 from typing import Tuple, Dict
 
 # errors:
@@ -12,16 +13,8 @@ PIP_INSTALL_ERROR = "\nPip install failed!\n"
 PIP_INSTALL_ERROR = "\nPip install failed!\n"
 PIP_REQUIRE_VIRTUALENV = "PIP_REQUIRE_VIRTUALENV"
 BLACKLISTED_ARGS: Dict[Tuple[str, ...], str] = {
-    (
-        "-t", "--target"
-    ): "Shiv already supplies a target internally, so overriding is not allowed.",
-    (
-        "--editable",
-    ): "Editable installs don't actually install via pip (they are just linked), so they are not allowed.",
-    (
-        "-d", "--download"
-    ): "Shiv needs to actually perform an install, not merely a download.",
-    (
-        "--user", "--root", "--prefix"
-    ): "Which conflicts with Shiv's internal use of '--target'.",
+    ("-t", "--target"): "Shiv already supplies a target internally, so overriding is not allowed.",
+    ("--editable", ): "Editable installs don't actually install via pip (they are just linked), so they are not allowed.",
+    ("-d", "--download"): "Shiv needs to actually perform an install, not merely a download.",
+    ("--user", "--root", "--prefix"): "Which conflicts with Shiv's internal use of '--target'.",
 }

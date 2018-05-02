@@ -1,3 +1,7 @@
+"""
+This module contains the ``Environment`` object, which combines settings decided at build time with
+overrides defined at runtime (via environment variables).
+"""
 import copy
 import json
 import os

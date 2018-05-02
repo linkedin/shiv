@@ -100,7 +100,7 @@ def main(
     Shiv is a command line utility for building fully self-contained Python zipapps
     as outlined in PEP 441, but with all their dependencies included!
     """
-    quiet = "-q" in pip_args
+    quiet = "-q" in pip_args or '--quiet' in pip_args
 
     if not quiet:
         click.secho(" shiv! " + SHIV, bold=True)

@@ -1,6 +1,9 @@
-"""This module contains a simplified implementation of Python's "zipapp" module.
+"""
+This module is a slightly modified implementation of Python's "zipapp" module.
 
-We've copied code here in order to patch in support for compression.
+We've copied a lot of zipapp's code here in order to backport support for compression.
+https://docs.python.org/3.7/library/zipapp.html#cmdoption-zipapp-c
+
 """
 import contextlib
 import zipfile
@@ -55,8 +58,12 @@ def maybe_open(archive: Union[str, Path], mode: str) -> Generator[IO[Any], None,
 def create_archive(
     source: Path, target: Path, interpreter: Path, main: str, compressed: bool = True
 ) -> None:
-    """Create an application archive from SOURCE."""
+    """Create an application archive from SOURCE.
 
+    A slightly modified version of stdlib's
+    `zipapp.create_archive <https://docs.python.org/3/library/zipapp.html#zipapp.create_archive>`_
+
+    """
     # Check that main has the right format.
     mod, sep, fn = main.partition(":")
     mod_ok = all(part.isidentifier() for part in mod.split("."))
