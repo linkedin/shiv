@@ -1,15 +1,16 @@
+import sys
+
+if sys.version_info < (3, 6):
+    print('\nshiv requires at least Python 3.6!')
+    sys.exit(1)
+
 import os
 import re
 import setuptools
-import sys
 import venv
 
 from pathlib import Path
 from setuptools.command import easy_install
-
-if sys.version_info < (3, 6):
-    print('shiv requires at least Python 3.6!')
-    sys.exit(1)
 
 requirements = [
     'click==6.7',
@@ -90,12 +91,12 @@ class Venv(setuptools.Command):
                 Path(Path(__file__).absolute().parent, 'activate'),
             )
         except FileExistsError:
-            ...
+            pass
 
 
 setuptools.setup(
     name='shiv',
-    version='0.0.13',
+    version='0.0.14',
     description="A command line utility for building fully self contained Python zipapps.",
     packages=setuptools.find_packages('src'),
     package_dir={'': 'src'},
