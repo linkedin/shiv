@@ -9,6 +9,8 @@ Shiv is a command line utility for building fully self-contained Python zipapps 
 
 Shiv's primary goal is making distributing Python applications fast & easy.
 
+Full documentation can be found [here](http://shiv.readthedocs.io/en/latest/).
+
 ### how to
 
 Shiv has a few command line options of its own and accepts almost all options passable to `pip install`.
