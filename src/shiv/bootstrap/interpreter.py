@@ -1,3 +1,8 @@
+"""
+The code in this module is adapted from https://github.com/pantsbuild/pex/blob/master/pex/pex.py
+
+It is used to enter an interactive interpreter session from an executable created with ``shiv``.
+"""
 import code
 import sys
 
@@ -13,7 +18,7 @@ def execute_content(name, content):
         ast = compile(content, name, "exec", flags=0, dont_inherit=1)
     except SyntaxError:
         raise RuntimeError(
-            "Unable to parse {}. Is it a Python script? Syntax correct?".format(name)
+            f"Unable to parse {name}. Is it a Python script? Syntax correct?"
         )
 
     old_name, old_file = globals().get("__name__"), globals().get("__file__")
@@ -40,9 +45,7 @@ def execute_interpreter():
                 name, content = sys.argv[1], fp.read()
         except (FileNotFoundError, IsADirectoryError, PermissionError) as e:
             raise RuntimeError(
-                "Could not open {} in the environment [{}]: {}".format(
-                    sys.argv[1], sys.argv[0], e
-                )
+                f"Could not open {sys.argv[1]} in the environment [{sys.argv[0]}]: {e}"
             )
 
         sys.argv = sys.argv[1:]
