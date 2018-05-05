@@ -126,6 +126,7 @@ def main(
     interpreter = validate_interpreter(python)
 
     with TemporaryDirectory() as working_path:
+        cwd = Path.cwd()
         # distutils doesn't support using --target if there's a config file
         # specifying --prefix. Homebrew's Pythons include a distutils.cfg that
         # breaks `pip install --target` with any non-wheel packages. We can
@@ -143,6 +144,9 @@ def main(
             python or sys.executable,
             ["--target", site_packages.as_posix()] + list(pip_args),
         )
+
+        # return to the previous working directory
+        os.chdir(cwd)
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
