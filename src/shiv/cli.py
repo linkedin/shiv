@@ -1,5 +1,4 @@
 import importlib_resources  # type: ignore
-import os
 import shutil
 import sys
 import uuid
@@ -126,16 +125,6 @@ def main(
     interpreter = validate_interpreter(python)
 
     with TemporaryDirectory() as working_path:
-        cwd = Path.cwd()
-        # distutils doesn't support using --target if there's a config file
-        # specifying --prefix. Homebrew's Pythons include a distutils.cfg that
-        # breaks `pip install --target` with any non-wheel packages. We can
-        # work around that by creating a setup.cfg specifying an empty prefix
-        # in the directory we run `pip install` from.
-        with Path(working_path, "setup.cfg").open('w') as f:
-            f.write('[install]\nprefix=')
-        os.chdir(working_path)
-
         site_packages = Path(working_path, "site-packages")
         site_packages.mkdir(parents=True, exist_ok=True)
 
@@ -144,9 +133,6 @@ def main(
             python or sys.executable,
             ["--target", site_packages.as_posix()] + list(pip_args),
         )
-
-        # return to the previous working directory
-        os.chdir(cwd)
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:

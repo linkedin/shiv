@@ -18,3 +18,4 @@ BLACKLISTED_ARGS: Dict[Tuple[str, ...], str] = {
     ("-d", "--download"): "Shiv needs to actually perform an install, not merely a download.",
     ("--user", "--root", "--prefix"): "Which conflicts with Shiv's internal use of '--target'.",
 }
+SETUP_CFG_NO_PREFIX = "[install]\nprefix="

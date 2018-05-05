@@ -3,9 +3,11 @@ import os
 import subprocess
 import sys
 
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Generator, List
 
-from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR
+from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR, SETUP_CFG_NO_PREFIX
 
 
 @contextlib.contextmanager
@@ -16,13 +18,27 @@ def clean_pip_env() -> Generator[None, None, None]:
 
     """
     require_venv = os.environ.pop(PIP_REQUIRE_VIRTUALENV, None)
+    cwd = Path.cwd()
 
-    try:
-        yield
+    with TemporaryDirectory() as working_path:
+        # distutils doesn't support using --target if there's a config file
+        # specifying --prefix. Homebrew's Pythons include a distutils.cfg that
+        # breaks `pip install --target` with any non-wheel packages. We can
+        # work around that by creating a setup.cfg specifying an empty prefix
+        # in the directory we run `pip install` from.
+        with Path(working_path, "setup.cfg").open("w") as f:
+            f.write(SETUP_CFG_NO_PREFIX)
+        os.chdir(working_path)
 
-    finally:
-        if require_venv is not None:
-            os.environ[PIP_REQUIRE_VIRTUALENV] = require_venv
+        try:
+            yield
+
+        finally:
+            if require_venv is not None:
+                os.environ[PIP_REQUIRE_VIRTUALENV] = require_venv
+
+            # return to the previous working directory
+            os.chdir(cwd)
 
 
 def install(interpreter_path: str, args: List[str]) -> None:
