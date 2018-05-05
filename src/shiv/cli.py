@@ -23,6 +23,8 @@ from .constants import (
     INVALID_PYTHON,
 )
 
+__version__ = '0.0.17'
+
 # This is the 'knife' emoji
 SHIV = u"\U0001F52A"
 
@@ -76,6 +78,7 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
         help_option_names=["-h", "--help", "--halp"], ignore_unknown_options=True
     )
 )
+@click.version_option(version=__version__, prog_name='shiv')
 @click.option("--entry-point", "-e", default=None, help="The entry point to invoke.")
 @click.option(
     "--console-script", "-c", default=None, help="The console_script to invoke."
