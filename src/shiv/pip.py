@@ -28,6 +28,7 @@ def clean_pip_env() -> Generator[None, None, None]:
         # in the directory we run `pip install` from.
         with Path(working_path, "setup.cfg").open("w") as f:
             f.write(SETUP_CFG_NO_PREFIX)
+
         os.chdir(working_path)
 
         try:
@@ -57,6 +58,10 @@ def install(interpreter_path: str, args: List[str]) -> None:
 
     """
     with clean_pip_env():
+
+        # convert '.' to absolute path if it exists
+        if '.' in args:
+            args[args.index('.')] = Path.cwd().absolute().as_posix()
 
         process = subprocess.Popen(
             [interpreter_path, "-m", "pip", "install"] + args,
