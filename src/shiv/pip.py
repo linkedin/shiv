@@ -43,7 +43,7 @@ def install(interpreter_path: str, args: List[str]) -> None:
     with clean_pip_env():
 
         process = subprocess.Popen(
-            [interpreter_path, "-m", "pip", "install"] + args,
+            [interpreter_path, "-m", "pip", "--disable-pip-version-check", "install"] + args,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
