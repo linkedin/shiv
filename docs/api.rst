@@ -40,13 +40,6 @@ bootstrap
     :members:
     :show-inheritance:
 
-bootstrap.utils
----------------
-
-.. automodule:: shiv.bootstrap.utils
-    :members:
-    :show-inheritance:
-
 bootstrap.environment
 ---------------------
 

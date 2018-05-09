@@ -1,14 +1,21 @@
+import compileall
 import site
 import sys
 import shutil
+import zipfile
 
 from importlib import import_module
 from pathlib import Path
-import compileall
 
 from .environment import Environment
 from .interpreter import execute_interpreter
-from .utils import current_zipfile
+
+
+def current_zipfile():
+    """A function to vend the current zipfile, if any"""
+    if zipfile.is_zipfile(sys.argv[0]):
+        fd = open(sys.argv[0], "rb")
+        return zipfile.ZipFile(fd)
 
 
 def import_string(import_name):
