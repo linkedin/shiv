@@ -9,14 +9,6 @@ from typing import Generator, List
 from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR, DISTUTILS_CFG_NO_PREFIX
 
 
-def pydistutils_cfg() -> Path:
-    """distutils can be configured by ``pydistutils.cfg`` or ``.pydistutils.cfg`` in a user's home directory."""
-    try:
-        return next(Path.home().glob("*pydistutils.cfg"))
-    except StopIteration:
-        return Path.home() / ".pydistutils.cfg"
-
-
 @contextlib.contextmanager
 def clean_pip_env() -> Generator[None, None, None]:
     """A context manager for temporarily removing 'PIP_REQUIRE_VIRTUALENV' from the environment.
@@ -26,8 +18,11 @@ def clean_pip_env() -> Generator[None, None, None]:
     """
     require_venv = os.environ.pop(PIP_REQUIRE_VIRTUALENV, None)
 
-    pydistutils = pydistutils_cfg()
+    # based on
+    # https://github.com/python/cpython/blob/8cf4b34b3665b8bb39ea7111e6b5c3410899d3e4/Lib/distutils/dist.py#L333-L363
+    pydistutils = Path.home() / (".pydistutils.cfg" if os.name == "posix" else "pydistutils.cfg")
     pydistutils_already_existed = pydistutils.exists()
+
     if not pydistutils_already_existed:
         # distutils doesn't support using --target if there's a config file
         # specifying --prefix. Homebrew's Pythons include a distutils.cfg that
