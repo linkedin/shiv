@@ -9,6 +9,14 @@ from typing import Generator, List
 from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR, DISTUTILS_CFG_NO_PREFIX
 
 
+def pydistutils_cfg() -> Path:
+    """distutils can be configured by ``pydistutils.cfg`` or ``.pydistutils.cfg`` in a user's home directory."""
+    try:
+        return next(Path.home().glob("*pydistutils.cfg"))
+    except StopIteration:
+        return Path.home() / ".pydistutils.cfg"
+
+
 @contextlib.contextmanager
 def clean_pip_env() -> Generator[None, None, None]:
     """A context manager for temporarily removing 'PIP_REQUIRE_VIRTUALENV' from the environment.
@@ -18,15 +26,15 @@ def clean_pip_env() -> Generator[None, None, None]:
     """
     require_venv = os.environ.pop(PIP_REQUIRE_VIRTUALENV, None)
 
-    distutils_cfg = Path.home() / ".pydistutils.cfg"
-    distutils_cfg_already_existed = distutils_cfg.exists()
-    if not distutils_cfg_already_existed:
+    pydistutils = pydistutils_cfg()
+    pydistutils_already_existed = pydistutils.exists()
+    if not pydistutils_already_existed:
         # distutils doesn't support using --target if there's a config file
         # specifying --prefix. Homebrew's Pythons include a distutils.cfg that
         # breaks `pip install --target` with any non-wheel packages. We can
         # work around that by creating a temporary ~/.pydistutils.cfg
         # specifying an empty prefix.
-        distutils_cfg.write_text(DISTUTILS_CFG_NO_PREFIX)
+        pydistutils.write_text(DISTUTILS_CFG_NO_PREFIX)
 
     try:
         yield
@@ -34,9 +42,9 @@ def clean_pip_env() -> Generator[None, None, None]:
     finally:
         if require_venv is not None:
             os.environ[PIP_REQUIRE_VIRTUALENV] = require_venv
-        if not distutils_cfg_already_existed:
+        if not pydistutils_already_existed:
             # remove the temporary ~/.pydistutils.cfg
-            distutils_cfg.unlink()
+            pydistutils.unlink()
 
 
 def install(interpreter_path: str, args: List[str]) -> None:

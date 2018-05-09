@@ -8,18 +8,18 @@ from shiv.constants import PIP_REQUIRE_VIRTUALENV, DISTUTILS_CFG_NO_PREFIX
 from shiv.pip import clean_pip_env
 
 
-@pytest.mark.parametrize("distutils_cfg_exists", [True, False])
-def test_clean_pip_env(monkeypatch, tmpdir, distutils_cfg_exists):
+@pytest.mark.parametrize("pydistutils_exists", ["pydistutils.cfg", ".pydistutils.cfg", None])
+def test_clean_pip_env(monkeypatch, tmpdir, pydistutils_exists):
     home = tmpdir.join("home").ensure(dir=True)
     monkeypatch.setenv("HOME", home)
 
-    distutils_cfg = Path(home) / ".pydistutils.cfg"
-
-    if distutils_cfg_exists:
-        distutils_contents = "foobar"
-        distutils_cfg.write_text(distutils_contents)
+    if pydistutils_exists:
+        pydistutils = Path.home() / pydistutils_exists
+        pydistutils_contents = "foobar"
+        pydistutils.write_text(pydistutils_contents)
     else:
-        distutils_contents = None
+        pydistutils = Path.home() / ".pydistutils.cfg"
+        pydistutils_contents = None
 
     before_env_var = "foo"
     monkeypatch.setenv(PIP_REQUIRE_VIRTUALENV, before_env_var)
@@ -27,15 +27,15 @@ def test_clean_pip_env(monkeypatch, tmpdir, distutils_cfg_exists):
     with clean_pip_env():
         assert PIP_REQUIRE_VIRTUALENV not in os.environ
 
-        if not distutils_cfg_exists:
+        if not pydistutils_exists:
             # ~/.pydistutils.cfg was created
-            assert distutils_cfg.read_text() == DISTUTILS_CFG_NO_PREFIX
+            assert pydistutils.read_text() == DISTUTILS_CFG_NO_PREFIX
         else:
             # ~/.pydistutils.cfg was not modified
-            assert distutils_cfg.read_text() == distutils_contents
+            assert pydistutils.read_text() == pydistutils_contents
 
     assert os.environ.get(PIP_REQUIRE_VIRTUALENV) == before_env_var
 
     # If a temporary ~/.pydistutils.cfg was created, it was deleted. If
     # ~/.pydistutils.cfg already existed, it still exists.
-    assert distutils_cfg.exists() == distutils_cfg_exists
+    assert pydistutils.exists() == bool(pydistutils_exists)
