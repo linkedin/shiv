@@ -45,11 +45,20 @@ class TestCLI:
         # assert we got the correct reason
         assert strip_header(result.output) == DISALLOWED_PIP_ARGS.format(arg=arg, reason=reason)
 
-    def test_hello_world(self, tmpdir, runner, package_location):
+    # /usr/local/bin/python3.6 is a test for https://github.com/linkedin/shiv/issues/16
+    @pytest.mark.parametrize('interpreter', [None, Path('/usr/local/bin/python3.6')])
+    def test_hello_world(self, tmpdir, runner, package_location, interpreter):
+        if interpreter is not None and not interpreter.exists():
+            pytest.skip(f'Interpreter "{interpreter}" does not exist')
+
         with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
             output_file = Path(tmpdir, 'test.pyz')
 
-            result = runner(['-e', 'hello:main', '-o', output_file.as_posix(), package_location.as_posix()])
+            args = ['-e', 'hello:main', '-o', output_file.as_posix(), package_location.as_posix()]
+            if interpreter is not None:
+                args = ['-p', interpreter.as_posix()] + args
+
+            result = runner(args)
 
             # check that the command successfully completed
             assert result.exit_code == 0
