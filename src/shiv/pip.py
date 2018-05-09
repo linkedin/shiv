@@ -18,8 +18,7 @@ def clean_pip_env() -> Generator[None, None, None]:
     """
     require_venv = os.environ.pop(PIP_REQUIRE_VIRTUALENV, None)
 
-    # based on
-    # https://github.com/python/cpython/blob/8cf4b34b3665b8bb39ea7111e6b5c3410899d3e4/Lib/distutils/dist.py#L333-L363
+    # https://github.com/python/cpython/blob/master/Lib/distutils/dist.py#L333-L363
     pydistutils = Path.home() / (".pydistutils.cfg" if os.name == "posix" else "pydistutils.cfg")
     pydistutils_already_existed = pydistutils.exists()
 
@@ -37,6 +36,7 @@ def clean_pip_env() -> Generator[None, None, None]:
     finally:
         if require_venv is not None:
             os.environ[PIP_REQUIRE_VIRTUALENV] = require_venv
+
         if not pydistutils_already_existed:
             # remove the temporary ~/.pydistutils.cfg
             pydistutils.unlink()
