@@ -4,11 +4,11 @@ import shutil
 
 from importlib import import_module
 from pathlib import Path
-from py_compile import compile
+import compileall
 
 from .environment import Environment
 from .interpreter import execute_interpreter
-from .utils import current_zipfile, silence_stderr
+from .utils import current_zipfile
 
 
 def import_string(import_name):
@@ -70,9 +70,7 @@ def extract_site_packages(archive, target_path):
             archive.extract(filename, target_path_tmp)
 
     # compile pyc with stderr silenced
-    with silence_stderr():
-        for py_file in target_path_tmp.glob('**/*.py'):
-            compile(py_file)
+    compileall.compile_dir(target_path_tmp, quiet=2, workers=0)
 
     # atomic move
     shutil.move(target_path_tmp.as_posix(), target_path.as_posix())
