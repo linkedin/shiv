@@ -5,15 +5,15 @@
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
 
 # shiv 🔪
-Shiv is a command line utility for building fully self-contained Python zipapps as outlined in [PEP 441](https://www.python.org/dev/peps/pep-0441/), but with all their dependencies included!
+shiv is a command line utility for building fully self-contained Python zipapps as outlined in [PEP 441](https://www.python.org/dev/peps/pep-0441/), but with all their dependencies included!
 
-Shiv's primary goal is making distributing Python applications fast & easy.
+shiv's primary goal is making distributing Python applications fast & easy.
 
 Full documentation can be found [here](http://shiv.readthedocs.io/en/latest/).
 
 ### how to
 
-Shiv has a few command line options of its own and accepts almost all options passable to `pip install`.
+shiv has a few command line options of its own and accepts almost all options passable to `pip install`.
 
 ##### simple cli example
 
@@ -87,9 +87,9 @@ tox
 
 ### gotchas
 
-Zipapps created with Shiv are not cross-compatible with other architectures. For example, a `pyz`
+Zipapps created with shiv are not cross-compatible with other architectures. For example, a `pyz`
  file built on a Mac will only work on other Macs, likewise for RHEL, etc.
 
-Zipapps created with Shiv *will* extract themselves into `~/.shiv`, unless overridden via
+Zipapps created with shiv *will* extract themselves into `~/.shiv`, unless overridden via
 `SHIV_ROOT`. If you create many utilities with shiv, you may want to ocassionally clean this
 directory.
