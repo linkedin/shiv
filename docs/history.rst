@@ -45,6 +45,6 @@ The primary differences between PEX and shiv are:
   packages, real filesystem access, etc.
 
 Because we optimize for a shorter ``sys.path`` and don't include ``pkg_resources`` in the critical
-path, executales created with ``shiv`` can outperform ones created with PEX by almost 2x. In most
+path, executables created with ``shiv`` can outperform ones created with PEX by almost 2x. In most
 cases the executables created with ``shiv`` are even faster than running a script from within a
 virtualenv!
