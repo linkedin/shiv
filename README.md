@@ -4,7 +4,9 @@
 [![Documentation Status](https://readthedocs.org/projects/shiv/badge/?version=latest)](http://shiv.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
 
-# shiv 🔪
+![snake](logo.png)
+
+# shiv
 shiv is a command line utility for building fully self-contained Python zipapps as outlined in [PEP 441](https://www.python.org/dev/peps/pep-0441/), but with all their dependencies included!
 
 shiv's primary goal is making distributing Python applications fast & easy.
@@ -93,3 +95,7 @@ Zipapps created with shiv are not cross-compatible with other architectures. For
 Zipapps created with shiv *will* extract themselves into `~/.shiv`, unless overridden via
 `SHIV_ROOT`. If you create many utilities with shiv, you may want to ocassionally clean this
 directory.
+
+---
+
+Logo by Juliette Carvalho
