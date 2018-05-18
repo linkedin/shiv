@@ -94,10 +94,20 @@ class Venv(setuptools.Command):
             pass
 
 
+def readme():
+    with open('README.md') as f:
+        return f.read()
+
+
 setuptools.setup(
     name='shiv',
-    version='0.0.19',
+    version='0.0.25',
     description="A command line utility for building fully self contained Python zipapps.",
+    long_description=readme(),
+    long_description_content_type='text/markdown',
+    author="Loren Carvalho",
+    author_email="lcarvalho@linkedin.com",
+    url="https://github.com/linkedin/shiv",
     packages=setuptools.find_packages('src'),
     package_dir={'': 'src'},
     install_requires=requirements,

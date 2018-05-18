@@ -19,12 +19,12 @@ shiv has a few command line options of its own and accepts almost all options pa
 
 ##### simple cli example
 
-Creating an executable of aws-cli with shiv:
+Creating an executable of pipenv with shiv:
 
 ```sh
-$ shiv -e awscli.clidriver:main -o aws awscli
-$ ./aws --version
-aws-cli/1.14.2 Python/3.6.1 Linux/3.10.0-514.21.2.el7.x86_64 botocore/1.8.6
+$ shiv -c pipenv -o ~/bin/pipenv pipenv pew
+$ ~/bin/pipenv --version
+pipenv, version 2018.05.18
 ```
 
 ##### complex example involving a wheel cache
@@ -97,5 +97,13 @@ Zipapps created with shiv *will* extract themselves into `~/.shiv`, unless overr
 directory.
 
 ---
+
+### acknowledgements
+
+Similar projects:
+
+* [PEX](https://github.com/pantsbuild/pex)
+* [pyzzer](https://pypi.org/project/pyzzer/#description)
+* [superzippy](https://github.com/brownhead/superzippy)
 
 Logo by Juliette Carvalho
