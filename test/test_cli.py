@@ -1,5 +1,4 @@
 import subprocess
-import sys
 import tempfile
 
 from pathlib import Path
@@ -8,7 +7,7 @@ import pytest
 
 from click.testing import CliRunner
 
-from shiv.cli import main, validate_interpreter
+from shiv.cli import main
 from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS, NO_OUTFILE, BLACKLISTED_ARGS
 
 
@@ -69,13 +68,3 @@ class TestCLI:
             # now run the produced zipapp
             with subprocess.Popen([output_file], stdout=subprocess.PIPE) as proc:
                 assert proc.stdout.read().decode() == 'hello world\n'
-
-    def test_interpreter(self):
-        assert validate_interpreter(None) == validate_interpreter() == Path(sys.executable)
-
-        with pytest.raises(SystemExit):
-            validate_interpreter(Path('/usr/local/bogus_python'))
-
-    @pytest.mark.skipif(len(sys.executable) > 128, reason='only run this test is the shebang is not too long')
-    def test_real_interpreter(self):
-        assert validate_interpreter(Path(sys.executable)) == Path(sys.executable)

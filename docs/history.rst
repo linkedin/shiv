@@ -36,9 +36,11 @@ injecting said dependencies at runtime. We have to credit the great work by @wic
 The primary differences between PEX and shiv are:
 
 * ``shiv`` completey avoids the use of ``pkg_resources``. If it is included by a transitive
-  dependency, the performance implications are mitigated by limiting the length of ``sys.path`` and
-  always including the `-s <https://docs.python.org/3/using/cmdline.html#cmdoption-s>`_ and
-  `-E <https://docs.python.org/3/using/cmdline.html#cmdoption-e>`_ Python interpreter flags.
+  dependency, the performance implications are mitigated by limiting the length of ``sys.path``.
+  Internally, at LinkedIn, we always include the
+  `-s <https://docs.python.org/3/using/cmdline.html#cmdoption-s>`_ and
+  `-E <https://docs.python.org/3/using/cmdline.html#cmdoption-e>`_ Python interpreter flags by
+  specifying ``--python "/path/to/python -sE"``, which ensures a clean environment.
 * Instead of shipping our binary with downloaded wheels inside, we package an entire site-packages
   directory, as installed by ``pip``. We then bootstrap that directory post-extraction via the
   stdlib's ``site.addsitedir`` function. That way, everything works out of the box: namespace

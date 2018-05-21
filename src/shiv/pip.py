@@ -42,14 +42,14 @@ def clean_pip_env() -> Generator[None, None, None]:
             pydistutils.unlink()
 
 
-def install(interpreter_path: str, args: List[str]) -> None:
+def install(args: List[str]) -> None:
     """`pip install` as a function.
 
     Accepts a list of pip arguments.
 
     .. code-block:: py
 
-        >>> install('/usr/local/bin/python3', ['numpy', '--target', 'site-packages'])
+        >>> install(['numpy', '--target', 'site-packages'])
         Collecting numpy
         Downloading numpy-1.13.3-cp35-cp35m-manylinux1_x86_64.whl (16.9MB)
             100% || 16.9MB 53kB/s
@@ -60,7 +60,7 @@ def install(interpreter_path: str, args: List[str]) -> None:
     with clean_pip_env():
 
         process = subprocess.Popen(
-            [interpreter_path, "-m", "pip", "--disable-pip-version-check", "install"] + args,
+            [sys.executable, "-m", "pip", "--disable-pip-version-check", "install"] + args,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
         )
