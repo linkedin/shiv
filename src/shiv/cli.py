@@ -20,7 +20,6 @@ from .constants import (
     NO_PIP_ARGS,
     NO_OUTFILE,
     NO_ENTRY_POINT,
-    INVALID_PYTHON,
 )
 
 __version__ = '0.0.25'
@@ -42,24 +41,6 @@ def find_entry_point(site_packages: Path, console_script: str) -> str:
     config_parser = ConfigParser()
     config_parser.read(site_packages.rglob("entry_points.txt"))
     return config_parser["console_scripts"][console_script]
-
-
-def validate_interpreter(interpreter_path: Optional[str] = None) -> Path:
-    """Ensure that the interpreter is a real path, not a symlink.
-
-    If no interpreter is given, default to `sys.exectuable`
-
-    :param interpreter_path: A path to a Python interpreter.
-    """
-    real_path = Path(sys.executable) if interpreter_path is None else Path(
-        interpreter_path
-    )
-
-    if real_path.exists():
-        return real_path
-
-    else:
-        sys.exit(INVALID_PYTHON.format(path=real_path))
 
 
 def copy_bootstrap(bootstrap_target: Path) -> None:
@@ -124,16 +105,12 @@ def main(
                     )
                 )
 
-    # validate supplied python (if any)
-    interpreter = validate_interpreter(python)
-
     with TemporaryDirectory() as working_path:
         site_packages = Path(working_path, "site-packages")
         site_packages.mkdir(parents=True, exist_ok=True)
 
         # install deps into staged site-packages
         pip.install(
-            python or sys.executable,
             ["--target", site_packages.as_posix()] + list(pip_args),
         )
 
@@ -163,7 +140,7 @@ def main(
         builder.create_archive(
             Path(working_path),
             target=Path(output_file),
-            interpreter=interpreter,
+            interpreter=python or sys.executable,
             main="_bootstrap:bootstrap",
             compressed=compressed,
         )

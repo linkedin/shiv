@@ -14,6 +14,8 @@ import zipapp
 from pathlib import Path
 from typing import Any, IO, Generator, Union
 
+from .constants import BINPRM_ERROR
+
 # Typical maximum length for a shebang line
 BINPRM_BUF_SIZE = 128
 
@@ -25,24 +27,17 @@ import {module}
 """
 
 
-def write_file_prefix(f: IO[Any], interpreter_path: Path) -> None:
+def write_file_prefix(f: IO[Any], interpreter: str) -> None:
     """Write a shebang line.
 
-    .. note::
-
-        Shiv explicitly uses `-sE` as start up flags to prevent contamination of sys.path.
-
     :param f: An open file handle.
-    :param interpreter_path: A path to a python interpreter.
+    :param interpreter: A path to a python interpreter.
     """
+    # if the provided path is too long for a shebang we should error out
+    if len(interpreter) > BINPRM_BUF_SIZE:
+        sys.exit(BINPRM_ERROR)
 
-    # fall back to /usr/bin/env if the interp path is too long
-    if len(interpreter_path.as_posix()) > BINPRM_BUF_SIZE:
-        shebang = f"/usr/bin/env {interpreter_path.name}"
-    else:
-        shebang = interpreter_path.as_posix()
-
-    f.write(b"#!" + shebang.encode(sys.getfilesystemencoding()) + b" -sE\n")
+    f.write(b"#!" + interpreter.encode(sys.getfilesystemencoding()) + b"\n")
 
 
 @contextlib.contextmanager
@@ -56,7 +51,11 @@ def maybe_open(archive: Union[str, Path], mode: str) -> Generator[IO[Any], None,
 
 
 def create_archive(
-    source: Path, target: Path, interpreter: Path, main: str, compressed: bool = True
+    source: Path,
+    target: Path,
+    interpreter: str,
+    main: str,
+    compressed: bool = True
 ) -> None:
     """Create an application archive from SOURCE.
 
@@ -95,5 +94,4 @@ def create_archive(
             z.writestr("__main__.py", main_py.encode("utf-8"))
 
     # make executable
-    if interpreter and not hasattr(target, "write"):
-        target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)

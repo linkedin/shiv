@@ -8,6 +8,8 @@ from code import interact
 from uuid import uuid4
 from zipfile import ZipFile
 
+import pytest
+
 from unittest import mock
 
 from shiv.bootstrap import import_string, current_zipfile, cache_path
@@ -32,6 +34,14 @@ class TestBootstrap:
         func = import_string('os.path:join')
         from os.path import join
         assert func == join
+
+        # test something already imported
+        import shiv
+        assert import_string('shiv') == shiv == sys.modules['shiv']
+
+        # test bogus imports raise properly
+        with pytest.raises(ImportError):
+            import_string('this is bogus!')
 
     def test_is_zipfile(self, zip_location):
         assert not current_zipfile()
