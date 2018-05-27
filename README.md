@@ -93,7 +93,7 @@ Zipapps created with shiv are not cross-compatible with other architectures. For
  file built on a Mac will only work on other Macs, likewise for RHEL, etc.
 
 Zipapps created with shiv *will* extract themselves into `~/.shiv`, unless overridden via
-`SHIV_ROOT`. If you create many utilities with shiv, you may want to ocassionally clean this
+`SHIV_ROOT`. If you create many utilities with shiv, you may want to occasionally clean this
 directory.
 
 ---

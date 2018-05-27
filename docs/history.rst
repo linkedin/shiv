@@ -35,7 +35,7 @@ injecting said dependencies at runtime. We have to credit the great work by @wic
 
 The primary differences between PEX and shiv are:
 
-* ``shiv`` completey avoids the use of ``pkg_resources``. If it is included by a transitive
+* ``shiv`` completely avoids the use of ``pkg_resources``. If it is included by a transitive
   dependency, the performance implications are mitigated by limiting the length of ``sys.path``.
   Internally, at LinkedIn, we always include the
   `-s <https://docs.python.org/3/using/cmdline.html#cmdoption-s>`_ and
