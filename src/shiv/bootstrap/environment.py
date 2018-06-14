@@ -12,6 +12,7 @@ from pathlib import Path
 class Environment:
     INTERPRETER = "SHIV_INTERPRETER"
     ENTRY_POINT = "SHIV_ENTRY_POINT"
+    MODULE = "SHIV_MODULE"
     ROOT = "SHIV_ROOT"
     FORCE_EXTRACT = "SHIV_FORCE_EXTRACT"
 
@@ -39,7 +40,10 @@ class Environment:
 
     @property
     def entry_point(self):
-        return os.environ.get(self.ENTRY_POINT, self._entry_point)
+        return os.environ.get(
+            self.ENTRY_POINT,
+            os.environ.get(self.MODULE, self._entry_point),
+        )
 
     @property
     def interpreter(self):
