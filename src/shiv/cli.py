@@ -1,14 +1,20 @@
 import importlib_resources  # type: ignore
+import os
 import shutil
 import sys
 import uuid
 
+from collections import defaultdict
 from configparser import ConfigParser
+from itertools import chain
 from pathlib import Path
+from shutil import rmtree
 from tempfile import TemporaryDirectory
 from typing import Optional, List
 
 import click
+
+from wheel.install import WheelFile
 
 from . import pip
 from . import builder
@@ -52,6 +58,44 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
         if importlib_resources.is_resource(bootstrap, bootstrap_file):
             with importlib_resources.path(bootstrap, bootstrap_file) as f:
                 shutil.copyfile(f.absolute(), bootstrap_target / f.name)
+
+
+def install_wheels(wheel_dir: Path, site_packages: Path) -> None:
+    """Install wheels from wheel_dir into site_packages"""
+    to_install = [WheelFile(req) for req in wheel_dir.glob('*.whl')]
+
+    # We now have a list of wheels to install
+    print("Installing:")
+
+    # Ensure we always put stuff in site-packages no matter what
+    overrides = {
+        'purelib': str(site_packages),
+        'platlib': str(site_packages),
+        'headers': str(Path(site_packages, '..', 'headers')),
+        'scripts': str(Path(site_packages, '..', 'scripts')),
+        'data': str(Path(site_packages, '..', 'data')),
+    }
+    for wf in to_install:
+        print("    {}".format(wf.filename))
+        wf.install(force=True, overrides=overrides)
+        wf.zipfile.close()
+
+
+def build_wheels(wheel_dir: Path) -> None:
+    """Build wheels for source packages in wheel_dir"""
+    to_build = [str(path) for path in chain(wheel_dir.glob('*.tar.*'),
+                                            wheel_dir.glob('*.zip'),
+                                            wheel_dir.glob('*.tar'))]
+
+    # build missing wheels
+    if to_build:
+        pip.wheel(
+            ["--wheel-dir", str(wheel_dir), '--find-links', str(wheel_dir)] + to_build,
+        )
+
+    # remove source packages
+    for sdist in to_build:
+        os.unlink(sdist)
 
 
 @click.command(
@@ -106,13 +150,25 @@ def main(
                 )
 
     with TemporaryDirectory() as working_path:
+        wheel_dir = Path(working_path, "wheelhouse")
+        wheel_dir.mkdir(parents=True, exist_ok=True)
+
         site_packages = Path(working_path, "site-packages")
         site_packages.mkdir(parents=True, exist_ok=True)
 
-        # install deps into staged site-packages
-        pip.install(
-            ["--target", site_packages.as_posix()] + list(pip_args),
+        # download wheels and sdists into wheel_dir
+        pip.download(
+            ["--dest", str(wheel_dir)] + list(pip_args),
         )
+
+        # build missing wheels
+        build_wheels(wheel_dir)
+
+        # install deps into staged site-packages
+        install_wheels(wheel_dir, site_packages)
+
+        # remove wheel dir
+        rmtree(str(wheel_dir))
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
