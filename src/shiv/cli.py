@@ -43,6 +43,11 @@ def find_entry_point(site_packages: Path, console_script: str) -> str:
     return config_parser["console_scripts"][console_script]
 
 
+class UserError(Exception):
+
+    pass
+
+
 def copy_bootstrap(bootstrap_target: Path) -> None:
     """Copy bootstrap code from shiv into the pyz.
 
@@ -89,17 +94,40 @@ def main(
     if not quiet:
         click.secho(" shiv! " + SHIV, bold=True)
 
+    try:
+        build_output(
+            output_file,
+            entry_point,
+            console_script,
+            python,
+            compressed,
+            pip_args,
+        )
+    except UserError as e:
+        sys.exit(str(e))
+
+    if not quiet:
+        click.secho(" done ", bold=True)
+
+def build_output(
+    output_file: str,
+    entry_point: Optional[str],
+    console_script: Optional[str],
+    python: Optional[str],
+    compressed: bool,
+    pip_args: List[str],
+) -> None:
     if not pip_args:
-        sys.exit(NO_PIP_ARGS)
+        raise UserError(NO_PIP_ARGS)
 
     if output_file is None:
-        sys.exit(NO_OUTFILE)
+        raise UserError(NO_OUTFILE)
 
     # check for disallowed pip arguments
     for blacklisted_arg in BLACKLISTED_ARGS:
         for supplied_arg in pip_args:
             if supplied_arg in blacklisted_arg:
-                sys.exit(
+                raise UserError(
                     DISALLOWED_PIP_ARGS.format(
                         arg=supplied_arg, reason=BLACKLISTED_ARGS[blacklisted_arg]
                     )
@@ -119,7 +147,8 @@ def main(
             try:
                 entry_point = find_entry_point(site_packages, console_script)
             except KeyError:
-                sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
+                raise UserError(
+                    NO_ENTRY_POINT.format(entry_point=console_script))
 
         # create runtime environment metadata
         env = Environment(
@@ -144,6 +173,3 @@ def main(
             main="_bootstrap:bootstrap",
             compressed=compressed,
         )
-
-    if not quiet:
-        click.secho(" done ", bold=True)
