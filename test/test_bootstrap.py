@@ -44,7 +44,8 @@ class TestBootstrap:
             import_string('this is bogus!')
 
     def test_is_zipfile(self, zip_location):
-        assert not current_zipfile()
+        with mock.patch.object(sys, 'argv', [__file__]):
+            assert not current_zipfile()
 
         with mock.patch.object(sys, 'argv', [zip_location]):
             assert isinstance(current_zipfile(), ZipFile)
