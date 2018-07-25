@@ -1,0 +1,33 @@
+environment:
+  matrix:
+    - PYTHON: "C:\\Python36-x64"
+      TOXENV: "py36"
+
+    - PYTHON: "C:\\Python37-x64"
+      TOXENV: "py37"
+
+skip_branch_with_pr: true
+
+install:
+  # prepend the current Python to the PATH
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
+  # check that we have the expected version and architecture for Python
+  - python --version
+  - python -c "import struct; print(struct.calcsize('P') * 8)"
+
+  # upgrade pip to avoid out-of-date warnings
+  - python -m pip install --disable-pip-version-check --upgrade pip
+
+  # install tox to run test suite in a virtual environment
+  - pip install tox
+
+build: false
+
+test_script:
+  - tox -e py
+
+on_success:
+  # upload test coverage to Coveralls
+  - pip install coveralls
+  - coveralls
