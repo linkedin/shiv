@@ -94,4 +94,5 @@ def create_archive(
             z.writestr("__main__.py", main_py.encode("utf-8"))
 
     # make executable
+    # NOTE on windows this is no-op
     target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
