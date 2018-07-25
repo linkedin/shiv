@@ -25,7 +25,9 @@ def test_clean_pip_env(monkeypatch, tmpdir, pydistutils_path, os_name):
         pydistutils_contents = "foobar"
         pydistutils.write_text(pydistutils_contents)
     else:
-        pydistutils = Path.home() / ".pydistutils.cfg"
+        pydistutils = Path.home() / (
+            ".pydistutils.cfg" if os.name == "posix" else "pydistutils.cfg"
+        )
         pydistutils_contents = None
 
     before_env_var = "foo"
