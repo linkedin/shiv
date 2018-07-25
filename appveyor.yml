@@ -27,7 +27,9 @@ build: false
 test_script:
   - tox -e py
 
-on_success:
-  # upload test coverage to Coveralls
-  - pip install coveralls
-  - coveralls
+# TODO enable coveralls for Appveyor by setting secure COVERALLS_REPO_TOKEN
+# https://github.com/coveralls-net/coveralls.net/wiki/CI-Integrations#appveyor
+# on_success:
+#   # upload test coverage to Coveralls
+#   - pip install coveralls
+#   - coveralls
