@@ -1,3 +1,4 @@
+import os
 import subprocess
 import tempfile
 
@@ -66,5 +67,5 @@ class TestCLI:
             assert output_file.exists()
 
             # now run the produced zipapp
-            with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE) as proc:
-                assert proc.stdout.read().decode() == 'hello world\n'
+            with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE, shell=True) as proc:
+                assert proc.stdout.read().decode() == "hello world" + os.linesep
