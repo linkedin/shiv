@@ -66,5 +66,5 @@ class TestCLI:
             assert output_file.exists()
 
             # now run the produced zipapp
-            with subprocess.Popen([output_file], stdout=subprocess.PIPE) as proc:
+            with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE) as proc:
                 assert proc.stdout.read().decode() == 'hello world\n'
