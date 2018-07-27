@@ -80,7 +80,7 @@ def extract_site_packages(archive, target_path):
     compileall.compile_dir(target_path_tmp, quiet=2, workers=0)
 
     # atomic move
-    shutil.move(target_path_tmp.as_posix(), target_path.as_posix())
+    shutil.move(str(target_path_tmp), str(target_path))
 
 
 def bootstrap():
