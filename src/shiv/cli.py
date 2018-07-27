@@ -111,7 +111,7 @@ def main(
 
         # install deps into staged site-packages
         pip.install(
-            ["--target", site_packages.as_posix()] + list(pip_args),
+            ["--target", str(site_packages)] + list(pip_args),
         )
 
         # if entry_point is a console script, get the callable

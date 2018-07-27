@@ -54,9 +54,9 @@ class TestCLI:
         with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
             output_file = Path(tmpdir, 'test.pyz')
 
-            args = ['-e', 'hello:main', '-o', output_file.as_posix(), package_location.as_posix()]
+            args = ['-e', 'hello:main', '-o', str(output_file), str(package_location)]
             if interpreter is not None:
-                args = ['-p', interpreter.as_posix()] + args
+                args = ['-p', str(interpreter)] + args
 
             result = runner(args)
 

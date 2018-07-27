@@ -88,7 +88,7 @@ def create_archive(
                     continue
 
                 arcname = child.relative_to(source)
-                z.write(child.as_posix(), arcname.as_posix())
+                z.write(str(child), str(arcname))
 
             # write main
             z.writestr("__main__.py", main_py.encode("utf-8"))
