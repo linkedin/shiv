@@ -1,5 +1,4 @@
 import compileall
-import site
 import sys
 import shutil
 import zipfile
@@ -99,8 +98,8 @@ def bootstrap():
     if not site_packages.exists() or env.force_extract:
         extract_site_packages(archive, site_packages.parent)
 
-    # stdlib blessed way of extending path
-    site.addsitedir(site_packages)
+    # shiv site_packages take precedence over anything else (eg: dist-packages)
+    sys.path.insert(1, str(site_packages))
 
     # do entry point import and call
     if env.entry_point is not None and env.interpreter is None:
