@@ -1,4 +1,5 @@
 import compileall
+import site
 import sys
 import shutil
 import zipfile
@@ -98,8 +99,12 @@ def bootstrap():
     if not site_packages.exists() or env.force_extract:
         extract_site_packages(archive, site_packages.parent)
 
-    # shiv site_packages take precedence over anything else (eg: dist-packages)
+    # prepend shiv site-packages so it takes precedence over anything else (eg: dist-packages)
     sys.path.insert(1, str(site_packages))
+
+    # but also append site-packages using the stdlib blessed way of extending path
+    # so as to handle .pth files correctly
+    site.addsitedir(site_packages)
 
     # do entry point import and call
     if env.entry_point is not None and env.interpreter is None:
