@@ -3,6 +3,9 @@ import os
 import subprocess
 import sys
 
+import click
+import crayons
+
 from pathlib import Path
 from typing import Generator, List
 
@@ -67,7 +70,7 @@ def install(args: List[str]) -> None:
 
         for output in process.stdout:
             if output:
-                print(output.decode().rstrip())
+                click.echo(crayons.blue(output.decode().rstrip()))
 
         if process.wait() > 0:
-            sys.exit(PIP_INSTALL_ERROR)
+            sys.exit(crayons.red(PIP_INSTALL_ERROR))

@@ -16,6 +16,8 @@ requirements = [
     'click==6.7',
     'pip>=9.0.1',
     'importlib_resources>=0.4',
+    'crayons>=0.1.2',
+    'blindspin>=2.0.1'
 ]
 
 # The following template and classmethod are copied from

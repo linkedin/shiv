@@ -9,6 +9,8 @@ from tempfile import TemporaryDirectory
 from typing import Optional, List
 
 import click
+import crayons
+from blindspin import spinner
 
 from . import pip
 from . import builder
@@ -87,27 +89,34 @@ def main(
     quiet = "-q" in pip_args or '--quiet' in pip_args
 
     if not quiet:
-        click.secho(" shiv! " + SHIV, bold=True)
+        click.secho("shiv! " + SHIV, bold=True)
 
     if not pip_args:
-        sys.exit(NO_PIP_ARGS)
+        sys.exit(crayons.red(NO_PIP_ARGS))
 
     if output_file is None:
-        sys.exit(NO_OUTFILE)
+        sys.exit(crayons.red(NO_OUTFILE))
 
     # check for disallowed pip arguments
     for blacklisted_arg in BLACKLISTED_ARGS:
         for supplied_arg in pip_args:
             if supplied_arg in blacklisted_arg:
-                sys.exit(
+                sys.exit(crayons.red(
                     DISALLOWED_PIP_ARGS.format(
                         arg=supplied_arg, reason=BLACKLISTED_ARGS[blacklisted_arg]
-                    )
+                    ))
                 )
-
+    if not quiet:
+        click.secho("with args : \n\toutput file : '{}', \n\tentry point : '{}', \
+                    \n\tpython : '{}', \n\tcompressed : {}"
+                    .format(output_file, entry_point or '', python or sys.executable, compressed))
+        click.secho("\tpip args '{}' ".format(' '.join(pip_args)))
     with TemporaryDirectory() as working_path:
         site_packages = Path(working_path, "site-packages")
         site_packages.mkdir(parents=True, exist_ok=True)
+
+        if not quiet:
+            click.secho("Pip installing dependencies to {}...".format(site_packages), bold=True)
 
         # install deps into staged site-packages
         pip.install(
@@ -118,8 +127,10 @@ def main(
         if entry_point is None and console_script is not None:
             try:
                 entry_point = find_entry_point(site_packages, console_script)
+                if not quiet:
+                    click.secho("Discovered entry point '{}'".format(entry_point))
             except KeyError:
-                sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
+                sys.exit(crayons.red(NO_ENTRY_POINT.format(entry_point=console_script)))
 
         # create runtime environment metadata
         env = Environment(
@@ -133,17 +144,28 @@ def main(
         bootstrap_target = Path(working_path, "_bootstrap")
         bootstrap_target.mkdir(parents=True, exist_ok=True)
 
+        if not quiet:
+            click.secho("Injecting bootstrap code")
         # copy bootstrap code
         copy_bootstrap(bootstrap_target)
 
-        # create the zip
-        builder.create_archive(
-            Path(working_path),
-            target=Path(output_file),
-            interpreter=python or sys.executable,
-            main="_bootstrap:bootstrap",
-            compressed=compressed,
-        )
+        if not quiet:
+            click.secho("Creating zip archive")
+
+        with spinner():
+            # create the zip
+            builder.create_archive(
+                Path(working_path),
+                target=Path(output_file),
+                interpreter=python or sys.executable,
+                main="_bootstrap:bootstrap",
+                compressed=compressed,
+            )
 
     if not quiet:
-        click.secho(" done ", bold=True)
+        conf_message = "Done, wrote output file to '{}'".format(output_file)
+        if entry_point:
+            conf_message += ", entry point is '{}'".format(entry_point)
+        else:
+            conf_message += ", no entry point specified."
+        click.secho(conf_message, bold=True)

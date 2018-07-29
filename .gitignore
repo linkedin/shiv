@@ -59,6 +59,8 @@ target/
 .python-version
 .pytest_cache/
 venv/
+.venv
+.vscode
 activate
 
 # mypy
