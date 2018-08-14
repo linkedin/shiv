@@ -12,7 +12,7 @@ import pytest
 
 from unittest import mock
 
-from shiv.bootstrap import import_string, current_zipfile, cache_path
+from shiv.bootstrap import import_string, current_zipfile, cache_path, _first_sitedir_index
 from shiv.bootstrap.environment import Environment
 
 
@@ -60,6 +60,13 @@ class TestBootstrap:
         uuid = str(uuid4())
 
         assert cache_path(mock_zip, Path.cwd(), uuid) == Path.cwd() / f"test_{uuid}"
+
+    def test_first_sitedir_index(self):
+        with mock.patch.object(sys, 'path', ['site-packages', 'dir', 'dir', 'dir']):
+            assert _first_sitedir_index() == 0
+
+        with mock.patch.object(sys, 'path', []):
+            assert _first_sitedir_index() is None
 
 
 class TestEnvironment:
