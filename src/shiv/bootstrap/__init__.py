@@ -80,7 +80,7 @@ def extract_site_packages(archive, target_path):
     compileall.compile_dir(target_path_tmp, quiet=2, workers=0)
 
     # atomic move
-    shutil.move(target_path_tmp.as_posix(), target_path.as_posix())
+    shutil.move(str(target_path_tmp), str(target_path))
 
 
 def bootstrap():
@@ -99,8 +99,18 @@ def bootstrap():
     if not site_packages.exists() or env.force_extract:
         extract_site_packages(archive, site_packages.parent)
 
-    # stdlib blessed way of extending path
+    preserved = sys.path[1:]
+
+    # truncate the sys.path so our package will be at the start,
+    # and take precedence over anything else (eg: dist-packages)
+    sys.path = sys.path[0:1]
+
+    # append site-packages using the stdlib blessed way of extending path
+    # so as to handle .pth files correctly
     site.addsitedir(site_packages)
+
+    # restore the previous sys.path entries after our package
+    sys.path.extend(preserved)
 
     # do entry point import and call
     if env.entry_point is not None and env.interpreter is None:

@@ -1,5 +1,6 @@
 import tempfile
 import stat
+import os
 import sys
 import zipfile
 
@@ -53,6 +54,8 @@ class TestBuilder:
             with pytest.raises(ZipAppError):
                 create_archive(sp, target, sys.executable, 'alsjdbas,,,')
 
+    @pytest.mark.skipif(os.name == 'nt',
+                        reason='windows has no concept of execute permissions')
     def test_archive_permissions(self, sp):
         with tempfile.TemporaryDirectory() as tmpdir:
             target = Path(tmpdir, 'test.zip')

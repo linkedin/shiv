@@ -24,7 +24,7 @@ from .constants import (
     NO_ENTRY_POINT,
 )
 
-__version__ = '0.0.27'
+__version__ = '0.0.29'
 
 # This is the 'knife' emoji
 SHIV = u"\U0001F52A"
@@ -120,7 +120,7 @@ def main(
 
         # install deps into staged site-packages
         pip.install(
-            ["--target", site_packages.as_posix()] + list(pip_args),
+            ["--target", str(site_packages)] + list(pip_args),
         )
 
         # if entry_point is a console script, get the callable
