@@ -5,10 +5,10 @@ import sys
 
 import click
 import crayons
-from pathlib import Path
 from typing import Generator, List
 
 from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR
+
 
 @contextlib.contextmanager
 def clean_pip_env() -> Generator[None, None, None]:
