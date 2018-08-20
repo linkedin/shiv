@@ -83,6 +83,12 @@ def extract_site_packages(archive, target_path):
     shutil.move(str(target_path_tmp), str(target_path))
 
 
+def _first_sitedir_index():
+    for index, part in enumerate(sys.path):
+        if Path(part).stem == 'site-packages':
+            return index
+
+
 def bootstrap():
     """Actually bootstrap our shiv environment."""
 
@@ -99,18 +105,18 @@ def bootstrap():
     if not site_packages.exists() or env.force_extract:
         extract_site_packages(archive, site_packages.parent)
 
-    preserved = sys.path[1:]
+    # get sys.path's length
+    length = len(sys.path)
 
-    # truncate the sys.path so our package will be at the start,
-    # and take precedence over anything else (eg: dist-packages)
-    sys.path = sys.path[0:1]
+    # Find the first instance of an existing site-packages on sys.path
+    index = _first_sitedir_index() or length
 
     # append site-packages using the stdlib blessed way of extending path
     # so as to handle .pth files correctly
     site.addsitedir(site_packages)
 
-    # restore the previous sys.path entries after our package
-    sys.path.extend(preserved)
+    # reorder to place our site-packages before any others found
+    sys.path = sys.path[:index] + sys.path[length:] + sys.path[index:length]
 
     # do entry point import and call
     if env.entry_point is not None and env.interpreter is None:
