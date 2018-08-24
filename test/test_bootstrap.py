@@ -89,6 +89,18 @@ class TestEnvironment:
         with env_var('SHIV_FORCE_EXTRACT', '1'):
             assert env.force_extract is True
 
+        assert env.compile_pyc is True
+        with env_var("SHIV_COMPILE_PYC", "False"):
+            assert env.compile_pyc is False
+
+        assert env.compile_workers == 0
+        with env_var("SHIV_COMPILE_WORKERS", "1"):
+            assert env.compile_workers == 1
+
+        # ensure that non-digits are ignored
+        with env_var("SHIV_COMPILE_WORKERS", "one bazillion"):
+            assert env.compile_workers == 0
+
     def test_serialize(self):
         env = Environment()
         env_as_json = env.to_json()

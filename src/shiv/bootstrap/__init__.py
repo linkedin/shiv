@@ -64,7 +64,7 @@ def cache_path(archive, root_dir, build_id):
     return root / f"{name}_{build_id}"
 
 
-def extract_site_packages(archive, target_path):
+def extract_site_packages(archive, target_path, compile_pyc, compile_workers=0):
     """Extract everything in site-packages to a specified path.
 
     :param ZipFile archive: The zipfile object we are bootstrapping from.
@@ -76,8 +76,8 @@ def extract_site_packages(archive, target_path):
         if filename.startswith("site-packages"):
             archive.extract(filename, target_path_tmp)
 
-    # compile pyc with stderr silenced
-    compileall.compile_dir(target_path_tmp, quiet=2, workers=0)
+    if compile_pyc:
+        compileall.compile_dir(target_path_tmp, quiet=2, workers=compile_workers)
 
     # atomic move
     shutil.move(str(target_path_tmp), str(target_path))
@@ -85,7 +85,7 @@ def extract_site_packages(archive, target_path):
 
 def _first_sitedir_index():
     for index, part in enumerate(sys.path):
-        if Path(part).stem == 'site-packages':
+        if Path(part).stem == "site-packages":
             return index
 
 
@@ -103,7 +103,7 @@ def bootstrap():
 
     # determine if first run or forcing extract
     if not site_packages.exists() or env.force_extract:
-        extract_site_packages(archive, site_packages.parent)
+        extract_site_packages(archive, site_packages.parent, env.compile_pyc, env.compile_workers)
 
     # get sys.path's length
     length = len(sys.path)
