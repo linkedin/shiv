@@ -45,12 +45,13 @@ class TestCLI:
         # assert we got the correct reason
         assert strip_header(result.output) == DISALLOWED_PIP_ARGS.format(arg=arg, reason=reason)
 
-    def test_hello_world(self, tmpdir, runner, package_location):
+    @pytest.mark.parametrize('compile_option', ["--compile-pyc", "--no-compile-pyc"])
+    def test_hello_world(self, tmpdir, runner, package_location, compile_option):
 
         with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
             output_file = Path(tmpdir, 'test.pyz')
 
-            result = runner(['-e', 'hello:main', '-o', str(output_file), str(package_location)])
+            result = runner(['-e', 'hello:main', '-o', str(output_file), str(package_location), compile_option])
 
             # check that the command successfully completed
             assert result.exit_code == 0

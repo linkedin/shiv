@@ -1,7 +1,11 @@
-import importlib_resources  # type: ignore
 import shutil
 import sys
 import uuid
+
+try:
+    import importlib.resources as importlib_resources  # type: ignore
+except ImportError:
+    import importlib_resources  # type: ignore
 
 from configparser import ConfigParser
 from pathlib import Path
@@ -71,6 +75,11 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
     default=True,
     help="Whether or not to compress your zip.",
 )
+@click.option(
+    "--compile-pyc/--no-compile-pyc",
+    default=True,
+    help="Whether or not to compile pyc files during initial bootstrap.",
+)
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
@@ -78,6 +87,7 @@ def main(
     console_script: Optional[str],
     python: Optional[str],
     compressed: bool,
+    compile_pyc: bool,
     pip_args: List[str],
 ) -> None:
     """
@@ -110,9 +120,7 @@ def main(
         site_packages.mkdir(parents=True, exist_ok=True)
 
         # install deps into staged site-packages
-        pip.install(
-            ["--target", str(site_packages)] + list(pip_args),
-        )
+        pip.install(["--target", str(site_packages)] + list(pip_args))
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
@@ -123,8 +131,7 @@ def main(
 
         # create runtime environment metadata
         env = Environment(
-            build_id=str(uuid.uuid4()),
-            entry_point=entry_point,
+            build_id=str(uuid.uuid4()), entry_point=entry_point, compile_pyc=compile_pyc
         )
 
         Path(working_path, "environment.json").write_text(env.to_json())
