@@ -154,3 +154,7 @@ def main(
 
     if not quiet:
         click.secho(" done ", bold=True)
+
+
+if __name__ == "__main__":
+    main()
