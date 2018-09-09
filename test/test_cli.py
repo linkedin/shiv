@@ -9,7 +9,7 @@ import pytest
 from click.testing import CliRunner
 
 from shiv.cli import main
-from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS, NO_OUTFILE, BLACKLISTED_ARGS
+from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS_OR_SITE_PACKAGES, NO_OUTFILE, BLACKLISTED_ARGS
 
 
 def strip_header(output):
@@ -24,7 +24,7 @@ class TestCLI:
     def test_no_args(self, runner):
         result = runner([])
         assert result.exit_code == 1
-        assert strip_header(result.output) == NO_PIP_ARGS
+        assert strip_header(result.output) == NO_PIP_ARGS_OR_SITE_PACKAGES
 
     def test_no_outfile(self, runner):
         result = runner(['-e', 'test', 'flask'])
