@@ -21,7 +21,7 @@ from .bootstrap.environment import Environment
 from .constants import (
     BLACKLISTED_ARGS,
     DISALLOWED_PIP_ARGS,
-    NO_PIP_ARGS,
+    NO_PIP_ARGS_OR_SITE_PACKAGES,
     NO_OUTFILE,
     NO_ENTRY_POINT,
 )
@@ -71,6 +71,11 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
 @click.option("--output-file", "-o", help="The file for shiv to create.")
 @click.option("--python", "-p", help="The path to a python interpreter to use.")
 @click.option(
+    "--site-packages",
+    help="The path to an existing site-packages directory to copy into the zipapp",
+    type=click.Path(exists=True),
+)
+@click.option(
     "--compressed/--uncompressed",
     default=True,
     help="Whether or not to compress your zip.",
@@ -86,6 +91,7 @@ def main(
     entry_point: Optional[str],
     console_script: Optional[str],
     python: Optional[str],
+    site_packages: Optional[str],
     compressed: bool,
     compile_pyc: bool,
     pip_args: List[str],
@@ -99,8 +105,8 @@ def main(
     if not quiet:
         click.secho(" shiv! " + SHIV, bold=True)
 
-    if not pip_args:
-        sys.exit(NO_PIP_ARGS)
+    if not pip_args and not site_packages:
+        sys.exit(NO_PIP_ARGS_OR_SITE_PACKAGES)
 
     if output_file is None:
         sys.exit(NO_OUTFILE)
@@ -116,16 +122,20 @@ def main(
                 )
 
     with TemporaryDirectory() as working_path:
-        site_packages = Path(working_path, "site-packages")
-        site_packages.mkdir(parents=True, exist_ok=True)
+        tmp_site_packages = Path(working_path, "site-packages")
 
-        # install deps into staged site-packages
-        pip.install(["--target", str(site_packages)] + list(pip_args))
+        if site_packages:
+            shutil.copytree(site_packages, tmp_site_packages)
+        else:
+            tmp_site_packages.mkdir(parents=True, exist_ok=True)
+        if pip_args:
+            # install deps into staged site-packages
+            pip.install(["--target", str(tmp_site_packages)] + list(pip_args))
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
             try:
-                entry_point = find_entry_point(site_packages, console_script)
+                entry_point = find_entry_point(tmp_site_packages, console_script)
             except KeyError:
                 sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
 
