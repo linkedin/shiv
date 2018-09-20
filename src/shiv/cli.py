@@ -26,7 +26,7 @@ from .constants import (
     NO_ENTRY_POINT,
 )
 
-__version__ = '0.0.34'
+__version__ = '0.0.35'
 
 # This is the 'knife' emoji
 SHIV = u"\U0001F52A"
