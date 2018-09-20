@@ -10,7 +10,7 @@ except ImportError:
 from configparser import ConfigParser
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Optional, List
+from typing import Optional, List, no_type_check
 
 import click
 
@@ -47,8 +47,11 @@ def find_entry_point(site_packages: Path, console_script: str) -> str:
     return config_parser["console_scripts"][console_script]
 
 
+@no_type_check
 def copy_bootstrap(bootstrap_target: Path) -> None:
     """Copy bootstrap code from shiv into the pyz.
+
+    This function is excluded from type checking due to the conditional import.
 
     :param bootstrap_target: The temporary directory where we are staging pyz contents.
     """
