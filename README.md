@@ -125,6 +125,9 @@ rm -r dist <project_name>.pyz
 # include the dependencies
 pip install -r <(pip freeze) --target dist/
 
+# or, if you're using pipnev
+# pip install -r  <(pipenv lock -r) --target dist/
+
 # specify which files to be included in the build
 cp -r \
 -t dist \
