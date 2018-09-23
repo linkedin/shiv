@@ -21,6 +21,7 @@ class Environment:
     ROOT = "SHIV_ROOT"
     FORCE_EXTRACT = "SHIV_FORCE_EXTRACT"
     COMPILE_PYC = "SHIV_COMPILE_PYC"
+    SYSTEM_SITE_PACKAGES = "SHIV_SYSTEM_SITE_PACKAGES"
     COMPILE_WORKERS = "SHIV_COMPILE_WORKERS"
 
     def __init__(
@@ -29,6 +30,7 @@ class Environment:
         entry_point=None,
         always_write_cache=False,
         compile_pyc=True,
+        system_site_packages=False,
     ):
         self.build_id = build_id
         self.always_write_cache = always_write_cache
@@ -36,6 +38,7 @@ class Environment:
         # properties
         self._entry_point = entry_point
         self._compile_pyc = compile_pyc
+        self._system_site_packages = system_site_packages
 
     @classmethod
     def from_json(cls, json_data):
@@ -69,6 +72,12 @@ class Environment:
     @property
     def compile_pyc(self):
         return str_bool(os.environ.get(self.COMPILE_PYC, self._compile_pyc))
+
+    @property
+    def system_site_packages(self):
+        return str_bool(
+            os.environ.get(self.SYSTEM_SITE_PACKAGES, self._system_site_packages)
+        )
 
     @property
     def compile_workers(self):

@@ -89,6 +89,13 @@ SHIV_INTERPRETER
 This is a boolean that bypasses and console_script or entry point baked into your pyz. Useful for
 dropping into an interactive session in the environment of a built cli utility.
 
+SHIV_SYSTEM_SITE_PACKAGES
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a boolean that toggles the inclusion of system site packages in the runtime environment
+for your pyz. The default is `False` (don't include system site packages), unless enabled during
+shiv's build process.
+
 SHIV_ENTRY_POINT
 ^^^^^^^^^^^^^^^^
 

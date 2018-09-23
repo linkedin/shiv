@@ -12,7 +12,13 @@ import pytest
 
 from unittest import mock
 
-from shiv.bootstrap import import_string, current_zipfile, cache_path, _first_sitedir_index
+from shiv.bootstrap import (
+    import_string,
+    current_zipfile,
+    cache_path,
+    _first_sitedir_index,
+    patch_sys_path,
+)
 from shiv.bootstrap.environment import Environment
 
 
@@ -69,6 +75,45 @@ class TestBootstrap:
             assert _first_sitedir_index() is None
 
 
+class TestPathPatching:
+    def setup_method(self, method):
+        self.sys_path = [
+            "/usr/lib/python37.zip",
+            "/usr/lib/python3.7",
+            "/usr/lib/python3.7/lib-dynload",
+            "/usr/local/lib/python3.7/dist-packages",
+            "/usr/lib/python3/dist-packages",
+        ]
+        self.site_packages = (
+            "/home/user/.shiv/app_7c32f985-9c69-4fad-bb60-115948078f05/site-packages"
+        )
+
+    def test_patch_path_with_system(self):
+        with mock.patch.object(sys, "path", self.sys_path):
+            with mock.patch("site.addsitedir", new=lambda s: sys.path.append(s)):
+                new_path = patch_sys_path(self.site_packages, True)
+        assert new_path == [
+            "/usr/lib/python37.zip",
+            "/usr/lib/python3.7",
+            "/usr/lib/python3.7/lib-dynload",
+            self.site_packages,
+            "/usr/local/lib/python3.7/dist-packages",
+            "/usr/lib/python3/dist-packages",
+        ]
+
+    def test_patch_path_no_system(self):
+        with mock.patch.object(sys, "path", self.sys_path):
+            with mock.patch("site.addsitedir", new=lambda s: sys.path.append(s)):
+                new_path = patch_sys_path(self.site_packages, False)
+
+        assert new_path == [
+            "/usr/lib/python37.zip",
+            "/usr/lib/python3.7",
+            "/usr/lib/python3.7/lib-dynload",
+            self.site_packages,
+        ]
+
+
 class TestEnvironment:
     def test_overrides(self):
         env = Environment()
@@ -92,6 +137,10 @@ class TestEnvironment:
         assert env.compile_pyc is True
         with env_var("SHIV_COMPILE_PYC", "False"):
             assert env.compile_pyc is False
+
+        assert env.system_site_packages is False
+        with env_var("SHIV_SYSTEM_SITE_PACKAGES", "True"):
+            assert env.system_site_packages is True
 
         assert env.compile_workers == 0
         with env_var("SHIV_COMPILE_WORKERS", "1"):
