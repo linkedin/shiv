@@ -85,7 +85,7 @@ def extract_site_packages(archive, target_path, compile_pyc, compile_workers=0):
 
 def _first_sitedir_index():
     for index, part in enumerate(sys.path):
-        if Path(part).stem == "site-packages":
+        if Path(part).stem in ["site-packages", "dist-packages"]:
             return index
 
 
