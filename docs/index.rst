@@ -110,6 +110,7 @@ Table of Contents
 
    history
    api
+   django
 
 Indices and tables
 ==================
