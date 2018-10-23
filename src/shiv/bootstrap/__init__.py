@@ -60,7 +60,7 @@ def cache_path(archive, root_dir, build_id):
     :param str buidl_id: The build id generated at zip creation.
     """
     root = root_dir or Path("~/.shiv").expanduser()
-    name = Path(archive.filename).stem
+    name = Path(archive.filename).resolve().stem
     return root / f"{name}_{build_id}"
 
 
