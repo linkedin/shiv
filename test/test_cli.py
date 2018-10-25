@@ -1,5 +1,6 @@
 import os
 import subprocess
+import sys
 import tempfile
 
 from pathlib import Path
@@ -8,7 +9,7 @@ import pytest
 
 from click.testing import CliRunner
 
-from shiv.cli import main
+from shiv.cli import main, _interpreter_path
 from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS_OR_SITE_PACKAGES, NO_OUTFILE, BLACKLISTED_ARGS
 
 
@@ -30,6 +31,14 @@ class TestCLI:
         result = runner(['-e', 'test', 'flask'])
         assert result.exit_code == 1
         assert strip_header(result.output) == NO_OUTFILE
+
+    def test_find_interpreter(self):
+        interpreter = _interpreter_path()
+        assert Path(interpreter).exists()
+        assert Path(interpreter).is_file()
+
+        interpreter = _interpreter_path(append_version=True)
+        assert Path(interpreter).name.endswith(str(sys.version_info.major))
 
     @pytest.mark.parametrize("arg", [arg for tup in BLACKLISTED_ARGS.keys() for arg in tup])
     def test_blacklisted_args(self, runner, arg):
