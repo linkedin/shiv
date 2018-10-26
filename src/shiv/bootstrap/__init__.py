@@ -122,12 +122,12 @@ def bootstrap():
     if env.entry_point is not None and env.interpreter is None:
         mod = import_string(env.entry_point)
         try:
-            mod()
+            sys.exit(mod())
         except TypeError as e:
             # catch "<module> is not callable", which is thrown when the entry point's
             # callable shares a name with it's parent module
             # e.g. "from foo.bar import bar; bar()"
-            getattr(mod, env.entry_point.replace(":", ".").split(".")[1])()
+            sys.exit(getattr(mod, env.entry_point.replace(":", ".").split(".")[1])())
     else:
         # drop into interactive mode
         execute_interpreter()
