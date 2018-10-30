@@ -1,6 +1,5 @@
 import os
 import subprocess
-import sys
 import tempfile
 
 from pathlib import Path
@@ -36,9 +35,6 @@ class TestCLI:
         interpreter = _interpreter_path()
         assert Path(interpreter).exists()
         assert Path(interpreter).is_file()
-
-        interpreter = _interpreter_path(append_version=True)
-        assert Path(interpreter).name.endswith(str(sys.version_info.major))
 
     @pytest.mark.parametrize("arg", [arg for tup in BLACKLISTED_ARGS.keys() for arg in tup])
     def test_blacklisted_args(self, runner, arg):

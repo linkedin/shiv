@@ -139,11 +139,7 @@ def main(
     as outlined in PEP 441, but with all their dependencies included!
     """
 
-<<<<<<< HEAD
-    quiet = "-q" in pip_args or '--quiet' in pip_args
-=======
     quiet = "-q" in pip_args or "--quiet" in pip_args
->>>>>>> Don't build shiv's with virtualenv's python.
 
     if not quiet:
         click.secho(" shiv! " + SHIV, bold=True)
@@ -198,7 +194,7 @@ def main(
         # create the zip
         builder.create_archive(
             Path(working_path),
-            target=Path(output_file),
+            target=Path(output_file).expanduser(),
             interpreter=python or _interpreter_path(),
             main="_bootstrap:bootstrap",
             compressed=compressed,
