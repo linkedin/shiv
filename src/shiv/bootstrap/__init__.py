@@ -1,4 +1,5 @@
 import compileall
+import os
 import site
 import sys
 import shutil
@@ -114,6 +115,15 @@ def bootstrap():
     # append site-packages using the stdlib blessed way of extending path
     # so as to handle .pth files correctly
     site.addsitedir(site_packages)
+
+    # add our site-packages to the environment, if requested
+    if env.extend_pythonpath:
+        if 'PYTHONPATH' in os.environ:
+            python_path = os.environ['PYTHONPATH'].split(os.pathsep)
+        else:
+            python_path = []
+        python_path.extend(sys.path[length:])
+        os.environ['PYTHONPATH'] = os.pathsep.join(python_path)
 
     # reorder to place our site-packages before any others found
     sys.path = sys.path[:index] + sys.path[length:] + sys.path[index:length]

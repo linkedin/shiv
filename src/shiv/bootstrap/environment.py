@@ -22,6 +22,7 @@ class Environment:
     FORCE_EXTRACT = "SHIV_FORCE_EXTRACT"
     COMPILE_PYC = "SHIV_COMPILE_PYC"
     COMPILE_WORKERS = "SHIV_COMPILE_WORKERS"
+    EXTEND_PYTHONPATH = "SHIV_EXTEND_PYTHONPATH"
 
     def __init__(
         self,
@@ -29,6 +30,7 @@ class Environment:
         entry_point=None,
         always_write_cache=False,
         compile_pyc=True,
+        extend_pythonpath=False,
     ):
         self.build_id = build_id
         self.always_write_cache = always_write_cache
@@ -36,6 +38,7 @@ class Environment:
         # properties
         self._entry_point = entry_point
         self._compile_pyc = compile_pyc
+        self._extend_pythonpath = extend_pythonpath
 
     @classmethod
     def from_json(cls, json_data):
@@ -69,6 +72,10 @@ class Environment:
     @property
     def compile_pyc(self):
         return str_bool(os.environ.get(self.COMPILE_PYC, self._compile_pyc))
+
+    @property
+    def extend_pythonpath(self):
+        return str_bool(os.environ.get(self.EXTEND_PYTHONPATH, self._extend_pythonpath))
 
     @property
     def compile_workers(self):

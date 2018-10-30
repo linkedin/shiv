@@ -93,6 +93,10 @@ class TestEnvironment:
         with env_var("SHIV_COMPILE_PYC", "False"):
             assert env.compile_pyc is False
 
+        assert env.extend_pythonpath is False
+        with env_var("SHIV_EXTEND_PYTHONPATH", "1"):
+            assert env.compile_pyc is True
+
         assert env.compile_workers == 0
         with env_var("SHIV_COMPILE_WORKERS", "1"):
             assert env.compile_workers == 1

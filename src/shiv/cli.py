@@ -88,6 +88,10 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
     default=True,
     help="Whether or not to compile pyc files during initial bootstrap.",
 )
+@click.option(
+    "--extend-pythonpath/--no-extend-pythonpath", "-E",
+    default=False,
+    help="Add the contents of the zipapp to PYTHONPATH (for subprocesses).")
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
@@ -97,6 +101,7 @@ def main(
     site_packages: Optional[str],
     compressed: bool,
     compile_pyc: bool,
+    extend_pythonpath: bool,
     pip_args: List[str],
 ) -> None:
     """
@@ -143,7 +148,8 @@ def main(
 
         # create runtime environment metadata
         env = Environment(
-            build_id=str(uuid.uuid4()), entry_point=entry_point, compile_pyc=compile_pyc
+            build_id=str(uuid.uuid4()), entry_point=entry_point,
+            compile_pyc=compile_pyc, extend_pythonpath=extend_pythonpath,
         )
 
         Path(working_path, "environment.json").write_text(env.to_json())
