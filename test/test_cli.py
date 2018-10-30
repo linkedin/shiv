@@ -46,7 +46,7 @@ class TestCLI:
         assert strip_header(result.output) == DISALLOWED_PIP_ARGS.format(arg=arg, reason=reason)
 
     @pytest.mark.parametrize('compile_option', ["--compile-pyc", "--no-compile-pyc"])
-    def test_hello_world(self, tmpdir, runner, package_location, compile_option):
+    def test_hello_world(self, tmpdir, runner, package_location, compile_option, monkeypatch):
 
         with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
             output_file = Path(tmpdir, 'test.pyz')
@@ -60,5 +60,7 @@ class TestCLI:
             assert output_file.exists()
 
             # now run the produced zipapp
-            with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE, shell=True) as proc:
-                assert proc.stdout.read().decode() == "hello world" + os.linesep
+            with monkeypatch.context() as m:
+                m.setenv('SHIV_ROOT', tmpdir)
+                with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE, shell=True) as proc:
+                    assert proc.stdout.read().decode() == "hello world" + os.linesep
