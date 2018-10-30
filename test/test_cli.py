@@ -69,3 +69,42 @@ class TestCLI:
                 m.setenv('SHIV_ROOT', tmpdir)
                 with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE, shell=True) as proc:
                     assert proc.stdout.read().decode() == "hello world" + os.linesep
+
+    @pytest.mark.parametrize('env_option', ["--extend-pythonpath", "--no-extend-pythonpath", "-E"])
+    def test_extend_pythonpath(self, tmpdir, runner, monkeypatch, env_option):
+
+        with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
+            output_file = Path(tmpdir, 'test_pythonpath.pyz')
+            package_dir = Path(tmpdir, 'package')
+            shiv_root = Path(tmpdir, 'shiv')
+            main_script = Path(package_dir, 'env.py')
+
+            MAIN_PROG = '\n'.join([
+                "import os",
+                "def main():",
+                "    print(os.environ.get('PYTHONPATH', ''))"
+            ])
+
+            package_dir.mkdir()
+            shiv_root.mkdir()
+            main_script.write_text(MAIN_PROG)
+
+            result = runner([
+                '-e', 'env:main',
+                '-o', str(output_file),
+                '--site-packages', str(package_dir),
+                env_option
+            ])
+
+            # check that the command successfully completed
+            assert result.exit_code == 0
+
+            # ensure the created file actually exists
+            assert output_file.exists()
+
+            # now run the produced zipapp and confirm shiv_root is in PYTHONPATH
+            with monkeypatch.context() as m:
+                m.setenv('SHIV_ROOT', str(shiv_root))
+                with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE, shell=True) as proc:
+                    pythonpath_has_root = (str(shiv_root) in proc.stdout.read().decode())
+                    assert env_option.startswith('--no') != pythonpath_has_root
