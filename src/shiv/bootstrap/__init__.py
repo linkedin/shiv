@@ -133,7 +133,7 @@ def bootstrap():
         mod = import_string(env.entry_point)
         try:
             sys.exit(mod())
-        except TypeError as e:
+        except TypeError:
             # catch "<module> is not callable", which is thrown when the entry point's
             # callable shares a name with it's parent module
             # e.g. "from foo.bar import bar; bar()"

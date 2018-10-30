@@ -8,7 +8,7 @@ import pytest
 
 from click.testing import CliRunner
 
-from shiv.cli import main
+from shiv.cli import main, _interpreter_path
 from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS_OR_SITE_PACKAGES, NO_OUTFILE, BLACKLISTED_ARGS
 
 
@@ -31,6 +31,11 @@ class TestCLI:
         assert result.exit_code == 1
         assert strip_header(result.output) == NO_OUTFILE
 
+    def test_find_interpreter(self):
+        interpreter = _interpreter_path()
+        assert Path(interpreter).exists()
+        assert Path(interpreter).is_file()
+
     @pytest.mark.parametrize("arg", [arg for tup in BLACKLISTED_ARGS.keys() for arg in tup])
     def test_blacklisted_args(self, runner, arg):
         result = runner(['-o', 'tmp', arg])
@@ -46,7 +51,7 @@ class TestCLI:
         assert strip_header(result.output) == DISALLOWED_PIP_ARGS.format(arg=arg, reason=reason)
 
     @pytest.mark.parametrize('compile_option', ["--compile-pyc", "--no-compile-pyc"])
-    def test_hello_world(self, tmpdir, runner, package_location, compile_option):
+    def test_hello_world(self, tmpdir, runner, package_location, compile_option, monkeypatch):
 
         with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
             output_file = Path(tmpdir, 'test.pyz')
@@ -60,8 +65,10 @@ class TestCLI:
             assert output_file.exists()
 
             # now run the produced zipapp
-            with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE, shell=True) as proc:
-                assert proc.stdout.read().decode() == "hello world" + os.linesep
+            with monkeypatch.context() as m:
+                m.setenv('SHIV_ROOT', tmpdir)
+                with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE, shell=True) as proc:
+                    assert proc.stdout.read().decode() == "hello world" + os.linesep
 
     @pytest.mark.parametrize('env_option', ["--extend-pythonpath", "--no-extend-pythonpath", "-E"])
     def test_extend_pythonpath(self, tmpdir, runner, monkeypatch, env_option):

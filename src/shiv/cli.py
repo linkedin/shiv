@@ -26,7 +26,7 @@ from .constants import (
     NO_ENTRY_POINT,
 )
 
-__version__ = '0.0.36'
+__version__ = "0.0.37"
 
 # This is the 'knife' emoji
 SHIV = u"\U0001F52A"
@@ -42,6 +42,7 @@ def find_entry_point(site_packages: Path, console_script: str) -> str:
     :param site_packages: A path to a site-packages directory on disk.
     :param console_script: A console_script string.
     """
+
     config_parser = ConfigParser()
     config_parser.read(site_packages.rglob("entry_points.txt"))
     return config_parser["console_scripts"][console_script]
@@ -55,10 +56,44 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
 
     :param bootstrap_target: The temporary directory where we are staging pyz contents.
     """
+
     for bootstrap_file in importlib_resources.contents(bootstrap):
         if importlib_resources.is_resource(bootstrap, bootstrap_file):
             with importlib_resources.path(bootstrap, bootstrap_file) as f:
                 shutil.copyfile(f.absolute(), bootstrap_target / f.name)
+
+
+def _interpreter_path(append_version: bool = False) -> str:
+    """A function to return the path to the current Python interpreter.
+
+    Even when inside a venv, this will return the interpreter the venv was created with.
+
+    """
+
+    base_dir = Path(getattr(sys, "real_prefix", sys.base_prefix)).resolve()
+    sys_exec = Path(sys.executable)
+    name = sys_exec.stem
+    suffix = sys_exec.suffix
+
+    if append_version:
+        name += str(sys.version_info.major)
+
+    name += suffix
+
+    try:
+        return str(next(iter(base_dir.rglob(name))))
+
+    except StopIteration:
+
+        if not append_version:
+            # If we couldn't find an interpreter, it's likely that we looked for
+            # "python" when we should've been looking for "python3"
+            # so we try again with append_version=True
+            return _interpreter_path(append_version=True)
+
+        # If we were still unable to find a real interpreter for some reason
+        # we fallback to the current runtime's interpreter
+        return sys.executable
 
 
 @click.command(
@@ -66,7 +101,7 @@ def copy_bootstrap(bootstrap_target: Path) -> None:
         help_option_names=["-h", "--help", "--halp"], ignore_unknown_options=True
     )
 )
-@click.version_option(version=__version__, prog_name='shiv')
+@click.version_option(version=__version__, prog_name="shiv")
 @click.option("--entry-point", "-e", default=None, help="The entry point to invoke.")
 @click.option(
     "--console-script", "-c", default=None, help="The console_script to invoke."
@@ -108,7 +143,8 @@ def main(
     Shiv is a command line utility for building fully self-contained Python zipapps
     as outlined in PEP 441, but with all their dependencies included!
     """
-    quiet = "-q" in pip_args or '--quiet' in pip_args
+
+    quiet = "-q" in pip_args or "--quiet" in pip_args
 
     if not quiet:
         click.secho(" shiv! " + SHIV, bold=True)
@@ -164,8 +200,8 @@ def main(
         # create the zip
         builder.create_archive(
             Path(working_path),
-            target=Path(output_file),
-            interpreter=python or sys.executable,
+            target=Path(output_file).expanduser(),
+            interpreter=python or _interpreter_path(),
             main="_bootstrap:bootstrap",
             compressed=compressed,
         )
