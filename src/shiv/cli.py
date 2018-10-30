@@ -26,7 +26,7 @@ from .constants import (
     NO_ENTRY_POINT,
 )
 
-__version__ = "0.0.37"
+__version__ = "0.0.38"
 
 # This is the 'knife' emoji
 SHIV = u"\U0001F52A"
@@ -184,8 +184,10 @@ def main(
 
         # create runtime environment metadata
         env = Environment(
-            build_id=str(uuid.uuid4()), entry_point=entry_point,
-            compile_pyc=compile_pyc, extend_pythonpath=extend_pythonpath,
+            build_id=str(uuid.uuid4()),
+            entry_point=entry_point,
+            compile_pyc=compile_pyc,
+            extend_pythonpath=extend_pythonpath,
         )
 
         Path(working_path, "environment.json").write_text(env.to_json())
