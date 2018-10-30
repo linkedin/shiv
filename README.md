@@ -69,8 +69,8 @@ pip install shiv
 You can even create a pyz _of_ shiv _using_ shiv!
 
 ```sh
-python3 -m venv shiv
-source shiv/bin/activate
+python3 -m venv .
+source bin/activate
 pip install shiv
 shiv -c shiv -o shiv shiv
 ```
