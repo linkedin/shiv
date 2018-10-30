@@ -123,6 +123,11 @@ def _interpreter_path(append_version: bool = False) -> str:
     default=True,
     help="Whether or not to compile pyc files during initial bootstrap.",
 )
+@click.option(
+    "--system-site-packages/--no-system-site-packages",
+    default=False,
+    help="Inherit system site packages during runtime",
+)
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
@@ -132,6 +137,7 @@ def main(
     site_packages: Optional[str],
     compressed: bool,
     compile_pyc: bool,
+    system_site_packages: bool,
     pip_args: List[str],
 ) -> None:
     """
@@ -179,7 +185,10 @@ def main(
 
         # create runtime environment metadata
         env = Environment(
-            build_id=str(uuid.uuid4()), entry_point=entry_point, compile_pyc=compile_pyc
+            build_id=str(uuid.uuid4()),
+            entry_point=entry_point,
+            compile_pyc=compile_pyc,
+            system_site_packages=system_site_packages,
         )
 
         Path(working_path, "environment.json").write_text(env.to_json())

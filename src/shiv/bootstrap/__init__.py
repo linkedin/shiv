@@ -83,6 +83,33 @@ def extract_site_packages(archive, target_path, compile_pyc, compile_workers=0):
     shutil.move(str(target_path_tmp), str(target_path))
 
 
+def patch_sys_path(new_path, system_site_packages):
+    """Insert a new path into sys.path and optionally remove system site-packages
+
+    :param str new_path: The new path to add
+    :param bool system_site_packages: Toggles the inclusion of site packages
+    """
+    if not system_site_packages:
+        sys.path = [
+            p
+            for p in sys.path
+            if Path(p).stem not in ["site-packages", "dist-packages"]
+        ]
+
+    # get sys.path's length
+    length = len(sys.path)
+
+    # Find the first instance of an existing site-packages on sys.path
+    index = _first_sitedir_index() or length
+
+    # append site-packages using the stdlib blessed way of extending path
+    # so as to handle .pth files correctly
+    site.addsitedir(new_path)
+
+    # reorder to place our site-packages before any others found
+    return sys.path[:index] + sys.path[length:] + sys.path[index:length]
+
+
 def _first_sitedir_index():
     for index, part in enumerate(sys.path):
         if Path(part).stem in ["site-packages", "dist-packages"]:
@@ -103,20 +130,11 @@ def bootstrap():
 
     # determine if first run or forcing extract
     if not site_packages.exists() or env.force_extract:
-        extract_site_packages(archive, site_packages.parent, env.compile_pyc, env.compile_workers)
+        extract_site_packages(
+            archive, site_packages.parent, env.compile_pyc, env.compile_workers
+        )
 
-    # get sys.path's length
-    length = len(sys.path)
-
-    # Find the first instance of an existing site-packages on sys.path
-    index = _first_sitedir_index() or length
-
-    # append site-packages using the stdlib blessed way of extending path
-    # so as to handle .pth files correctly
-    site.addsitedir(site_packages)
-
-    # reorder to place our site-packages before any others found
-    sys.path = sys.path[:index] + sys.path[length:] + sys.path[index:length]
+    sys.path = patch_sys_path(site_packages, env.system_site_packages)
 
     # do entry point import and call
     if env.entry_point is not None and env.interpreter is None:
