@@ -58,7 +58,7 @@ Save it as ``build.sh`` (next to manage.py)
     # include the dependencies from `pip freeze`
     pip install -r <(pip freeze) --target dist/
 
-    # or, if you're using pipnev
+    # or, if you're using pipenv
     # pip install -r  <(pipenv lock -r) --target dist/
 
     # specify which files to be included in the build
