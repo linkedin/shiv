@@ -141,8 +141,6 @@ def main(
     as outlined in PEP 441, but with all their dependencies included!
     """
 
-    quiet = "-q" in pip_args or "--quiet" in pip_args
-
     if not pip_args and not site_packages:
         sys.exit(NO_PIP_ARGS_OR_SITE_PACKAGES)
 

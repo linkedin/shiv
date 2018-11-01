@@ -104,3 +104,30 @@ class TestCLI:
                 with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE, shell=True) as proc:
                     pythonpath_has_root = (str(shiv_root) in proc.stdout.read().decode())
                     assert env_option.startswith('--no') != pythonpath_has_root
+
+    def test_no_entrypoint(self, tmpdir, runner, package_location, monkeypatch):
+
+        with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
+            output_file = Path(tmpdir, 'test.pyz')
+
+            result = runner(['-o', str(output_file), str(package_location)])
+
+            # check that the command successfully completed
+            assert result.exit_code == 0
+
+            # ensure the created file actually exists
+            assert output_file.exists()
+
+            # now run the produced zipapp
+            with monkeypatch.context() as m:
+                m.setenv('SHIV_ROOT', tmpdir)
+                proc = subprocess.run(
+                    [str(output_file)],
+                    input=b"import hello;print(hello)",
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    shell=True,
+                )
+
+        assert proc.returncode == 0
+        assert "hello" in proc.stdout.decode()
