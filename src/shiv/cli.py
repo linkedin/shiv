@@ -28,9 +28,6 @@ from .constants import (
 
 __version__ = "0.0.38"
 
-# This is the 'knife' emoji
-SHIV = u"\U0001F52A"
-
 
 def find_entry_point(site_packages: Path, console_script: str) -> str:
     """Find a console_script in a site-packages directory.
@@ -146,9 +143,6 @@ def main(
 
     quiet = "-q" in pip_args or "--quiet" in pip_args
 
-    if not quiet:
-        click.secho(" shiv! " + SHIV, bold=True)
-
     if not pip_args and not site_packages:
         sys.exit(NO_PIP_ARGS_OR_SITE_PACKAGES)
 
@@ -207,9 +201,6 @@ def main(
             main="_bootstrap:bootstrap",
             compressed=compressed,
         )
-
-    if not quiet:
-        click.secho(" done ", bold=True)
 
 
 if __name__ == "__main__":
