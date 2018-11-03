@@ -12,7 +12,14 @@ import pytest
 
 from unittest import mock
 
-from shiv.bootstrap import import_string, current_zipfile, cache_path, _first_sitedir_index
+from shiv.bootstrap import (
+    _first_sitedir_index,
+    _extend_python_path,
+    import_string,
+    current_zipfile,
+    cache_path,
+    extract_site_packages,
+)
 from shiv.bootstrap.environment import Environment
 
 
@@ -24,7 +31,7 @@ def env_var(key, value):
 
 
 class TestBootstrap:
-    def test_various_imports(self):
+    def test_import_string(self):
         assert import_string('site.addsitedir') == addsitedir
         assert import_string('site:addsitedir') == addsitedir
         assert import_string('code.interact') == interact
@@ -68,6 +75,31 @@ class TestBootstrap:
         with mock.patch.object(sys, 'path', []):
             assert _first_sitedir_index() is None
 
+    @pytest.mark.parametrize("compile_pyc", (False, True))
+    def test_extract_site_packages(self, tmpdir, zip_location, compile_pyc):
+
+        zipfile = ZipFile(str(zip_location))
+        target = Path(tmpdir, "test")
+
+        # Do the extraction (of our empty zip file)
+        extract_site_packages(zipfile, target, compile_pyc)
+
+        site_packages = target / "site-packages"
+        assert site_packages.exists()
+        assert site_packages.is_dir()
+        assert Path(site_packages, "test").exists()
+        assert Path(site_packages, "test").is_file()
+
+    @pytest.mark.parametrize("additional_paths", (["test"], ["test", ".pth"]))
+    def test_extend_path(self, additional_paths):
+
+        orig = os.environ.copy()
+
+        _extend_python_path(additional_paths)
+        assert os.environ["PYTHONPATH"] == os.pathsep.join(additional_paths)
+
+        os.environ = orig
+
 
 class TestEnvironment:
     def test_overrides(self):
@@ -105,7 +137,7 @@ class TestEnvironment:
         with env_var("SHIV_COMPILE_WORKERS", "one bazillion"):
             assert env.compile_workers == 0
 
-    def test_serialize(self):
+    def test_roundtrip(self):
         env = Environment()
         env_as_json = env.to_json()
         env_from_json = Environment.from_json(env_as_json)
