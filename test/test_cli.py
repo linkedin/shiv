@@ -12,10 +12,6 @@ from shiv.cli import main, _interpreter_path
 from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS_OR_SITE_PACKAGES, NO_OUTFILE, BLACKLISTED_ARGS
 
 
-def strip_header(output):
-    return '\n'.join(output.splitlines()[1:])
-
-
 class TestCLI:
     @pytest.fixture
     def runner(self):
@@ -24,12 +20,12 @@ class TestCLI:
     def test_no_args(self, runner):
         result = runner([])
         assert result.exit_code == 1
-        assert strip_header(result.output) == NO_PIP_ARGS_OR_SITE_PACKAGES
+        assert NO_PIP_ARGS_OR_SITE_PACKAGES in result.output
 
     def test_no_outfile(self, runner):
         result = runner(['-e', 'test', 'flask'])
         assert result.exit_code == 1
-        assert strip_header(result.output) == NO_OUTFILE
+        assert NO_OUTFILE in result.output
 
     def test_find_interpreter(self):
         interpreter = _interpreter_path()
@@ -48,7 +44,7 @@ class TestCLI:
         assert result.exit_code == 1
 
         # assert we got the correct reason
-        assert strip_header(result.output) == DISALLOWED_PIP_ARGS.format(arg=arg, reason=reason)
+        assert DISALLOWED_PIP_ARGS.format(arg=arg, reason=reason) in result.output
 
     @pytest.mark.parametrize('compile_option', ["--compile-pyc", "--no-compile-pyc"])
     def test_hello_world(self, tmpdir, runner, package_location, compile_option, monkeypatch):
@@ -108,3 +104,30 @@ class TestCLI:
                 with subprocess.Popen([str(output_file)], stdout=subprocess.PIPE, shell=True) as proc:
                     pythonpath_has_root = (str(shiv_root) in proc.stdout.read().decode())
                     assert env_option.startswith('--no') != pythonpath_has_root
+
+    def test_no_entrypoint(self, tmpdir, runner, package_location, monkeypatch):
+
+        with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
+            output_file = Path(tmpdir, 'test.pyz')
+
+            result = runner(['-o', str(output_file), str(package_location)])
+
+            # check that the command successfully completed
+            assert result.exit_code == 0
+
+            # ensure the created file actually exists
+            assert output_file.exists()
+
+            # now run the produced zipapp
+            with monkeypatch.context() as m:
+                m.setenv('SHIV_ROOT', tmpdir)
+                proc = subprocess.run(
+                    [str(output_file)],
+                    input=b"import hello;print(hello)",
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    shell=True,
+                )
+
+        assert proc.returncode == 0
+        assert "hello" in proc.stdout.decode()
