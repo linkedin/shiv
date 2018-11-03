@@ -19,14 +19,14 @@ from . import builder
 from . import bootstrap
 from .bootstrap.environment import Environment
 from .constants import (
-    BLACKLISTED_ARGS,
+    DISALLOWED_ARGS,
     DISALLOWED_PIP_ARGS,
     NO_PIP_ARGS_OR_SITE_PACKAGES,
     NO_OUTFILE,
     NO_ENTRY_POINT,
 )
 
-__version__ = "0.0.38"
+__version__ = "0.0.39"
 
 
 def find_entry_point(site_packages: Path, console_script: str) -> str:
@@ -148,12 +148,12 @@ def main(
         sys.exit(NO_OUTFILE)
 
     # check for disallowed pip arguments
-    for blacklisted_arg in BLACKLISTED_ARGS:
+    for disallowed in DISALLOWED_ARGS:
         for supplied_arg in pip_args:
-            if supplied_arg in blacklisted_arg:
+            if supplied_arg in disallowed:
                 sys.exit(
                     DISALLOWED_PIP_ARGS.format(
-                        arg=supplied_arg, reason=BLACKLISTED_ARGS[blacklisted_arg]
+                        arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed]
                     )
                 )
 

@@ -90,6 +90,12 @@ def _first_sitedir_index():
             return index
 
 
+def _extend_python_path(additional_paths):
+    python_path = os.environ["PYTHONPATH"].split(os.pathsep) if "PYTHONPATH" in os.environ else []
+    python_path.extend(additional_paths)
+    os.environ["PYTHONPATH"] = os.pathsep.join(python_path)
+
+
 def bootstrap():
     """Actually bootstrap our shiv environment."""
 
@@ -118,14 +124,7 @@ def bootstrap():
 
     # add our site-packages to the environment, if requested
     if env.extend_pythonpath:
-
-        if "PYTHONPATH" in os.environ:
-            python_path = os.environ["PYTHONPATH"].split(os.pathsep)
-        else:
-            python_path = []
-
-        python_path.extend(sys.path[length:])
-        os.environ["PYTHONPATH"] = os.pathsep.join(python_path)
+        _extend_python_path(sys.path[index:])
 
     # reorder to place our site-packages before any others found
     sys.path = sys.path[:index] + sys.path[length:] + sys.path[index:length]
