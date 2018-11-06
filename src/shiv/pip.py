@@ -5,6 +5,9 @@ import sys
 
 from typing import Generator, List
 
+import click
+
+from .bootstrap import _first_sitedir_index, _extend_python_path
 from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR
 
 
@@ -42,15 +45,23 @@ def install(args: List[str]) -> None:
     """
     with clean_pip_env():
 
+        # if being invoked as a pyz, we must ensure we have access to our own
+        # site-packages when subprocessing since there is no guarantee that pip
+        # will be available
+        subprocess_env = os.environ.copy()
+        sitedir_index = _first_sitedir_index()
+        _extend_python_path(subprocess_env, sys.path[sitedir_index:])
+
         process = subprocess.Popen(
             [sys.executable, "-m", "pip", "--disable-pip-version-check", "install"] + args,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            env=subprocess_env,
         )
 
         for output in process.stdout:
             if output:
-                print(output.decode().rstrip())
+                click.echo(output.decode().rstrip())
 
         if process.wait() > 0:
             sys.exit(PIP_INSTALL_ERROR)
