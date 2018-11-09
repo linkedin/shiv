@@ -93,12 +93,10 @@ class TestBootstrap:
     @pytest.mark.parametrize("additional_paths", (["test"], ["test", ".pth"]))
     def test_extend_path(self, additional_paths):
 
-        orig = os.environ.copy()
+        env = os.environ.copy()
 
-        _extend_python_path(additional_paths)
-        assert os.environ["PYTHONPATH"] == os.pathsep.join(additional_paths)
-
-        os.environ = orig
+        _extend_python_path(env, additional_paths)
+        assert env["PYTHONPATH"] == os.pathsep.join(additional_paths)
 
 
 class TestEnvironment:

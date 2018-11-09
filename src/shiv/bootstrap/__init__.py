@@ -86,14 +86,14 @@ def extract_site_packages(archive, target_path, compile_pyc, compile_workers=0):
 
 def _first_sitedir_index():
     for index, part in enumerate(sys.path):
-        if Path(part).stem in ["site-packages", "dist-packages"]:
+        if Path(part).stem in ("site-packages", "dist-packages"):
             return index
 
 
-def _extend_python_path(additional_paths):
-    python_path = os.environ["PYTHONPATH"].split(os.pathsep) if "PYTHONPATH" in os.environ else []
+def _extend_python_path(environ, additional_paths):
+    python_path = environ["PYTHONPATH"].split(os.pathsep) if "PYTHONPATH" in environ else []
     python_path.extend(additional_paths)
-    os.environ["PYTHONPATH"] = os.pathsep.join(python_path)
+    environ["PYTHONPATH"] = os.pathsep.join(python_path)
 
 
 def bootstrap():
@@ -124,7 +124,7 @@ def bootstrap():
 
     # add our site-packages to the environment, if requested
     if env.extend_pythonpath:
-        _extend_python_path(sys.path[index:])
+        _extend_python_path(os.environ, sys.path[index:])
 
     # reorder to place our site-packages before any others found
     sys.path = sys.path[:index] + sys.path[length:] + sys.path[index:length]
