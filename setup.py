@@ -13,7 +13,7 @@ from pathlib import Path
 from setuptools.command import easy_install
 
 install_requires = [
-    'click==6.7',
+    'click>=6.7',
     'pip>=9.0.3',
 ]
 
