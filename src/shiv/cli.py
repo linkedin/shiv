@@ -117,7 +117,7 @@ def _interpreter_path(append_version: bool = False) -> str:
 )
 @click.option(
     "--compile-pyc/--no-compile-pyc",
-    default=True,
+    default=False,
     help="Whether or not to compile pyc files during initial bootstrap.",
 )
 @click.option(
