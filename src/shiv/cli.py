@@ -8,6 +8,7 @@ except ImportError:
     import importlib_resources  # type: ignore
 
 from configparser import ConfigParser
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional, List, no_type_check
@@ -178,11 +179,13 @@ def main(
 
         # create runtime environment metadata
         env = Environment(
+            built_at=str(datetime.now()),
             build_id=str(uuid.uuid4()),
             entry_point=entry_point,
             script=console_script,
             compile_pyc=compile_pyc,
             extend_pythonpath=extend_pythonpath,
+            shiv_version=__version__,
         )
 
         Path(working_path, "environment.json").write_text(env.to_json())

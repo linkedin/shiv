@@ -2,6 +2,7 @@ import os
 import sys
 
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from site import addsitedir
 from code import interact
@@ -112,7 +113,12 @@ class TestBootstrap:
 
 class TestEnvironment:
     def test_overrides(self):
-        env = Environment()
+        now = str(datetime.now())
+        version = "0.0.1"
+        env = Environment(now, version)
+
+        assert env.built_at == now
+        assert env.shiv_version == version
 
         assert env.entry_point is None
         with env_var('SHIV_ENTRY_POINT', 'test'):
@@ -147,7 +153,9 @@ class TestEnvironment:
             assert env.compile_workers == 0
 
     def test_roundtrip(self):
-        env = Environment()
+        now = str(datetime.now())
+        version = "0.0.1"
+        env = Environment(now, version)
         env_as_json = env.to_json()
         env_from_json = Environment.from_json(env_as_json)
         assert env.__dict__ == env_from_json.__dict__

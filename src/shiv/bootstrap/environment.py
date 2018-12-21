@@ -26,6 +26,8 @@ class Environment:
 
     def __init__(
         self,
+        built_at,
+        shiv_version,
         build_id=None,
         entry_point=None,
         script=None,
@@ -33,6 +35,8 @@ class Environment:
         compile_pyc=True,
         extend_pythonpath=False,
     ):
+        self.built_at = built_at
+        self.shiv_version = shiv_version
         self.build_id = build_id
         self.always_write_cache = always_write_cache
         self.script = script
