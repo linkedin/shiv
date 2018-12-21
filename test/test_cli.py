@@ -12,6 +12,7 @@ from click.testing import CliRunner
 
 from shiv.cli import main, find_entry_point, _interpreter_path
 from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS_OR_SITE_PACKAGES, NO_OUTFILE, DISALLOWED_ARGS
+from shiv.info import main as info_main
 from shiv.pip import install
 
 
@@ -40,6 +41,12 @@ class TestCLI:
         """Returns a click test runner."""
 
         return lambda args: CliRunner().invoke(main, args)
+
+    @pytest.fixture
+    def info_runner(self):
+        """Returns a click test runner (for shiv-info)."""
+
+        return lambda args: CliRunner().invoke(info_main, args)
 
     def test_find_entry_point(self, tmpdir, package_location):
         """Test that we can find console_script metadata."""
@@ -96,7 +103,7 @@ class TestCLI:
 
     @pytest.mark.parametrize('compile_option', ["--compile-pyc", "--no-compile-pyc"])
     @pytest.mark.parametrize('force', ["yes", "no"])
-    def test_hello_world(self, runner, shiv_root, package_location, compile_option, force):
+    def test_hello_world(self, runner, info_runner, shiv_root, package_location, compile_option, force):
         output_file = Path(shiv_root, 'test.pyz')
 
         result = runner(['-e', 'hello:main', '-o', str(output_file), str(package_location), compile_option])
@@ -114,6 +121,13 @@ class TestCLI:
         proc = subprocess.run([str(output_file)], stdout=subprocess.PIPE, shell=True, env=env)
 
         assert proc.stdout.decode() == "hello world" + os.linesep
+
+        # now run shiv-info on the produced zipapp
+        result = info_runner([str(output_file)])
+
+        # check the rc and output
+        assert result.exit_code == 0
+        assert f"pyz file: {str(output_file)}" in result.output
 
     @pytest.mark.parametrize("extend_path", ["--extend-pythonpath", "--no-extend-pythonpath", "-E"])
     def test_extend_pythonpath(self, shiv_root, runner, extend_path):

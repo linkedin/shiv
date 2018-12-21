@@ -124,6 +124,7 @@ setuptools.setup(
     entry_points={
         'console_scripts': [
             'shiv = shiv.cli:main',
+            'shiv-info = shiv.info:main',
         ],
     },
     include_package_data=True,
