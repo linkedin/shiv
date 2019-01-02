@@ -1,5 +1,6 @@
 import compileall
 import os
+import runpy
 import site
 import sys
 import shutil
@@ -139,9 +140,12 @@ def bootstrap():
             # callable shares a name with it's parent module
             # e.g. "from foo.bar import bar; bar()"
             sys.exit(getattr(mod, env.entry_point.replace(":", ".").split(".")[1])())
-    else:
-        # drop into interactive mode
-        execute_interpreter()
+
+    elif env.script is not None:
+        sys.exit(runpy.run_path(site_packages / "bin" / env.script, run_name="__main__"))
+
+    # all other options exhausted, drop into interactive mode
+    execute_interpreter()
 
 
 if __name__ == "__main__":

@@ -171,13 +171,16 @@ def main(
         if entry_point is None and console_script is not None:
             try:
                 entry_point = find_entry_point(tmp_site_packages, console_script)
+
             except KeyError:
-                sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
+                if not Path(tmp_site_packages, "bin", console_script).exists():
+                    sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
 
         # create runtime environment metadata
         env = Environment(
             build_id=str(uuid.uuid4()),
             entry_point=entry_point,
+            script=console_script,
             compile_pyc=compile_pyc,
             extend_pythonpath=extend_pythonpath,
         )
