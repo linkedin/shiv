@@ -97,7 +97,7 @@ def _extend_python_path(environ, additional_paths):
     environ["PYTHONPATH"] = os.pathsep.join(python_path)
 
 
-def bootstrap():
+def bootstrap():  # pragma: no cover
     """Actually bootstrap our shiv environment."""
 
     # get a handle of the currently executing zip file
