@@ -10,8 +10,9 @@ import pytest
 
 from click.testing import CliRunner
 
-from shiv.cli import main, _interpreter_path
+from shiv.cli import main, find_entry_point, _interpreter_path
 from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS_OR_SITE_PACKAGES, NO_OUTFILE, DISALLOWED_ARGS
+from shiv.pip import install
 
 
 @contextlib.contextmanager
@@ -39,6 +40,11 @@ class TestCLI:
         """Returns a click test runner."""
 
         return lambda args: CliRunner().invoke(main, args)
+
+    def test_find_entry_point(self, tmpdir, package_location):
+        """Test that we can find console_script metadata."""
+        install(['-t', str(tmpdir), str(package_location)])
+        assert find_entry_point(Path(tmpdir), "hello") == "hello:main"
 
     def test_no_args(self, runner):
         """This should fail with a warning about supplying pip arguments"""
