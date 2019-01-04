@@ -89,7 +89,8 @@ class TestCLI:
         assert DISALLOWED_PIP_ARGS.format(arg=arg, reason=reason) in result.output
 
     @pytest.mark.parametrize('compile_option', ["--compile-pyc", "--no-compile-pyc"])
-    def test_hello_world(self, runner, shiv_root, package_location, compile_option):
+    @pytest.mark.parametrize('force', ["yes", "no"])
+    def test_hello_world(self, runner, shiv_root, package_location, compile_option, force):
         output_file = Path(shiv_root, 'test.pyz')
 
         result = runner(['-e', 'hello:main', '-o', str(output_file), str(package_location), compile_option])
@@ -100,8 +101,11 @@ class TestCLI:
         # ensure the created file actually exists
         assert output_file.exists()
 
+        # build env
+        env = {**os.environ, "SHIV_FORCE_EXTRACT": force}
+
         # now run the produced zipapp
-        proc = subprocess.run([str(output_file)], stdout=subprocess.PIPE, shell=True, env=os.environ)
+        proc = subprocess.run([str(output_file)], stdout=subprocess.PIPE, shell=True, env=env)
 
         assert proc.stdout.decode() == "hello world" + os.linesep
 

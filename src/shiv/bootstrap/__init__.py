@@ -9,6 +9,7 @@ import zipfile
 from importlib import import_module
 from pathlib import Path
 
+from .filelock import FileLock
 from .environment import Environment
 from .interpreter import execute_interpreter
 
@@ -66,23 +67,35 @@ def cache_path(archive, root_dir, build_id):
     return root / f"{name}_{build_id}"
 
 
-def extract_site_packages(archive, target_path, compile_pyc, compile_workers=0):
+def extract_site_packages(archive, target_path, compile_pyc, compile_workers=0, force=False):
     """Extract everything in site-packages to a specified path.
 
     :param ZipFile archive: The zipfile object we are bootstrapping from.
     :param Path target_path: The path to extract our zip to.
     """
     target_path_tmp = Path(target_path.parent, target_path.stem + ".tmp")
+    lock = Path(target_path.parent, target_path.stem + ".lock")
 
-    for filename in archive.namelist():
-        if filename.startswith("site-packages"):
-            archive.extract(filename, target_path_tmp)
+    with FileLock(lock):
 
-    if compile_pyc:
-        compileall.compile_dir(target_path_tmp, quiet=2, workers=compile_workers)
+        # we acquired a lock, it's possible that prior invocation was holding the lock and has
+        # completed bootstrapping, so let's check (again) if we need to do any work
+        if not target_path.exists() or force:
 
-    # atomic move
-    shutil.move(str(target_path_tmp), str(target_path))
+            # extract our site-packages
+            for filename in archive.namelist():
+                if filename.startswith("site-packages"):
+                    archive.extract(filename, target_path_tmp)
+
+            if compile_pyc:
+                compileall.compile_dir(target_path_tmp, quiet=2, workers=compile_workers)
+
+            # if using `force` we will need to delete our target path
+            if target_path.exists():
+                shutil.rmtree(str(target_path))
+
+            # atomic move
+            shutil.move(str(target_path_tmp), str(target_path))
 
 
 def _first_sitedir_index():
@@ -111,7 +124,7 @@ def bootstrap():  # pragma: no cover
 
     # determine if first run or forcing extract
     if not site_packages.exists() or env.force_extract:
-        extract_site_packages(archive, site_packages.parent, env.compile_pyc, env.compile_workers)
+        extract_site_packages(archive, site_packages.parent, env.compile_pyc, env.compile_workers, env.force_extract)
 
     # get sys.path's length
     length = len(sys.path)

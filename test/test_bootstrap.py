@@ -21,6 +21,7 @@ from shiv.bootstrap import (
     extract_site_packages,
 )
 from shiv.bootstrap.environment import Environment
+from shiv.bootstrap.filelock import FileLock
 
 
 @contextmanager
@@ -76,13 +77,18 @@ class TestBootstrap:
             assert _first_sitedir_index() is None
 
     @pytest.mark.parametrize("compile_pyc", (False, True))
-    def test_extract_site_packages(self, tmpdir, zip_location, compile_pyc):
+    @pytest.mark.parametrize("force", (False, True))
+    def test_extract_site_packages(self, tmpdir, zip_location, compile_pyc, force):
 
         zipfile = ZipFile(str(zip_location))
         target = Path(tmpdir, "test")
 
+        if force:
+            # we want to make sure we overwrite if the target exists when using force
+            target.mkdir(parents=True, exist_ok=True)
+
         # Do the extraction (of our empty zip file)
-        extract_site_packages(zipfile, target, compile_pyc)
+        extract_site_packages(zipfile, target, compile_pyc, force=force)
 
         site_packages = target / "site-packages"
         assert site_packages.exists()
@@ -140,3 +146,9 @@ class TestEnvironment:
         env_as_json = env.to_json()
         env_from_json = Environment.from_json(env_as_json)
         assert env.__dict__ == env_from_json.__dict__
+
+    def test_lock(self):
+        with FileLock("lockfile") as f:
+            assert f.is_locked
+
+        assert not f.is_locked
