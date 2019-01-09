@@ -76,12 +76,17 @@ class TestBootstrap:
         with mock.patch.object(sys, 'path', []):
             assert _first_sitedir_index() is None
 
+    @pytest.mark.parametrize("nested", (False, True))
     @pytest.mark.parametrize("compile_pyc", (False, True))
     @pytest.mark.parametrize("force", (False, True))
-    def test_extract_site_packages(self, tmpdir, zip_location, compile_pyc, force):
+    def test_extract_site_packages(self, tmpdir, zip_location, nested, compile_pyc, force):
 
         zipfile = ZipFile(str(zip_location))
         target = Path(tmpdir, "test")
+
+        if nested:
+            # we want to test for not-yet-created shiv root dirs
+            target = target / "nested" / "root"
 
         if force:
             # we want to make sure we overwrite if the target exists when using force

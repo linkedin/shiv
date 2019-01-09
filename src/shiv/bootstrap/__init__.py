@@ -73,8 +73,13 @@ def extract_site_packages(archive, target_path, compile_pyc, compile_workers=0, 
     :param ZipFile archive: The zipfile object we are bootstrapping from.
     :param Path target_path: The path to extract our zip to.
     """
-    target_path_tmp = Path(target_path.parent, target_path.stem + ".tmp")
-    lock = Path(target_path.parent, target_path.stem + ".lock")
+    parent = target_path.parent
+    target_path_tmp = Path(parent, target_path.stem + ".tmp")
+    lock = Path(parent, target_path.stem + ".lock")
+
+    # If this is the first time that a pyz is being extracted, we'll need to create the ~/.shiv dir
+    if not parent.exists():
+        parent.mkdir(parents=True, exist_ok=True)
 
     with FileLock(lock):
 
