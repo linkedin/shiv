@@ -148,19 +148,22 @@ def bootstrap():  # pragma: no cover
     # reorder to place our site-packages before any others found
     sys.path = sys.path[:index] + sys.path[length:] + sys.path[index:length]
 
-    # do entry point import and call
-    if env.entry_point is not None and env.interpreter is None:
-        mod = import_string(env.entry_point)
-        try:
-            sys.exit(mod())
-        except TypeError:
-            # catch "<module> is not callable", which is thrown when the entry point's
-            # callable shares a name with it's parent module
-            # e.g. "from foo.bar import bar; bar()"
-            sys.exit(getattr(mod, env.entry_point.replace(":", ".").split(".")[1])())
+    # first check if we should drop into interactive mode
+    if not env.interpreter:
 
-    elif env.script is not None:
-        sys.exit(runpy.run_path(site_packages / "bin" / env.script, run_name="__main__"))
+        # do entry point import and call
+        if env.entry_point is not None:
+            mod = import_string(env.entry_point)
+            try:
+                sys.exit(mod())
+            except TypeError:
+                # catch "<module> is not callable", which is thrown when the entry point's
+                # callable shares a name with it's parent module
+                # e.g. "from foo.bar import bar; bar()"
+                sys.exit(getattr(mod, env.entry_point.replace(":", ".").split(".")[1])())
+
+        elif env.script is not None:
+            sys.exit(runpy.run_path(site_packages / "bin" / env.script, run_name="__main__"))
 
     # all other options exhausted, drop into interactive mode
     execute_interpreter()
