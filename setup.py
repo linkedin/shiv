@@ -15,6 +15,7 @@ from setuptools.command import easy_install
 install_requires = [
     'click>=6.7',
     'pip>=9.0.3',
+    'setuptools',
 ]
 
 extras_require = {
