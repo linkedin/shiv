@@ -96,8 +96,8 @@ tox
 
 ### gotchas
 
-Zipapps created with shiv are not cross-compatible with other architectures. For example, a `pyz`
- file built on a Mac will only work on other Macs, likewise for RHEL, etc.
+Zipapps created with shiv are not guaranteed to be cross-compatible with other architectures. For example, a `pyz`
+ file built on a Mac may only work on other Macs, likewise for RHEL, etc. This usually only applies to zipapps that have C extensions in their dependencies. If all your dependencies are pure python, then chances are the `pyz` _will_ work on other platforms. Just something to be aware of.
 
 Zipapps created with shiv *will* extract themselves into `~/.shiv`, unless overridden via
 `SHIV_ROOT`. If you create many utilities with shiv, you may want to occasionally clean this
