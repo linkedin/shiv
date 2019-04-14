@@ -102,6 +102,14 @@ SHIV_FORCE_EXTRACT
 This forces re-extraction of dependencies even if they've already been extracted. If you make
 hotfixes/modifications to the 'cached' dependencies, this will overwrite them.
 
+SHIV_EXTEND_PYTHONPATH
+^^^^^^^^^^^^^^^^^^^^^^
+
+This is a boolean that adds the modules bundled into the zipapp into the ``PYTHONPATH`` environment
+variable. It is not needed for most applications, but if an application calls Python as a
+subprocess, expecting to be able to import the modules bundled in the zipapp, this will allow it
+to do so successfully.
+
 Table of Contents
 =================
 
@@ -110,6 +118,7 @@ Table of Contents
 
    history
    api
+   django
 
 Indices and tables
 ==================

@@ -12,8 +12,16 @@ import pytest
 
 from unittest import mock
 
-from shiv.bootstrap import import_string, current_zipfile, cache_path
+from shiv.bootstrap import (
+    _first_sitedir_index,
+    _extend_python_path,
+    import_string,
+    current_zipfile,
+    cache_path,
+    extract_site_packages,
+)
 from shiv.bootstrap.environment import Environment
+from shiv.bootstrap.filelock import FileLock
 
 
 @contextmanager
@@ -24,7 +32,7 @@ def env_var(key, value):
 
 
 class TestBootstrap:
-    def test_various_imports(self):
+    def test_import_string(self):
         assert import_string('site.addsitedir') == addsitedir
         assert import_string('site:addsitedir') == addsitedir
         assert import_string('code.interact') == interact
@@ -61,6 +69,46 @@ class TestBootstrap:
 
         assert cache_path(mock_zip, Path.cwd(), uuid) == Path.cwd() / f"test_{uuid}"
 
+    def test_first_sitedir_index(self):
+        with mock.patch.object(sys, 'path', ['site-packages', 'dir', 'dir', 'dir']):
+            assert _first_sitedir_index() == 0
+
+        with mock.patch.object(sys, 'path', []):
+            assert _first_sitedir_index() is None
+
+    @pytest.mark.parametrize("nested", (False, True))
+    @pytest.mark.parametrize("compile_pyc", (False, True))
+    @pytest.mark.parametrize("force", (False, True))
+    def test_extract_site_packages(self, tmpdir, zip_location, nested, compile_pyc, force):
+
+        zipfile = ZipFile(str(zip_location))
+        target = Path(tmpdir, "test")
+
+        if nested:
+            # we want to test for not-yet-created shiv root dirs
+            target = target / "nested" / "root"
+
+        if force:
+            # we want to make sure we overwrite if the target exists when using force
+            target.mkdir(parents=True, exist_ok=True)
+
+        # Do the extraction (of our empty zip file)
+        extract_site_packages(zipfile, target, compile_pyc, force=force)
+
+        site_packages = target / "site-packages"
+        assert site_packages.exists()
+        assert site_packages.is_dir()
+        assert Path(site_packages, "test").exists()
+        assert Path(site_packages, "test").is_file()
+
+    @pytest.mark.parametrize("additional_paths", (["test"], ["test", ".pth"]))
+    def test_extend_path(self, additional_paths):
+
+        env = os.environ.copy()
+
+        _extend_python_path(env, additional_paths)
+        assert env["PYTHONPATH"] == os.pathsep.join(additional_paths)
+
 
 class TestEnvironment:
     def test_overrides(self):
@@ -82,8 +130,30 @@ class TestEnvironment:
         with env_var('SHIV_FORCE_EXTRACT', '1'):
             assert env.force_extract is True
 
-    def test_serialize(self):
+        assert env.compile_pyc is True
+        with env_var("SHIV_COMPILE_PYC", "False"):
+            assert env.compile_pyc is False
+
+        assert env.extend_pythonpath is False
+        with env_var("SHIV_EXTEND_PYTHONPATH", "1"):
+            assert env.compile_pyc is True
+
+        assert env.compile_workers == 0
+        with env_var("SHIV_COMPILE_WORKERS", "1"):
+            assert env.compile_workers == 1
+
+        # ensure that non-digits are ignored
+        with env_var("SHIV_COMPILE_WORKERS", "one bazillion"):
+            assert env.compile_workers == 0
+
+    def test_roundtrip(self):
         env = Environment()
         env_as_json = env.to_json()
         env_from_json = Environment.from_json(env_as_json)
         assert env.__dict__ == env_from_json.__dict__
+
+    def test_lock(self):
+        with FileLock("lockfile") as f:
+            assert f.is_locked
+
+        assert not f.is_locked

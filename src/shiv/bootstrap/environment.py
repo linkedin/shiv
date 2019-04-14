@@ -2,11 +2,16 @@
 This module contains the ``Environment`` object, which combines settings decided at build time with
 overrides defined at runtime (via environment variables).
 """
-import copy
 import json
 import os
 
 from pathlib import Path
+
+
+def str_bool(v):
+    if not isinstance(v, bool):
+        return str(v).lower() in ("yes", "true", "t", "1")
+    return v
 
 
 class Environment:
@@ -15,34 +20,42 @@ class Environment:
     MODULE = "SHIV_MODULE"
     ROOT = "SHIV_ROOT"
     FORCE_EXTRACT = "SHIV_FORCE_EXTRACT"
+    COMPILE_PYC = "SHIV_COMPILE_PYC"
+    COMPILE_WORKERS = "SHIV_COMPILE_WORKERS"
+    EXTEND_PYTHONPATH = "SHIV_EXTEND_PYTHONPATH"
 
     def __init__(
         self,
         build_id=None,
         entry_point=None,
+        script=None,
         always_write_cache=False,
+        compile_pyc=True,
+        extend_pythonpath=False,
     ):
         self.build_id = build_id
         self.always_write_cache = always_write_cache
+        self.script = script
 
         # properties
         self._entry_point = entry_point
+        self._compile_pyc = compile_pyc
+        self._extend_pythonpath = extend_pythonpath
 
     @classmethod
     def from_json(cls, json_data):
         return Environment(**json.loads(json_data))
 
     def to_json(self):
-        d = copy.copy(self.__dict__)
-        del d["_entry_point"]
-        d["entry_point"] = self.entry_point
-        return json.dumps(d)
+        return json.dumps(
+            # we strip the leading underscores to retain properties (such as _entry_point)
+            {key.lstrip("_"): value for key, value in self.__dict__.items()}
+        )
 
     @property
     def entry_point(self):
         return os.environ.get(
-            self.ENTRY_POINT,
-            os.environ.get(self.MODULE, self._entry_point),
+            self.ENTRY_POINT, os.environ.get(self.MODULE, self._entry_point)
         )
 
     @property
@@ -56,4 +69,19 @@ class Environment:
 
     @property
     def force_extract(self):
-        return bool(os.environ.get(self.FORCE_EXTRACT, self.always_write_cache))
+        return str_bool(os.environ.get(self.FORCE_EXTRACT, self.always_write_cache))
+
+    @property
+    def compile_pyc(self):
+        return str_bool(os.environ.get(self.COMPILE_PYC, self._compile_pyc))
+
+    @property
+    def extend_pythonpath(self):
+        return str_bool(os.environ.get(self.EXTEND_PYTHONPATH, self._extend_pythonpath))
+
+    @property
+    def compile_workers(self):
+        try:
+            return int(os.environ.get(self.COMPILE_WORKERS, 0))
+        except ValueError:
+            return 0

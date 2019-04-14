@@ -25,12 +25,14 @@ def tmp_write_prefix(interpreter):
 
 
 class TestBuilder:
+
     @pytest.mark.parametrize(
-        'interpreter,expected', [
-            ('/usr/bin/python', b'#!/usr/bin/python\n'),
-            ('/usr/bin/env python', b'#!/usr/bin/env python\n'),
-            ('/some/other/path/python -sE', b'#!/some/other/path/python -sE\n'),
-        ]
+        "interpreter,expected",
+        [
+            ("/usr/bin/python", b"#!/usr/bin/python\n"),
+            ("/usr/bin/env python", b"#!/usr/bin/env python\n"),
+            ("/some/other/path/python -sE", b"#!/some/other/path/python -sE\n"),
+        ],
     )
     def test_file_prefix(self, interpreter, expected):
         assert tmp_write_prefix(interpreter) == expected
@@ -41,24 +43,25 @@ class TestBuilder:
 
     def test_create_archive(self, sp):
         with tempfile.TemporaryDirectory() as tmpdir:
-            target = Path(tmpdir, 'test.zip')
+            target = Path(tmpdir, "test.zip")
 
             # create an archive
-            create_archive(sp, target, sys.executable, 'code:interact')
+            create_archive(sp, target, sys.executable, "code:interact")
 
             # create one again (to ensure we overwrite)
-            create_archive(sp, target, sys.executable, 'code:interact')
+            create_archive(sp, target, sys.executable, "code:interact")
 
             assert zipfile.is_zipfile(str(target))
 
             with pytest.raises(ZipAppError):
-                create_archive(sp, target, sys.executable, 'alsjdbas,,,')
+                create_archive(sp, target, sys.executable, "alsjdbas,,,")
 
-    @pytest.mark.skipif(os.name == 'nt',
-                        reason='windows has no concept of execute permissions')
+    @pytest.mark.skipif(
+        os.name == "nt", reason="windows has no concept of execute permissions"
+    )
     def test_archive_permissions(self, sp):
         with tempfile.TemporaryDirectory() as tmpdir:
-            target = Path(tmpdir, 'test.zip')
-            create_archive(sp, target, sys.executable, 'code:interact')
+            target = Path(tmpdir, "test.zip")
+            create_archive(sp, target, sys.executable, "code:interact")
 
             assert target.stat().st_mode & UGOX == UGOX

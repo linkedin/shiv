@@ -4,8 +4,9 @@
 [![Coverage Status](https://coveralls.io/repos/github/linkedin/shiv/badge.svg)](https://coveralls.io/github/linkedin/shiv)
 [![Documentation Status](https://readthedocs.org/projects/shiv/badge/?version=latest)](http://shiv.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
+[![Supported](https://img.shields.io/pypi/pyversions/shiv.svg)](https://pypi.python.org/pypi/shiv)
 
-![snake](logo.png)
+![snake](https://github.com/linkedin/shiv/raw/master/logo.png)
 
 # shiv
 shiv is a command line utility for building fully self-contained Python zipapps as outlined in [PEP 441](https://www.python.org/dev/peps/pep-0441/), but with all their dependencies included!
@@ -68,8 +69,8 @@ pip install shiv
 You can even create a pyz _of_ shiv _using_ shiv!
 
 ```sh
-python3 -m venv shiv
-source shiv/bin/activate
+python3 -m venv .
+source bin/activate
 pip install shiv
 shiv -c shiv -o shiv shiv
 ```
@@ -95,8 +96,8 @@ tox
 
 ### gotchas
 
-Zipapps created with shiv are not cross-compatible with other architectures. For example, a `pyz`
- file built on a Mac will only work on other Macs, likewise for RHEL, etc.
+Zipapps created with shiv are not guaranteed to be cross-compatible with other architectures. For example, a `pyz`
+ file built on a Mac may only work on other Macs, likewise for RHEL, etc. This usually only applies to zipapps that have C extensions in their dependencies. If all your dependencies are pure python, then chances are the `pyz` _will_ work on other platforms. Just something to be aware of.
 
 Zipapps created with shiv *will* extract themselves into `~/.shiv`, unless overridden via
 `SHIV_ROOT`. If you create many utilities with shiv, you may want to occasionally clean this

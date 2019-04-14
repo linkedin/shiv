@@ -12,13 +12,22 @@ import venv
 from pathlib import Path
 from setuptools.command import easy_install
 
-requirements = [
-    'click==6.7',
-    'pip>=9.0.1',
-    'importlib_resources>=0.4',
-    'crayons>=0.1.2',
-    'blindspin>=2.0.1'
+
+install_requires = [
+    'click>=6.7',
+    'pip>=9.0.3',
+    'setuptools',
+
 ]
+
+extras_require = {
+    ":python_version<'3.7'": ["importlib_resources>=0.4"]
+}
+
+if int(setuptools.__version__.split('.')[0]) < 18:
+    extras_require = {}
+    if sys.version_info < (3, 7):
+        install_requires.append('importlib_resources>=0.4')
 
 # The following template and classmethod are copied from
 # fast entry points, Copyright (c) 2016, Aaron Christianson
@@ -103,7 +112,7 @@ def readme():
 
 setuptools.setup(
     name='shiv',
-    version='0.0.29',
+    version='0.0.44',
     description="A command line utility for building fully self contained Python zipapps.",
     long_description=readme(),
     long_description_content_type='text/markdown',
@@ -112,7 +121,8 @@ setuptools.setup(
     url="https://github.com/linkedin/shiv",
     packages=setuptools.find_packages('src'),
     package_dir={'': 'src'},
-    install_requires=requirements,
+    install_requires=install_requires,
+    extras_require=extras_require,
     entry_points={
         'console_scripts': [
             'shiv = shiv.cli:main',
@@ -126,5 +136,6 @@ setuptools.setup(
         'Programming Language :: Python :: 3 :: Only',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
 )
