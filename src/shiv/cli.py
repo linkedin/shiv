@@ -27,7 +27,7 @@ from .constants import (
     NO_ENTRY_POINT,
 )
 
-__version__ = "0.0.44"
+__version__ = "0.0.45"
 
 
 def find_entry_point(site_packages: Path, console_script: str) -> str:
