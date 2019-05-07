@@ -200,11 +200,13 @@ def main(
 
         # create runtime environment metadata
         env = Environment(
+            built_at=str(datetime.now()),
             build_id=str(uuid.uuid4()),
             entry_point=entry_point,
             script=console_script,
             compile_pyc=compile_pyc,
             extend_pythonpath=extend_pythonpath,
+            shiv_version=__version__,
         )
 
         Path(working_path, "environment.json").write_text(env.to_json())

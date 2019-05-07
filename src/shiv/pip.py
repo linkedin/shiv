@@ -41,6 +41,7 @@ def install(args: List[str]) -> None:
         Successfully installed numpy-1.13.3
 
     """
+
     with clean_pip_env():
 
         # if being invoked as a pyz, we must ensure we have access to our own
@@ -51,15 +52,15 @@ def install(args: List[str]) -> None:
         _extend_python_path(subprocess_env, sys.path[sitedir_index:])
 
         process = subprocess.Popen(
-            [sys.executable, "-m", "pip", "--disable-pip-version-check", "install"] + args,
+            [sys.executable, "-m", "pip", "--disable-pip-version-check", "install", *args],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             env=subprocess_env,
         )
 
-        for output in process.stdout:
-            if output:
-                click.echo(output.decode().rstrip())
+    for output in process.stdout:
+        if output:
+            click.echo(output.decode().rstrip())
 
-        if process.wait() > 0:
-            sys.exit(PIP_INSTALL_ERROR)
+    if process.wait() > 0:
+        sys.exit(PIP_INSTALL_ERROR)
