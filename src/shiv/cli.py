@@ -172,6 +172,7 @@ def main(
                     \n\tpython : '{}', \n\tcompressed : {}"
                     .format(output_file, entry_point or '', python or sys.executable, compressed))
         click.secho("\tpip args '{}' ".format(' '.join(pip_args)))
+        
     with TemporaryDirectory() as working_path:
         tmp_site_packages = Path(working_path, "site-packages")
 
@@ -187,7 +188,7 @@ def main(
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
             try:
-                entry_point = find_entry_point(site_packages, console_script)
+                entry_point = find_entry_point(tmp_site_packages, console_script)
                 if verbose:
                     click.secho("Discovered entry point '{}'".format(entry_point))
             except KeyError:
