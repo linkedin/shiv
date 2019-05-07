@@ -2,16 +2,12 @@ import contextlib
 import os
 import subprocess
 import sys
-
 import click
-import crayons
+
 from typing import Generator, List
-
-import click
 
 from .bootstrap import _first_sitedir_index, _extend_python_path
 from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR
-
 
 @contextlib.contextmanager
 def clean_pip_env() -> Generator[None, None, None]:
@@ -63,10 +59,7 @@ def install(args: List[str]) -> None:
 
         for output in process.stdout:
             if output:
-
-                click.echo(crayons.blue(output.decode().rstrip()))
                 click.echo(output.decode().rstrip())
 
-
         if process.wait() > 0:
-            sys.exit(crayons.red(PIP_INSTALL_ERROR))
+            sys.exit(PIP_INSTALL_ERROR)

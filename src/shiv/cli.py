@@ -8,13 +8,12 @@ except ImportError:
     import importlib_resources  # type: ignore
 
 from configparser import ConfigParser
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional, List, no_type_check
 
 import click
-import crayons
-from blindspin import spinner
 
 from . import pip
 from . import builder
@@ -118,6 +117,11 @@ def _interpreter_path(append_version: bool = False) -> str:
     help="Whether or not to compress your zip.",
 )
 @click.option(
+    "--verbose/--quiet",
+    default=False,
+    help="Whether or not to generate versose output.",
+)
+@click.option(
     "--compile-pyc/--no-compile-pyc",
     default=False,
     help="Whether or not to compile pyc files during initial bootstrap.",
@@ -133,6 +137,7 @@ def main(
     console_script: Optional[str],
     python: Optional[str],
     site_packages: Optional[str],
+    verbose: bool,
     compressed: bool,
     compile_pyc: bool,
     extend_pythonpath: bool,
@@ -142,38 +147,27 @@ def main(
     Shiv is a command line utility for building fully self-contained Python zipapps
     as outlined in PEP 441, but with all their dependencies included!
     """
-
-    quiet = "-q" in pip_args or '--quiet' in pip_args
-    if not quiet:
-        click.secho("shiv! " + SHIV, bold=True)
-
-    if not pip_args:
-        sys.exit(crayons.red(NO_PIP_ARGS))
-
-
     if not pip_args and not site_packages:
         sys.exit(NO_PIP_ARGS_OR_SITE_PACKAGES)
+    
+    #verbose = "-v" in pip_args or '--verbose' in pip_args
+    if verbose:
+        click.secho("shiv! ", bold=True)
 
     if output_file is None:
-        sys.exit(crayons.red(NO_OUTFILE))
+        sys.exit(NO_OUTFILE)
 
     # check for disallowed pip arguments
     for disallowed in DISALLOWED_ARGS:
         for supplied_arg in pip_args:
-
-            if supplied_arg in blacklisted_arg:
-                sys.exit(crayons.red(
-                    DISALLOWED_PIP_ARGS.format(
-                        arg=supplied_arg, reason=BLACKLISTED_ARGS[blacklisted_arg]
-                    ))
-
             if supplied_arg in disallowed:
                 sys.exit(
                     DISALLOWED_PIP_ARGS.format(
-                        arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed]
+                        arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed] 
                     )
                 )
-    if not quiet:
+            
+    if verbose:
         click.secho("with args : \n\toutput file : '{}', \n\tentry point : '{}', \
                     \n\tpython : '{}', \n\tcompressed : {}"
                     .format(output_file, entry_point or '', python or sys.executable, compressed))
@@ -181,17 +175,12 @@ def main(
     with TemporaryDirectory() as working_path:
         tmp_site_packages = Path(working_path, "site-packages")
 
-        if not quiet:
-            click.secho("Pip installing dependencies to {}...".format(site_packages), bold=True)
-
-        # install deps into staged site-packages
-        pip.install(
-            ["--target", str(site_packages)] + list(pip_args),
-        )
         if site_packages:
             shutil.copytree(site_packages, tmp_site_packages)
 
         if pip_args:
+            if verbose:
+                click.secho("Pip installing dependencies to {}...".format(site_packages), fg="green", bold=True)
             # install deps into staged site-packages
             pip.install(["--target", str(tmp_site_packages)] + list(pip_args))
 
@@ -199,12 +188,11 @@ def main(
         if entry_point is None and console_script is not None:
             try:
                 entry_point = find_entry_point(site_packages, console_script)
-                if not quiet:
+                if verbose:
                     click.secho("Discovered entry point '{}'".format(entry_point))
             except KeyError:
-                sys.exit(crayons.red(NO_ENTRY_POINT.format(entry_point=console_script)))
+                sys.exit( NO_ENTRY_POINT.format(entry_point=console_script))
 
-                entry_point = find_entry_point(tmp_site_packages, console_script)
 
             except KeyError:
                 if not Path(tmp_site_packages, "bin", console_script).exists():
@@ -225,33 +213,16 @@ def main(
         bootstrap_target = Path(working_path, "_bootstrap")
         bootstrap_target.mkdir(parents=True, exist_ok=True)
 
-        if not quiet:
+        if verbose:
             click.secho("Injecting bootstrap code")
+            
         # copy bootstrap code
         copy_bootstrap(bootstrap_target)
 
-        if not quiet:
+        if verbose:
             click.secho("Creating zip archive")
 
-        with spinner():
-            # create the zip
-            builder.create_archive(
-                Path(working_path),
-                target=Path(output_file),
-                interpreter=python or sys.executable,
-                main="_bootstrap:bootstrap",
-                compressed=compressed,
-            )
-
-    if not quiet:
-        conf_message = "Done, wrote output file to '{}'".format(output_file)
-        if entry_point:
-            conf_message += ", entry point is '{}'".format(entry_point)
-        else:
-            conf_message += ", no entry point specified."
-        click.secho(conf_message, bold=True)
-
-        # create the zip
+         # create the zip
         builder.create_archive(
             Path(working_path),
             target=Path(output_file).expanduser(),
@@ -259,6 +230,14 @@ def main(
             main="_bootstrap:bootstrap",
             compressed=compressed,
         )
+
+        if verbose:
+            conf_message = "Done, wrote output file to '{}'".format(output_file)
+            if entry_point:
+                conf_message += ", entry point is '{}'".format(entry_point)
+            else:
+                conf_message += ", no entry point specified."
+            click.secho(conf_message, bold=True)
 
 if __name__ == "__main__":
     main()  # pragma: no cover
