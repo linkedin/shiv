@@ -149,8 +149,7 @@ def main(
     """
     if not pip_args and not site_packages:
         sys.exit(NO_PIP_ARGS_OR_SITE_PACKAGES)
-    
-    #verbose = "-v" in pip_args or '--verbose' in pip_args
+
     if verbose:
         click.secho("shiv! ", bold=True)
 
@@ -163,16 +162,15 @@ def main(
             if supplied_arg in disallowed:
                 sys.exit(
                     DISALLOWED_PIP_ARGS.format(
-                        arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed] 
+                        arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed]
                     )
                 )
-            
     if verbose:
         click.secho("with args : \n\toutput file : '{}', \n\tentry point : '{}', \
                     \n\tpython : '{}', \n\tcompressed : {}"
                     .format(output_file, entry_point or '', python or sys.executable, compressed))
         click.secho("\tpip args '{}' ".format(' '.join(pip_args)))
-        
+
     with TemporaryDirectory() as working_path:
         tmp_site_packages = Path(working_path, "site-packages")
 
@@ -192,8 +190,7 @@ def main(
                 if verbose:
                     click.secho("Discovered entry point '{}'".format(entry_point))
             except KeyError:
-                sys.exit( NO_ENTRY_POINT.format(entry_point=console_script))
-
+                sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
 
             except KeyError:
                 if not Path(tmp_site_packages, "bin", console_script).exists():
@@ -218,14 +215,14 @@ def main(
 
         if verbose:
             click.secho("Injecting bootstrap code")
-            
+
         # copy bootstrap code
         copy_bootstrap(bootstrap_target)
 
         if verbose:
             click.secho("Creating zip archive")
 
-         # create the zip
+        # create the zip
         builder.create_archive(
             Path(working_path),
             target=Path(output_file).expanduser(),
@@ -241,6 +238,7 @@ def main(
             else:
                 conf_message += ", no entry point specified."
             click.secho(conf_message, bold=True)
+
 
 if __name__ == "__main__":
     main()  # pragma: no cover

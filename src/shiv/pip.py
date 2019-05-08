@@ -9,6 +9,7 @@ from typing import Generator, List
 from .bootstrap import _first_sitedir_index, _extend_python_path
 from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR
 
+
 @contextlib.contextmanager
 def clean_pip_env() -> Generator[None, None, None]:
     """A context manager for temporarily removing 'PIP_REQUIRE_VIRTUALENV' from the environment.
