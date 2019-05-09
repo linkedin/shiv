@@ -110,7 +110,7 @@ def readme():
 
 setuptools.setup(
     name='shiv',
-    version='0.0.45',
+    version='0.0.46',
     description="A command line utility for building fully self contained Python zipapps.",
     long_description=readme(),
     long_description_content_type='text/markdown',
