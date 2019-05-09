@@ -1,26 +1,18 @@
 import os
 import sys
 
+from code import interact
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from site import addsitedir
-from code import interact
+from unittest import mock
 from uuid import uuid4
 from zipfile import ZipFile
 
 import pytest
 
-from unittest import mock
-
-from shiv.bootstrap import (
-    _first_sitedir_index,
-    _extend_python_path,
-    import_string,
-    current_zipfile,
-    cache_path,
-    extract_site_packages,
-)
+from shiv.bootstrap import _extend_python_path, _first_sitedir_index, cache_path, current_zipfile, extract_site_packages, import_string, run
 from shiv.bootstrap.environment import Environment
 from shiv.bootstrap.filelock import FileLock
 
@@ -165,3 +157,8 @@ class TestEnvironment:
             assert f.is_locked
 
         assert not f.is_locked
+
+    def scrub_env(self):
+
+        with mock.patch('sys.exit'):
+            run(lambda: 1)

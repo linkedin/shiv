@@ -6,12 +6,31 @@ import sys
 import shutil
 import zipfile
 
+from contextlib import suppress
+from functools import partial
 from importlib import import_module
 from pathlib import Path
 
 from .filelock import FileLock
 from .environment import Environment
 from .interpreter import execute_interpreter
+
+
+def run(module):  # pragma: no cover
+    """Run a module in a scrubbed environment.
+
+    If a single pyz has multiple callers, we want to remove these vars as we no longer need them
+    and they can cause subprocesses to fail with a ModuleNotFoundError.
+
+    :param callable module: The entry point to invoke the pyz with.
+    """
+    with suppress(KeyError):
+        del os.environ[Environment.MODULE]
+
+    with suppress(KeyError):
+        del os.environ[Environment.ENTRY_POINT]
+
+    sys.exit(module())
 
 
 def current_zipfile():
@@ -153,17 +172,10 @@ def bootstrap():  # pragma: no cover
 
         # do entry point import and call
         if env.entry_point is not None:
-            mod = import_string(env.entry_point)
-            try:
-                sys.exit(mod())
-            except TypeError:
-                # catch "<module> is not callable", which is thrown when the entry point's
-                # callable shares a name with it's parent module
-                # e.g. "from foo.bar import bar; bar()"
-                sys.exit(getattr(mod, env.entry_point.replace(":", ".").split(".")[1])())
+            run(import_string(env.entry_point))
 
         elif env.script is not None:
-            sys.exit(runpy.run_path(site_packages / "bin" / env.script, run_name="__main__"))
+            run(partial(runpy.run_path, site_packages / "bin" / env.script, run_name="__main__"))
 
     # all other options exhausted, drop into interactive mode
     execute_interpreter()
