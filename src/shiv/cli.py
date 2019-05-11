@@ -16,6 +16,7 @@ from typing import Optional, List, no_type_check
 import click
 
 from . import pip
+from .info import write_info
 from . import builder
 from . import bootstrap
 from .bootstrap.environment import Environment
@@ -94,6 +95,13 @@ def _interpreter_path(append_version: bool = False) -> str:
         return sys.executable
 
 
+def write_completed(output_file: str, entry_point: str = None):
+    """ Echo a completed summary """
+
+    click.secho(f"Done, create pyz with settings : ", fg="green", bold=True, nl=False)
+    write_info(False, pyz=output_file)
+
+
 @click.command(
     context_settings=dict(
         help_option_names=["-h", "--help", "--halp"], ignore_unknown_options=True
@@ -117,7 +125,7 @@ def _interpreter_path(append_version: bool = False) -> str:
     help="Whether or not to compress your zip.",
 )
 @click.option(
-    "--verbose/--quiet",
+    "--verbose/--quiet", "-v/-q",
     default=False,
     help="Whether or not to generate versose output.",
 )
@@ -150,9 +158,6 @@ def main(
     if not pip_args and not site_packages:
         sys.exit(NO_PIP_ARGS_OR_SITE_PACKAGES)
 
-    if verbose:
-        click.secho("shiv! ", bold=True)
-
     if output_file is None:
         sys.exit(NO_OUTFILE)
 
@@ -166,10 +171,18 @@ def main(
                     )
                 )
     if verbose:
-        click.secho("with args : \n\toutput file : '{}', \n\tentry point : '{}', \
-                    \n\tpython : '{}', \n\tcompressed : {}"
-                    .format(output_file, entry_point or '', python or sys.executable, compressed))
-        click.secho("\tpip args '{}' ".format(' '.join(pip_args)))
+        click.secho("Running Shiv with args : \n", fg="green", bold=True, nl=False)
+        click.secho("output_file: ", fg="blue", bold=True, nl=False)
+        click.secho(f"{output_file}", fg="white")
+        click.secho("entry_point: ", fg="blue", bold=True, nl=False)
+        click.secho(f"{entry_point or 'None'}", fg="white")
+        click.secho("python: ", fg="blue", bold=True, nl=False)
+        click.secho(f"{python or sys.executable}", fg="white")
+        click.secho("compressed: ", fg="blue", bold=True, nl=False)
+        click.secho(f"{compressed}", fg="white")
+        click.secho("pip args: ", fg="blue", bold=True, nl=False)
+        click.secho(f"{' '.join(pip_args)}")  # ' '.join(pip_args)
+        click.echo()
 
     with TemporaryDirectory() as working_path:
         tmp_site_packages = Path(working_path, "site-packages")
@@ -179,18 +192,16 @@ def main(
 
         if pip_args:
             if verbose:
-                click.secho("Pip installing dependencies to {}...".format(site_packages), fg="green", bold=True)
+                click.secho(f"Pip installing dependencies to {site_packages}...", fg="green", bold=True, nl=False)
             # install deps into staged site-packages
             pip.install(["--target", str(tmp_site_packages)] + list(pip_args))
-
+            click.secho()
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
             try:
                 entry_point = find_entry_point(tmp_site_packages, console_script)
                 if verbose:
-                    click.secho("Discovered entry point '{}'".format(entry_point))
-            except KeyError:
-                sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
+                    click.secho(f"Discovered entry point '{entry_point}'")
 
             except KeyError:
                 if not Path(tmp_site_packages, "bin", console_script).exists():
@@ -232,12 +243,7 @@ def main(
         )
 
         if verbose:
-            conf_message = "Done, wrote output file to '{}'".format(output_file)
-            if entry_point:
-                conf_message += ", entry point is '{}'".format(entry_point)
-            else:
-                conf_message += ", no entry point specified."
-            click.secho(conf_message, bold=True)
+            write_completed(output_file, entry_point)
 
 
 if __name__ == "__main__":

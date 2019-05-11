@@ -3,11 +3,8 @@ import json
 import zipfile
 
 
-@click.command(context_settings=dict(help_option_names=["-h", "--help", "--halp"]))
-@click.option("--json", "-j", "print_as_json", is_flag=True, help="output as plain json")
-@click.argument("pyz")
-def main(print_as_json, pyz):
-    """A simple utility to print debugging information about PYZ files created with ``shiv``"""
+def write_info(print_as_json: bool, pyz: str):
+    """print debugging information about the PYZ file passed in """
 
     zip_file = zipfile.ZipFile(pyz)
     data = json.loads(zip_file.read("environment.json"))
@@ -26,3 +23,12 @@ def main(print_as_json, pyz):
             click.secho(f"{value}", fg="white")
 
         click.echo()
+
+
+@click.command(context_settings=dict(help_option_names=["-h", "--help", "--halp"]))
+@click.option("--json", "-j", "print_as_json", is_flag=True, help="output as plain json")
+@click.argument("pyz")
+def main(print_as_json, pyz):
+    """A simple utility to print debugging information about PYZ files created with ``shiv``"""
+
+    write_info(print_as_json, pyz)
