@@ -181,7 +181,7 @@ def main(
         click.secho("compressed: ", fg="blue", bold=True, nl=False)
         click.secho(f"{compressed}", fg="white")
         click.secho("pip args: ", fg="blue", bold=True, nl=False)
-        click.secho(f"{' '.join(pip_args)}")  # ' '.join(pip_args)
+        click.secho(f"{' '.join(pip_args)}")
         click.echo()
 
     with TemporaryDirectory() as working_path:
@@ -195,7 +195,7 @@ def main(
                 click.secho(f"Pip installing dependencies to {site_packages}...", fg="green", bold=True, nl=False)
             # install deps into staged site-packages
             pip.install(["--target", str(tmp_site_packages)] + list(pip_args))
-            click.secho()
+            click.secho("")
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
             try:

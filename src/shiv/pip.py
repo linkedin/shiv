@@ -2,9 +2,10 @@ import contextlib
 import os
 import subprocess
 import sys
-import click
 
 from typing import Generator, List
+
+import click
 
 from .bootstrap import _first_sitedir_index, _extend_python_path
 from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR
