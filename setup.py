@@ -14,7 +14,7 @@ from setuptools.command import easy_install
 
 
 install_requires = [
-    'click>=6.7',
+    'click>=6.7,!=7.0',
     'pip>=9.0.3',
     'setuptools',
 
@@ -112,7 +112,7 @@ def readme():
 
 setuptools.setup(
     name='shiv',
-    version='0.0.44',
+    version='0.0.47',
     description="A command line utility for building fully self contained Python zipapps.",
     long_description=readme(),
     long_description_content_type='text/markdown',
