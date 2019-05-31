@@ -12,7 +12,7 @@ from zipfile import ZipFile
 
 import pytest
 
-from shiv.bootstrap import _extend_python_path, _first_sitedir_index, cache_path, current_zipfile, extract_site_packages, import_string, run
+from shiv.bootstrap import _extend_python_path, _first_sitedir_index, cache_path, current_zipfile, extract_site_packages, import_string
 from shiv.bootstrap.environment import Environment
 from shiv.bootstrap.filelock import FileLock
 
@@ -157,8 +157,3 @@ class TestEnvironment:
             assert f.is_locked
 
         assert not f.is_locked
-
-    def scrub_env(self):
-
-        with mock.patch('sys.exit'):
-            run(lambda: 1)

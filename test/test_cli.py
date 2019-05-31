@@ -1,7 +1,9 @@
 import contextlib
+import json
 import os
 import subprocess
 import sys
+import stat
 import tempfile
 
 from pathlib import Path
@@ -14,6 +16,8 @@ from shiv.cli import main, find_entry_point, _interpreter_path
 from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS_OR_SITE_PACKAGES, NO_OUTFILE, DISALLOWED_ARGS
 from shiv.info import main as info_main
 from shiv.pip import install
+
+UGOX = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 
 
 @contextlib.contextmanager
@@ -128,6 +132,11 @@ class TestCLI:
         # check the rc and output
         assert result.exit_code == 0
         assert f"pyz file: {str(output_file)}" in result.output
+
+        # ensure that executable permissions were retained (skip test on windows)
+        if os.name != "nt":
+            build_id = json.loads(info_runner([str(output_file), '--json']).output)['build_id']
+            assert Path(shiv_root, f"{output_file.stem}_{build_id}", "site-packages", "hello", "script.sh").stat().st_mode & UGOX == UGOX
 
     @pytest.mark.parametrize("extend_path", ["--extend-pythonpath", "--no-extend-pythonpath", "-E"])
     def test_extend_pythonpath(self, shiv_root, runner, extend_path):
