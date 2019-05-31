@@ -107,9 +107,13 @@ def extract_site_packages(archive, target_path, compile_pyc, compile_workers=0, 
         if not target_path.exists() or force:
 
             # extract our site-packages
-            for filename in archive.namelist():
-                if filename.startswith("site-packages"):
-                    archive.extract(filename, target_path_tmp)
+            for fileinfo in archive.infolist():
+
+                if fileinfo.filename.startswith("site-packages"):
+                    extracted = archive.extract(fileinfo.filename, target_path_tmp)
+
+                    # restore original permissions
+                    os.chmod(extracted, fileinfo.external_attr >> 16)
 
             if compile_pyc:
                 compileall.compile_dir(target_path_tmp, quiet=2, workers=compile_workers)
