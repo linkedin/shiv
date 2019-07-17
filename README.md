@@ -26,36 +26,31 @@ shiv has a few command line options of its own and accepts almost all options pa
 
 ##### simple cli example
 
-Creating an executable of pipenv with shiv:
+Creating an executable of flake8 with shiv:
 
 ```sh
-$ shiv -c pipenv -o ~/bin/pipenv pipenv pew
-$ ~/bin/pipenv --version
-pipenv, version 2018.05.18
+$ shiv -c flake8 -o ~/bin/flake8 flake8
+$ ~/bin/flake8 --version
+3.7.8 (mccabe: 0.6.1, pycodestyle: 2.5.0, pyflakes: 2.1.1) CPython 3.7.4 on Darwin
 ```
-
-##### complex example involving a wheel cache
 
 Creating an interactive executable with a downloaded wheel of boto:
 
 ```sh
-$ python3 -m pip download boto
-Collecting boto
-  File was already downloaded /tmp/tmp.iklsO1qyd3/boto-2.48.0-py2.py3-none-any.whl
-Successfully downloaded boto
-$ shiv -o boto.pyz --find-links . --no-index boto
+$ shiv -o boto.pyz boto
  shiv! 🔪
 Collecting boto
 Installing collected packages: boto
-Successfully installed boto-2.48.0
+Successfully installed boto-2.49.0
  done
 $ ./boto.pyz
-Python 3.6.1 (default, Apr 19 2017, 21:58:41)
-[GCC 4.8.5 20150623 (Red Hat 4.8.5-4)] on linux
+Python 3.7.4 (v3.7.4:e09359112e, Jul  8 2019, 14:54:52)
+[Clang 6.0 (clang-600.0.57)] on darwin
 Type "help", "copyright", "credits" or "license" for more information.
 (InteractiveConsole)
 >>> import boto
->>>
+>>> boto.__version__
+'2.49.0'
 ```
 
 ### installing
