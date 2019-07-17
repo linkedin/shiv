@@ -38,7 +38,6 @@ Creating an interactive executable with the boto library:
 
 ```sh
 $ shiv -o boto.pyz boto
- shiv! 🔪
 Collecting boto
 Installing collected packages: boto
 Successfully installed boto-2.49.0
