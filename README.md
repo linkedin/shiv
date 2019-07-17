@@ -55,7 +55,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ### installing
 
-You can install shiv by simply downloading a release from https://github.com/linkedin/shiv/releases/ or via `pip` / `pypi`:
+You can install shiv by simply downloading a release from https://github.com/linkedin/shiv/releases or via `pip` / `pypi`:
 
 ```sh
 pip install shiv
