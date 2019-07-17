@@ -34,7 +34,7 @@ $ ~/bin/flake8 --version
 3.7.8 (mccabe: 0.6.1, pycodestyle: 2.5.0, pyflakes: 2.1.1) CPython 3.7.4 on Darwin
 ```
 
-Creating an interactive executable with a downloaded wheel of boto:
+Creating an interactive executable with the boto library:
 
 ```sh
 $ shiv -o boto.pyz boto
