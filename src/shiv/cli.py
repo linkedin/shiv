@@ -16,6 +16,7 @@ from typing import Optional, List, no_type_check
 import click
 
 from . import pip
+from .info import write_info
 from . import builder
 from . import bootstrap
 from .bootstrap.environment import Environment
@@ -94,6 +95,13 @@ def _interpreter_path(append_version: bool = False) -> str:
         return sys.executable
 
 
+def write_completed(output_file: str, entry_point: str = None):
+    """ Echo a completed summary """
+
+    click.secho(f"Done, create pyz with settings : ", fg="green", bold=True, nl=False)
+    write_info(False, pyz=output_file)
+
+
 @click.command(
     context_settings=dict(
         help_option_names=["-h", "--help", "--halp"], ignore_unknown_options=True
@@ -117,6 +125,11 @@ def _interpreter_path(append_version: bool = False) -> str:
     help="Whether or not to compress your zip.",
 )
 @click.option(
+    "--verbose/--quiet", "-v/-q",
+    default=False,
+    help="Whether or not to generate versose output.",
+)
+@click.option(
     "--compile-pyc/--no-compile-pyc",
     default=False,
     help="Whether or not to compile pyc files during initial bootstrap.",
@@ -132,6 +145,7 @@ def main(
     console_script: Optional[str],
     python: Optional[str],
     site_packages: Optional[str],
+    verbose: bool,
     compressed: bool,
     compile_pyc: bool,
     extend_pythonpath: bool,
@@ -141,7 +155,6 @@ def main(
     Shiv is a command line utility for building fully self-contained Python zipapps
     as outlined in PEP 441, but with all their dependencies included!
     """
-
     if not pip_args and not site_packages:
         sys.exit(NO_PIP_ARGS_OR_SITE_PACKAGES)
 
@@ -157,6 +170,19 @@ def main(
                         arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed]
                     )
                 )
+    if verbose:
+        click.secho("Running Shiv with args : \n", fg="green", bold=True, nl=False)
+        click.secho("output_file: ", fg="blue", bold=True, nl=False)
+        click.secho(f"{output_file}", fg="white")
+        click.secho("entry_point: ", fg="blue", bold=True, nl=False)
+        click.secho(f"{entry_point or 'None'}", fg="white")
+        click.secho("python: ", fg="blue", bold=True, nl=False)
+        click.secho(f"{python or sys.executable}", fg="white")
+        click.secho("compressed: ", fg="blue", bold=True, nl=False)
+        click.secho(f"{compressed}", fg="white")
+        click.secho("pip args: ", fg="blue", bold=True, nl=False)
+        click.secho(f"{' '.join(pip_args)}")
+        click.echo()
 
     with TemporaryDirectory() as working_path:
         tmp_site_packages = Path(working_path, "site-packages")
@@ -165,13 +191,17 @@ def main(
             shutil.copytree(site_packages, tmp_site_packages)
 
         if pip_args:
+            if verbose:
+                click.secho(f"Pip installing dependencies to {site_packages}...", fg="green", bold=True, nl=False)
             # install deps into staged site-packages
             pip.install(["--target", str(tmp_site_packages)] + list(pip_args))
-
+            click.secho("")
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
             try:
                 entry_point = find_entry_point(tmp_site_packages, console_script)
+                if verbose:
+                    click.secho(f"Discovered entry point '{entry_point}'")
 
             except KeyError:
                 if not Path(tmp_site_packages, "bin", console_script).exists():
@@ -194,8 +224,14 @@ def main(
         bootstrap_target = Path(working_path, "_bootstrap")
         bootstrap_target.mkdir(parents=True, exist_ok=True)
 
+        if verbose:
+            click.secho("Injecting bootstrap code")
+
         # copy bootstrap code
         copy_bootstrap(bootstrap_target)
+
+        if verbose:
+            click.secho("Creating zip archive")
 
         # create the zip
         builder.create_archive(
@@ -205,6 +241,9 @@ def main(
             main="_bootstrap:bootstrap",
             compressed=compressed,
         )
+
+        if verbose:
+            write_completed(output_file, entry_point)
 
 
 if __name__ == "__main__":

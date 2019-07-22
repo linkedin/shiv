@@ -59,7 +59,13 @@ target/
 .python-version
 .pytest_cache/
 venv/
+.venv
 activate
 
 # mypy
 .mypy_cache
+None/
+
+# IDE
+.vscode
+pyrightconfig.json
