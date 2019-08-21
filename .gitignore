@@ -63,3 +63,8 @@ activate
 
 # mypy
 .mypy_cache
+
+# IDEA
+*.iml
+*.ipr
+*.iws
