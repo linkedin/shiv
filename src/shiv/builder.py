@@ -10,6 +10,8 @@ import zipfile
 import stat
 import sys
 import zipapp
+import os
+import pathspec
 
 from pathlib import Path
 from typing import Any, Callable, IO, Generator, Union
@@ -25,6 +27,15 @@ MAIN_TEMPLATE = """\
 import {module}
 {module}.{fn}()
 """
+
+def shivIgnore() -> Callable:
+    shivignore = os.path.join(os.getcwd(), ".shivignore")
+    if os.path.exists(shivignore):
+        with open(shivignore, 'r') as f:
+            spec = pathspec.PathSpec.from_lines('gitwildmatch', f)
+        return lambda x: not spec.match_file(str(x))
+    else:
+        return None
 
 
 def write_file_prefix(f: IO[Any], interpreter: str) -> None:
@@ -82,6 +93,7 @@ def create_archive(
 
         # create zipapp
         with zipfile.ZipFile(fd, "w", compression=compression) as z:
+            isPreserve = shivIgnore()
             for child in source.rglob("*"):
 
                 # skip compiled files
@@ -89,7 +101,7 @@ def create_archive(
                     continue
 
                 arcname = child.relative_to(source)
-                if filter == None or filter(arcname):
+                if (filter == None or filter(arcname)) and (isPreserve == None or isPreserve(arcname)):
                     z.write(str(child), str(arcname))
 
             # write main

@@ -70,6 +70,32 @@ class TestBuilder:
             assert zipfile.is_zipfile(str(unfiltered_target))
             assert len(zipfile.ZipFile(str(unfiltered_target)).filelist) == 2 # __main__.py + test.py
 
+    def test_create_archive_dot_shivignore(self):
+        try:
+            cwd = os.getcwd()
+            with tempfile.TemporaryDirectory() as tmpdir, tempfile.TemporaryDirectory() as sourceDir:
+                filtered_target = Path(tmpdir, "test.zip")
+                unfiltered_target = Path(tmpdir, "test2.zip")
+                open(Path(sourceDir, "test.py"), "a").close()
+                os.chdir(sourceDir)
+
+                create_archive(Path(sourceDir), unfiltered_target, sys.executable, "code:interact")
+
+                # Add the .shivignore
+                with open(Path(sourceDir, ".shivignore"), "a") as f:
+                    f.write("*")
+                create_archive(Path(sourceDir), filtered_target, sys.executable, "code:interact")
+
+                # Filtered zipfile
+                assert zipfile.is_zipfile(str(filtered_target))
+                assert len(zipfile.ZipFile(str(filtered_target)).filelist) == 1
+                # Unfiltered zipfile
+                assert zipfile.is_zipfile(str(unfiltered_target))
+                assert len(zipfile.ZipFile(str(unfiltered_target)).filelist) == 2
+        finally:
+            os.chdir(cwd)
+
+
     @pytest.mark.skipif(
         os.name == "nt", reason="windows has no concept of execute permissions"
     )
