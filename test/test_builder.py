@@ -56,6 +56,20 @@ class TestBuilder:
             with pytest.raises(ZipAppError):
                 create_archive(sp, target, sys.executable, "alsjdbas,,,")
 
+    def test_create_archive_filter(self):
+        with tempfile.TemporaryDirectory() as tmpdir, tempfile.TemporaryDirectory() as sourceDir:
+            filtered_target = Path(tmpdir, "test.zip")
+            unfiltered_target = Path(tmpdir, "test2.zip")
+            open(Path(sourceDir, "test.py"), "a").close()
+
+            create_archive(Path(sourceDir), filtered_target, sys.executable, "code:interact", lambda _: False)
+            create_archive(Path(sourceDir), unfiltered_target, sys.executable, "code:interact")
+
+            assert zipfile.is_zipfile(str(filtered_target))
+            assert len(zipfile.ZipFile(str(filtered_target)).filelist) == 1 # At least there is __main__.py
+            assert zipfile.is_zipfile(str(unfiltered_target))
+            assert len(zipfile.ZipFile(str(unfiltered_target)).filelist) == 2 # __main__.py + test.py
+
     @pytest.mark.skipif(
         os.name == "nt", reason="windows has no concept of execute permissions"
     )

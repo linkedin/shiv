@@ -12,7 +12,7 @@ import sys
 import zipapp
 
 from pathlib import Path
-from typing import Any, IO, Generator, Union
+from typing import Any, Callable, IO, Generator, Union
 
 from .constants import BINPRM_ERROR
 
@@ -55,6 +55,7 @@ def create_archive(
     target: Path,
     interpreter: str,
     main: str,
+    filter: Callable = None,
     compressed: bool = True
 ) -> None:
     """Create an application archive from SOURCE.
@@ -88,7 +89,8 @@ def create_archive(
                     continue
 
                 arcname = child.relative_to(source)
-                z.write(str(child), str(arcname))
+                if filter == None or filter(arcname):
+                    z.write(str(child), str(arcname))
 
             # write main
             z.writestr("__main__.py", main_py.encode("utf-8"))
