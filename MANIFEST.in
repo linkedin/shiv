@@ -1,1 +1,6 @@
 include README.md
+include LICENSE NOTICE
+recursive-include docs *.rst
+recursive-include test *.py
+recursive-include test *.sh
+recursive-include test *.zip
