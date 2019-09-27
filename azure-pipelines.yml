@@ -18,11 +18,12 @@ steps:
   inputs:
     versionSpec: '$(python.version)'
   displayName: '$(python.version)'
+  name: 'py'
 
 - script: |
-    $(python.version) -m pip install --disable-pip-version-check --upgrade pip
-    $(python.version) -m pip install tox
-    $(python.version) -m pip install --editable .
+    $(py.pythonLocation) -m pip install --disable-pip-version-check --upgrade pip
+    $(py.pythonLocation) -m pip install tox
+    $(py.pythonLocation) -m pip install --editable .
   displayName: 'dependencies'
 
 - script: |
