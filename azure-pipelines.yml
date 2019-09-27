@@ -20,8 +20,9 @@ steps:
   displayName: '$(python.version)'
 
 - script: |
-    $(python.version) setup.py develop
+    $(python.version) -m pip install --disable-pip-version-check --upgrade pip
     $(python.version) -m pip install tox
+    $(python.version) -m pip install --editable .
   displayName: 'dependencies'
 
 - script: |
