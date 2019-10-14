@@ -54,15 +54,23 @@ def install(args: List[str]) -> None:
         _extend_python_path(subprocess_env, sys.path[sitedir_index:])
 
         process = subprocess.Popen(
-            [sys.executable, "-m", "pip", "--disable-pip-version-check", "install", *args],
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "--disable-pip-version-check",
+                "install",
+                *args,
+            ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             env=subprocess_env,
+            text=True,
         )
 
     for output in process.stdout:
         if output:
-            click.echo(output.decode().rstrip())
+            click.echo(output.rstrip())
 
     if process.wait() > 0:
         sys.exit(PIP_INSTALL_ERROR)
