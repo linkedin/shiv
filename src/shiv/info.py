@@ -1,6 +1,7 @@
-import click
 import json
 import zipfile
+
+import click
 
 
 @click.command(context_settings=dict(help_option_names=["-h", "--help", "--halp"]))

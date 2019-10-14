@@ -1,7 +1,7 @@
-import tempfile
-import stat
 import os
+import stat
 import sys
+import tempfile
 import zipfile
 
 from pathlib import Path
@@ -9,8 +9,7 @@ from zipapp import ZipAppError
 
 import pytest
 
-from shiv.builder import write_file_prefix, create_archive
-
+from shiv.builder import create_archive, write_file_prefix
 
 UGOX = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 
@@ -25,7 +24,6 @@ def tmp_write_prefix(interpreter):
 
 
 class TestBuilder:
-
     @pytest.mark.parametrize(
         "interpreter,expected",
         [
@@ -56,9 +54,7 @@ class TestBuilder:
             with pytest.raises(ZipAppError):
                 create_archive(sp, target, sys.executable, "alsjdbas,,,")
 
-    @pytest.mark.skipif(
-        os.name == "nt", reason="windows has no concept of execute permissions"
-    )
+    @pytest.mark.skipif(os.name == "nt", reason="windows has no concept of execute permissions")
     def test_archive_permissions(self, sp):
         with tempfile.TemporaryDirectory() as tmpdir:
             target = Path(tmpdir, "test.zip")

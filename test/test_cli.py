@@ -1,9 +1,9 @@
 import contextlib
 import json
 import os
+import stat
 import subprocess
 import sys
-import stat
 import tempfile
 
 from pathlib import Path
@@ -11,9 +11,8 @@ from pathlib import Path
 import pytest
 
 from click.testing import CliRunner
-
-from shiv.cli import main, find_entry_point, _interpreter_path
-from shiv.constants import DISALLOWED_PIP_ARGS, NO_PIP_ARGS_OR_SITE_PACKAGES, NO_OUTFILE, DISALLOWED_ARGS
+from shiv.cli import _interpreter_path, find_entry_point, main
+from shiv.constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES
 from shiv.info import main as info_main
 from shiv.pip import install
 
@@ -30,12 +29,11 @@ def mocked_sys_prefix():
 
 
 class TestCLI:
-
     @pytest.fixture
     def shiv_root(self, monkeypatch, tmpdir):
 
         with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
-            os.environ['SHIV_ROOT'] = tmpdir
+            os.environ["SHIV_ROOT"] = tmpdir
             yield tmpdir
 
         os.environ.pop("SHIV_ROOT")
@@ -54,7 +52,7 @@ class TestCLI:
 
     def test_find_entry_point(self, tmpdir, package_location):
         """Test that we can find console_script metadata."""
-        install(['-t', str(tmpdir), str(package_location)])
+        install(["-t", str(tmpdir), str(package_location)])
         assert find_entry_point(Path(tmpdir), "hello") == "hello:main"
 
     def test_no_args(self, runner):
@@ -68,7 +66,7 @@ class TestCLI:
     def test_no_outfile(self, runner):
         """This should fail with a warning about not providing an outfile"""
 
-        result = runner(['-e', 'test', 'flask'])
+        result = runner(["-e", "test", "flask"])
 
         assert result.exit_code == 1
         assert NO_OUTFILE in result.output
@@ -93,7 +91,7 @@ class TestCLI:
         """This method tests that all the potential disallowed arguments match their error messages."""
 
         # run shiv with a disallowed argument
-        result = runner(['-o', 'tmp', arg])
+        result = runner(["-o", "tmp", arg])
 
         # get the 'reason' message:
         for disallowed in DISALLOWED_ARGS:
@@ -105,12 +103,12 @@ class TestCLI:
         # assert we got the correct reason
         assert DISALLOWED_PIP_ARGS.format(arg=arg, reason=reason) in result.output
 
-    @pytest.mark.parametrize('compile_option', ["--compile-pyc", "--no-compile-pyc"])
-    @pytest.mark.parametrize('force', ["yes", "no"])
+    @pytest.mark.parametrize("compile_option", ["--compile-pyc", "--no-compile-pyc"])
+    @pytest.mark.parametrize("force", ["yes", "no"])
     def test_hello_world(self, runner, info_runner, shiv_root, package_location, compile_option, force):
-        output_file = Path(shiv_root, 'test.pyz')
+        output_file = Path(shiv_root, "test.pyz")
 
-        result = runner(['-e', 'hello:main', '-o', str(output_file), str(package_location), compile_option])
+        result = runner(["-e", "hello:main", "-o", str(output_file), str(package_location), compile_option])
 
         # check that the command successfully completed
         assert result.exit_code == 0
@@ -135,31 +133,26 @@ class TestCLI:
 
         # ensure that executable permissions were retained (skip test on windows)
         if os.name != "nt":
-            build_id = json.loads(info_runner([str(output_file), '--json']).output)['build_id']
-            assert Path(shiv_root, f"{output_file.stem}_{build_id}", "site-packages", "hello", "script.sh").stat().st_mode & UGOX == UGOX
+            build_id = json.loads(info_runner([str(output_file), "--json"]).output)["build_id"]
+            assert (
+                Path(shiv_root, f"{output_file.stem}_{build_id}", "site-packages", "hello", "script.sh").stat().st_mode
+                & UGOX
+                == UGOX
+            )
 
     @pytest.mark.parametrize("extend_path", ["--extend-pythonpath", "--no-extend-pythonpath", "-E"])
     def test_extend_pythonpath(self, shiv_root, runner, extend_path):
 
-        output_file = Path(shiv_root, 'test_pythonpath.pyz')
-        package_dir = Path(shiv_root, 'package')
-        main_script = Path(package_dir, 'env.py')
+        output_file = Path(shiv_root, "test_pythonpath.pyz")
+        package_dir = Path(shiv_root, "package")
+        main_script = Path(package_dir, "env.py")
 
-        MAIN_PROG = '\n'.join([
-            "import os",
-            "def main():",
-            "    print(os.environ.get('PYTHONPATH', ''))"
-        ])
+        MAIN_PROG = "\n".join(["import os", "def main():", "    print(os.environ.get('PYTHONPATH', ''))"])
 
         package_dir.mkdir()
         main_script.write_text(MAIN_PROG)
 
-        result = runner([
-            '-e', 'env:main',
-            '-o', str(output_file),
-            '--site-packages', str(package_dir),
-            extend_path,
-        ])
+        result = runner(["-e", "env:main", "-o", str(output_file), "--site-packages", str(package_dir), extend_path])
 
         # check that the command successfully completed
         assert result.exit_code == 0
@@ -171,13 +164,13 @@ class TestCLI:
         proc = subprocess.run([str(output_file)], stdout=subprocess.PIPE, shell=True, env=os.environ)
 
         pythonpath_has_root = str(shiv_root) in proc.stdout.decode()
-        assert extend_path.startswith('--no') != pythonpath_has_root
+        assert extend_path.startswith("--no") != pythonpath_has_root
 
     def test_no_entrypoint(self, shiv_root, runner, package_location, monkeypatch):
 
-        output_file = Path(shiv_root, 'test.pyz')
+        output_file = Path(shiv_root, "test.pyz")
 
-        result = runner(['-o', str(output_file), str(package_location)])
+        result = runner(["-o", str(output_file), str(package_location)])
 
         # check that the command successfully completed
         assert result.exit_code == 0
