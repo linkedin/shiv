@@ -51,11 +51,7 @@ def maybe_open(archive: Union[str, Path], mode: str) -> Generator[IO[Any], None,
 
 
 def create_archive(
-    source: Path,
-    target: Path,
-    interpreter: str,
-    main: str,
-    compressed: bool = True
+    source: Path, target: Path, interpreter: str, main: str, compressed: bool = True
 ) -> None:
     """Create an application archive from SOURCE.
 
@@ -84,7 +80,7 @@ def create_archive(
             for child in source.rglob("*"):
 
                 # skip compiled files
-                if child.suffix == '.pyc':
+                if child.suffix == ".pyc":
                     continue
 
                 arcname = child.relative_to(source)

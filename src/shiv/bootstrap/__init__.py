@@ -152,7 +152,9 @@ def bootstrap():  # pragma: no cover
 
     # determine if first run or forcing extract
     if not site_packages.exists() or env.force_extract:
-        extract_site_packages(archive, site_packages.parent, env.compile_pyc, env.compile_workers, env.force_extract)
+        extract_site_packages(
+            archive, site_packages.parent, env.compile_pyc, env.compile_workers, env.force_extract
+        )
 
     # get sys.path's length
     length = len(sys.path)

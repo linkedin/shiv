@@ -58,9 +58,7 @@ class Environment:
 
     @property
     def entry_point(self):
-        return os.environ.get(
-            self.ENTRY_POINT, os.environ.get(self.MODULE, self._entry_point)
-        )
+        return os.environ.get(self.ENTRY_POINT, os.environ.get(self.MODULE, self._entry_point))
 
     @property
     def interpreter(self):

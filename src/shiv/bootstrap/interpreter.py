@@ -17,9 +17,7 @@ def execute_content(name, content):
     try:
         ast = compile(content, name, "exec", flags=0, dont_inherit=1)
     except SyntaxError:
-        raise RuntimeError(
-            f"Unable to parse {name}. Is it a Python script? Syntax correct?"
-        )
+        raise RuntimeError(f"Unable to parse {name}. Is it a Python script? Syntax correct?")
 
     old_name, old_file = globals().get("__name__"), globals().get("__file__")
 

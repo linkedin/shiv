@@ -95,15 +95,11 @@ def _interpreter_path(append_version: bool = False) -> str:
 
 
 @click.command(
-    context_settings=dict(
-        help_option_names=["-h", "--help", "--halp"], ignore_unknown_options=True
-    )
+    context_settings=dict(help_option_names=["-h", "--help", "--halp"], ignore_unknown_options=True)
 )
 @click.version_option(version=__version__, prog_name="shiv")
 @click.option("--entry-point", "-e", default=None, help="The entry point to invoke.")
-@click.option(
-    "--console-script", "-c", default=None, help="The console_script to invoke."
-)
+@click.option("--console-script", "-c", default=None, help="The console_script to invoke.")
 @click.option("--output-file", "-o", help="The file for shiv to create.")
 @click.option("--python", "-p", help="The path to a python interpreter to use.")
 @click.option(
@@ -112,9 +108,7 @@ def _interpreter_path(append_version: bool = False) -> str:
     type=click.Path(exists=True),
 )
 @click.option(
-    "--compressed/--uncompressed",
-    default=True,
-    help="Whether or not to compress your zip.",
+    "--compressed/--uncompressed", default=True, help="Whether or not to compress your zip."
 )
 @click.option(
     "--compile-pyc/--no-compile-pyc",
@@ -122,9 +116,11 @@ def _interpreter_path(append_version: bool = False) -> str:
     help="Whether or not to compile pyc files during initial bootstrap.",
 )
 @click.option(
-    "--extend-pythonpath/--no-extend-pythonpath", "-E",
+    "--extend-pythonpath/--no-extend-pythonpath",
+    "-E",
     default=False,
-    help="Add the contents of the zipapp to PYTHONPATH (for subprocesses).")
+    help="Add the contents of the zipapp to PYTHONPATH (for subprocesses).",
+)
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
@@ -153,9 +149,7 @@ def main(
         for supplied_arg in pip_args:
             if supplied_arg in disallowed:
                 sys.exit(
-                    DISALLOWED_PIP_ARGS.format(
-                        arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed]
-                    )
+                    DISALLOWED_PIP_ARGS.format(arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed])
                 )
 
     with TemporaryDirectory() as working_path:
