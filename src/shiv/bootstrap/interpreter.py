@@ -42,9 +42,7 @@ def execute_interpreter():
             with open(sys.argv[1]) as fp:
                 name, content = sys.argv[1], fp.read()
         except (FileNotFoundError, IsADirectoryError, PermissionError) as e:
-            raise RuntimeError(
-                f"Could not open {sys.argv[1]} in the environment [{sys.argv[0]}]: {e}"
-            )
+            raise RuntimeError(f"Could not open {sys.argv[1]} in the environment [{sys.argv[0]}]: {e}")
 
         sys.argv = sys.argv[1:]
         execute_content(name, content)

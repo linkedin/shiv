@@ -1,5 +1,5 @@
 """This module contains various error messages."""
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 
 # errors:
 DISALLOWED_PIP_ARGS = "\nYou supplied a disallowed pip argument! '{arg}'\n\n{reason}\n"

@@ -6,7 +6,7 @@ from shiv.pip import clean_pip_env
 
 def test_clean_pip_env(monkeypatch):
 
-    before_env_var = 'test'
+    before_env_var = "test"
     monkeypatch.setenv(PIP_REQUIRE_VIRTUALENV, before_env_var)
 
     with clean_pip_env():

@@ -7,8 +7,8 @@ from typing import Generator, List
 
 import click
 
-from .bootstrap import _first_sitedir_index, _extend_python_path
-from .constants import PIP_REQUIRE_VIRTUALENV, PIP_INSTALL_ERROR
+from .bootstrap import _extend_python_path, _first_sitedir_index
+from .constants import PIP_INSTALL_ERROR, PIP_REQUIRE_VIRTUALENV
 
 
 @contextlib.contextmanager

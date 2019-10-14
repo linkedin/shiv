@@ -1,9 +1,9 @@
 import compileall
 import os
 import runpy
+import shutil
 import site
 import sys
-import shutil
 import zipfile
 
 from contextlib import suppress
@@ -11,8 +11,8 @@ from functools import partial
 from importlib import import_module
 from pathlib import Path
 
-from .filelock import FileLock
 from .environment import Environment
+from .filelock import FileLock
 from .interpreter import execute_interpreter
 
 
@@ -152,9 +152,7 @@ def bootstrap():  # pragma: no cover
 
     # determine if first run or forcing extract
     if not site_packages.exists() or env.force_extract:
-        extract_site_packages(
-            archive, site_packages.parent, env.compile_pyc, env.compile_workers, env.force_extract
-        )
+        extract_site_packages(archive, site_packages.parent, env.compile_pyc, env.compile_workers, env.force_extract)
 
     # get sys.path's length
     length = len(sys.path)
