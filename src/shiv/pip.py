@@ -65,7 +65,7 @@ def install(args: List[str]) -> None:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             env=subprocess_env,
-            text=True,
+            universal_newlines=True,
         )
 
     for output in process.stdout:
