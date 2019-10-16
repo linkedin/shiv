@@ -6,18 +6,13 @@ from configparser import ConfigParser
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Optional, no_type_check
+from typing import List, Optional
 
 import click
 
-from . import bootstrap, builder, pip
+from . import builder, pip
 from .bootstrap.environment import Environment
 from .constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_ENTRY_POINT, NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES
-
-try:
-    import importlib.resources as importlib_resources  # type: ignore
-except ImportError:
-    import importlib_resources  # type: ignore
 
 __version__ = "0.0.50"
 
@@ -36,21 +31,6 @@ def find_entry_point(site_packages: Path, console_script: str) -> str:
     config_parser = ConfigParser()
     config_parser.read(site_packages.rglob("entry_points.txt"))
     return config_parser["console_scripts"][console_script]
-
-
-@no_type_check
-def copy_bootstrap(bootstrap_target: Path) -> None:
-    """Copy bootstrap code from shiv into the pyz.
-
-    This function is excluded from type checking due to the conditional import.
-
-    :param bootstrap_target: The temporary directory where we are staging pyz contents.
-    """
-
-    for bootstrap_file in importlib_resources.contents(bootstrap):
-        if importlib_resources.is_resource(bootstrap, bootstrap_file):
-            with importlib_resources.path(bootstrap, bootstrap_file) as f:
-                shutil.copyfile(f.absolute(), bootstrap_target / f.name)
 
 
 def _interpreter_path(append_version: bool = False) -> str:
@@ -138,20 +118,21 @@ def main(
             if supplied_arg in disallowed:
                 sys.exit(DISALLOWED_PIP_ARGS.format(arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed]))
 
-    with TemporaryDirectory() as working_path:
-        tmp_site_packages = Path(working_path, "site-packages")
-
+    with TemporaryDirectory() as tmp_site_packages:
         if site_packages:
-            shutil.copytree(site_packages, tmp_site_packages)
+            if pip_args:
+                shutil.copytree(site_packages, tmp_site_packages)
+            else:
+                tmp_site_packages = site_packages
 
         if pip_args:
             # install deps into staged site-packages
-            pip.install(["--target", str(tmp_site_packages)] + list(pip_args))
+            pip.install(["--target", tmp_site_packages] + list(pip_args))
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
             try:
-                entry_point = find_entry_point(tmp_site_packages, console_script)
+                entry_point = find_entry_point(Path(tmp_site_packages), console_script)
 
             except KeyError:
                 if not Path(tmp_site_packages, "bin", console_script).exists():
@@ -168,21 +149,13 @@ def main(
             shiv_version=__version__,
         )
 
-        Path(working_path, "environment.json").write_text(env.to_json())
-
-        # create bootstrapping directory in working path
-        bootstrap_target = Path(working_path, "_bootstrap")
-        bootstrap_target.mkdir(parents=True, exist_ok=True)
-
-        # copy bootstrap code
-        copy_bootstrap(bootstrap_target)
-
         # create the zip
         builder.create_archive(
-            Path(working_path),
+            Path(tmp_site_packages).expanduser(),
             target=Path(output_file).expanduser(),
             interpreter=python or _interpreter_path(),
             main="_bootstrap:bootstrap",
+            env=env,
             compressed=compressed,
         )
 

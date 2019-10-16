@@ -14,7 +14,14 @@ import zipfile
 from pathlib import Path
 from typing import IO, Any, Generator, Union
 
+from . import bootstrap
+from .bootstrap.environment import Environment
 from .constants import BINPRM_ERROR
+
+try:
+    import importlib.resources as importlib_resources  # type: ignore
+except ImportError:
+    import importlib_resources  # type: ignore
 
 # Typical maximum length for a shebang line
 BINPRM_BUF_SIZE = 128
@@ -50,7 +57,14 @@ def maybe_open(archive: Union[str, Path], mode: str) -> Generator[IO[Any], None,
         yield archive
 
 
-def create_archive(source: Path, target: Path, interpreter: str, main: str, compressed: bool = True) -> None:
+def create_archive(
+    source: Path,
+    target: Path,
+    interpreter: str,
+    main: str,
+    env: Environment,
+    compressed: bool = True
+) -> None:
     """Create an application archive from SOURCE.
 
     A slightly modified version of stdlib's
@@ -75,14 +89,27 @@ def create_archive(source: Path, target: Path, interpreter: str, main: str, comp
 
         # create zipapp
         with zipfile.ZipFile(fd, "w", compression=compression) as z:
-            for child in source.rglob("*"):
-
+            site_packages = Path('site-packages')
+            # Glob is known to return results in undetermenistic order.
+            # We need to sort them by in-archive paths to ensure
+            # that archive contents are reproducible
+            for child in sorted(source.rglob("*"), key=str):
                 # skip compiled files
                 if child.suffix == ".pyc":
                     continue
 
-                arcname = child.relative_to(source)
+                arcname = site_packages / child.relative_to(source)
                 z.write(str(child), str(arcname))
+
+            bootstrap_target = Path('_bootstrap')
+            # write bootstrap code
+            for bootstrap_file in importlib_resources.contents(bootstrap):  # type: ignore
+                if importlib_resources.is_resource(bootstrap, bootstrap_file):  # type: ignore
+                    with importlib_resources.path(bootstrap, bootstrap_file) as f:  # type: ignore
+                        z.write(f.absolute(), str(bootstrap_target / f.name))
+
+            # write environment
+            z.writestr("environment.json", env.to_json().encode("utf-8"))
 
             # write main
             z.writestr("__main__.py", main_py.encode("utf-8"))

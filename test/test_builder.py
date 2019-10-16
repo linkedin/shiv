@@ -39,25 +39,25 @@ class TestBuilder:
         with pytest.raises(SystemExit):
             tmp_write_prefix(f"/{'c' * 200}/python")
 
-    def test_create_archive(self, sp):
+    def test_create_archive(self, sp, env):
         with tempfile.TemporaryDirectory() as tmpdir:
             target = Path(tmpdir, "test.zip")
 
             # create an archive
-            create_archive(sp, target, sys.executable, "code:interact")
+            create_archive(sp, target, sys.executable, "code:interact", env)
 
             # create one again (to ensure we overwrite)
-            create_archive(sp, target, sys.executable, "code:interact")
+            create_archive(sp, target, sys.executable, "code:interact", env)
 
             assert zipfile.is_zipfile(str(target))
 
             with pytest.raises(ZipAppError):
-                create_archive(sp, target, sys.executable, "alsjdbas,,,")
+                create_archive(sp, target, sys.executable, "alsjdbas,,,", env)
 
     @pytest.mark.skipif(os.name == "nt", reason="windows has no concept of execute permissions")
-    def test_archive_permissions(self, sp):
+    def test_archive_permissions(self, sp, env):
         with tempfile.TemporaryDirectory() as tmpdir:
             target = Path(tmpdir, "test.zip")
-            create_archive(sp, target, sys.executable, "code:interact")
+            create_archive(sp, target, sys.executable, "code:interact", env)
 
             assert target.stat().st_mode & UGOX == UGOX
