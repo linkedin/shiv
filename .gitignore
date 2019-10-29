@@ -68,3 +68,6 @@ activate
 *.iml
 *.ipr
 *.iws
+
+# VS Code
+/.vscode
