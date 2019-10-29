@@ -58,6 +58,7 @@ target/
 # pyenv python configuration file
 .python-version
 .pytest_cache/
+.venv/
 venv/
 activate
 
@@ -65,6 +66,7 @@ activate
 .mypy_cache
 
 # IDEA
+.idea/
 *.iml
 *.ipr
 *.iws
