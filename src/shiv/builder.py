@@ -1,9 +1,8 @@
 """
-This module is a slightly modified implementation of Python's "zipapp" module.
+This module is a modified implementation of Python's "zipapp" module.
 
 We've copied a lot of zipapp's code here in order to backport support for compression.
 https://docs.python.org/3.7/library/zipapp.html#cmdoption-zipapp-c
-
 """
 import contextlib
 import stat
@@ -58,19 +57,15 @@ def maybe_open(archive: Union[str, Path], mode: str) -> Generator[IO[Any], None,
 
 
 def create_archive(
-    source: Path,
-    target: Path,
-    interpreter: str,
-    main: str,
-    env: Environment,
-    compressed: bool = True
+    source: Path, target: Path, interpreter: str, main: str, env: Environment, compressed: bool = True
 ) -> None:
     """Create an application archive from SOURCE.
 
-    A slightly modified version of stdlib's
+    A modified version of stdlib's
     `zipapp.create_archive <https://docs.python.org/3/library/zipapp.html#zipapp.create_archive>`_
 
     """
+
     # Check that main has the right format.
     mod, sep, fn = main.partition(":")
     mod_ok = all(part.isidentifier() for part in mod.split("."))
@@ -81,32 +76,37 @@ def create_archive(
     main_py = MAIN_TEMPLATE.format(module=mod, fn=fn)
 
     with maybe_open(target, "wb") as fd:
-        # write shebang
+
+        # Write shebang.
         write_file_prefix(fd, interpreter)
 
-        # determine compression
+        # Determine compression.
         compression = zipfile.ZIP_DEFLATED if compressed else zipfile.ZIP_STORED
 
-        # create zipapp
+        # Pack zipapp with dependencies.
         with zipfile.ZipFile(fd, "w", compression=compression) as z:
-            site_packages = Path('site-packages')
+
+            site_packages = Path("site-packages")
+
             # Glob is known to return results in undetermenistic order.
             # We need to sort them by in-archive paths to ensure
-            # that archive contents are reproducible
+            # that archive contents are reproducible.
             for child in sorted(source.rglob("*"), key=str):
-                # skip compiled files
+
+                # Skip compiled files.
                 if child.suffix == ".pyc":
                     continue
 
                 arcname = site_packages / child.relative_to(source)
-                z.write(str(child), str(arcname))
+                z.write(child, arcname)
 
-            bootstrap_target = Path('_bootstrap')
-            # write bootstrap code
+            bootstrap_target = Path("_bootstrap")
+
+            # Write shiv's bootstrap code.
             for bootstrap_file in importlib_resources.contents(bootstrap):  # type: ignore
                 if importlib_resources.is_resource(bootstrap, bootstrap_file):  # type: ignore
                     with importlib_resources.path(bootstrap, bootstrap_file) as f:  # type: ignore
-                        z.write(f.absolute(), str(bootstrap_target / f.name))
+                        z.write(f.absolute(), bootstrap_target / f.name)
 
             # write environment
             z.writestr("environment.json", env.to_json().encode("utf-8"))
@@ -114,6 +114,5 @@ def create_archive(
             # write main
             z.writestr("__main__.py", main_py.encode("utf-8"))
 
-    # make executable
-    # NOTE on windows this is no-op
+    # Make pyz executable (on windows this is no-op).
     target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)

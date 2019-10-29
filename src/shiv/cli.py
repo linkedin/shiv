@@ -119,6 +119,9 @@ def main(
                 sys.exit(DISALLOWED_PIP_ARGS.format(arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed]))
 
     with TemporaryDirectory() as tmp_site_packages:
+
+        # If both site_packages and pip_args are present, we need to copy the site_packages
+        # dir into our staging area (tmp_site_packages) as pip may modify the contents.
         if site_packages:
             if pip_args:
                 shutil.copytree(site_packages, tmp_site_packages)
@@ -126,7 +129,7 @@ def main(
                 tmp_site_packages = site_packages
 
         if pip_args:
-            # install deps into staged site-packages
+            # Install dependencies into staged site-packages.
             pip.install(["--target", tmp_site_packages] + list(pip_args))
 
         # if entry_point is a console script, get the callable
