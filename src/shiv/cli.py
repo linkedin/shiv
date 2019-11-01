@@ -124,7 +124,7 @@ def main(
         # dir into our staging area (tmp_site_packages) as pip may modify the contents.
         if site_packages:
             if pip_args:
-                shutil.copytree(site_packages, tmp_site_packages)
+                shutil.copytree(site_packages, tmp_site_packages, dirs_exist_ok=True)
             else:
                 tmp_site_packages = site_packages
 
