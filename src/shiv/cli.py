@@ -124,7 +124,10 @@ def main(
         # dir into our staging area (tmp_site_packages) as pip may modify the contents.
         if site_packages:
             if pip_args:
-                shutil.copytree(site_packages, tmp_site_packages, dirs_exist_ok=True)
+                # the dst dir arg to shutil.copytree must not exist, so tack on a non-existant directory here. Starting
+                # with python 3.8 this can be removed and shutil.copytree called with dirs_exist_ok=True to work around this
+                tmp_site_packages = Path(tmp_site_packages, "site_packages")
+                shutil.copytree(site_packages, tmp_site_packages
             else:
                 tmp_site_packages = site_packages
 
