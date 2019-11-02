@@ -66,6 +66,28 @@ def _interpreter_path(append_version: bool = False) -> str:
         return sys.executable
 
 
+def _copytree(src: Path, dst: Path) -> None:
+    """A utility function for syncing directories.
+
+    This function is based on shutil.copytree. In Python versions that are
+    older than 3.8, shutil.copytree would raise FileExistsError if the "dst"
+    directory already existed.
+
+    """
+
+    # Make our target (if it doesn't already exist).
+    dst.mkdir(parents=True, exist_ok=True)
+
+    for path in src.iterdir():  # type: Path
+
+        # If we encounter a subdirectory, recurse.
+        if path.is_dir():
+            _copytree(path, dst / path.relative_to(src))
+
+        else:
+            shutil.copy2(str(path), str(dst / path.relative_to(src)))
+
+
 @click.command(context_settings=dict(help_option_names=["-h", "--help", "--halp"], ignore_unknown_options=True))
 @click.version_option(version=__version__, prog_name="shiv")
 @click.option("--entry-point", "-e", default=None, help="The entry point to invoke.")
@@ -124,7 +146,7 @@ def main(
         # dir into our staging area (tmp_site_packages) as pip may modify the contents.
         if site_packages:
             if pip_args:
-                shutil.copytree(site_packages, tmp_site_packages)
+                _copytree(Path(site_packages), Path(tmp_site_packages))
             else:
                 tmp_site_packages = site_packages
 
@@ -163,5 +185,5 @@ def main(
         )
 
 
-if __name__ == "__main__":
-    main()  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
+    main()
