@@ -14,7 +14,7 @@ from . import builder, pip
 from .bootstrap.environment import Environment
 from .constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_ENTRY_POINT, NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES
 
-__version__ = "0.0.51"
+__version__ = "0.0.52"
 
 
 def find_entry_point(site_packages: Path, console_script: str) -> str:
