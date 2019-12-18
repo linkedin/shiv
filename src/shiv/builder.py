@@ -11,7 +11,7 @@ import zipapp
 import zipfile
 
 from pathlib import Path
-from typing import IO, Any, Generator, Union
+from typing import IO, Any, Generator, List, Union
 
 from . import bootstrap
 from .bootstrap.environment import Environment
@@ -57,7 +57,7 @@ def maybe_open(archive: Union[str, Path], mode: str) -> Generator[IO[Any], None,
 
 
 def create_archive(
-    source: Path, target: Path, interpreter: str, main: str, env: Environment, compressed: bool = True
+    sources: List[Path], target: Path, interpreter: str, main: str, env: Environment, compressed: bool = True
 ) -> None:
     """Create an application archive from SOURCE.
 
@@ -85,20 +85,20 @@ def create_archive(
 
         # Pack zipapp with dependencies.
         with zipfile.ZipFile(fd, "w", compression=compression) as z:
-
             site_packages = Path("site-packages")
 
-            # Glob is known to return results in undetermenistic order.
-            # We need to sort them by in-archive paths to ensure
-            # that archive contents are reproducible.
-            for child in sorted(source.rglob("*"), key=str):
+            for source in sources:
+                # Glob is known to return results in undetermenistic order.
+                # We need to sort them by in-archive paths to ensure
+                # that archive contents are reproducible.
+                for child in sorted(source.rglob("*"), key=str):
 
-                # Skip compiled files.
-                if child.suffix == ".pyc":
-                    continue
+                    # Skip compiled files.
+                    if child.suffix == ".pyc":
+                        continue
 
-                arcname = site_packages / child.relative_to(source)
-                z.write(child, arcname)
+                    arcname = site_packages / child.relative_to(source)
+                    z.write(child, arcname)
 
             bootstrap_target = Path("_bootstrap")
 

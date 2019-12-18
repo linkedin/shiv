@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from click.testing import CliRunner
-from shiv.cli import _interpreter_path, find_entry_point, main
+from shiv.cli import _interpreter_path, console_script_exists, find_entry_point, main
 from shiv.constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES
 from shiv.info import main as info_main
 from shiv.pip import install
@@ -53,7 +53,21 @@ class TestCLI:
     def test_find_entry_point(self, tmpdir, package_location):
         """Test that we can find console_script metadata."""
         install(["-t", str(tmpdir), str(package_location)])
-        assert find_entry_point(Path(tmpdir), "hello") == "hello:main"
+        assert find_entry_point([Path(tmpdir)], "hello") == "hello:main"
+
+    def test_find_entry_point_two_points(self, tmpdir, package_location):
+        """Test that we can find console_script metadata."""
+        install(["-t", str(tmpdir), str(package_location)])
+        assert find_entry_point([Path(tmpdir)], "hello") == "hello:main"
+
+    def test_console_script_exists(self, tmpdir, package_location):
+        """Test that we can check console_script presence."""
+        install_dir = os.path.join(tmpdir, 'install')
+        install(["-t", str(install_dir), str(package_location)])
+        empty_dir = os.path.join(tmpdir, 'empty')
+        os.makedirs(empty_dir)
+
+        assert console_script_exists([Path(empty_dir), Path(install_dir)], "hello")
 
     def test_no_args(self, runner):
         """This should fail with a warning about supplying pip arguments"""
@@ -165,6 +179,37 @@ class TestCLI:
 
         pythonpath_has_root = str(shiv_root) in proc.stdout.decode()
         assert extend_path.startswith("--no") != pythonpath_has_root
+
+    def test_multiple_site_packages(self, shiv_root, runner):
+        output_file = Path(shiv_root, "test_multiple_sp.pyz")
+        package_dir = Path(shiv_root, "package")
+        main_script = Path(package_dir, "hello.py")
+
+        env_code = "\n".join(["import os", "def hello():", "    print('hello!')"])
+
+        package_dir.mkdir()
+        main_script.write_text(env_code)
+
+        other_package_dir = Path(shiv_root, "dependent_package")
+        main_script = Path(package_dir, "hello_client.py")
+
+        env_client_code = "\n".join(["import os", "from hello import hello", "def main():", "    hello()"])
+
+        other_package_dir.mkdir()
+        main_script.write_text(env_client_code)
+
+        result = runner(["-e", "hello_client:main", "-o", str(output_file), "--site-packages", str(package_dir),
+                         "--site-packages", str(other_package_dir)])
+
+        # check that the command successfully completed
+        assert result.exit_code == 0
+
+        # ensure the created file actually exists
+        assert output_file.exists()
+
+        # now run the produced zipapp and confirm that output is ok
+        proc = subprocess.run([str(output_file)], stdout=subprocess.PIPE, shell=True, env=os.environ)
+        assert 'hello!' in proc.stdout.decode()
 
     def test_no_entrypoint(self, shiv_root, runner, package_location, monkeypatch):
 
