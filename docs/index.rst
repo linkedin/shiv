@@ -1,8 +1,7 @@
 shiv 🔪
 ====================
 
-Shiv is a command line utility for building fully self
-contained Python zipapps as outlined in `PEP 441 <http://legacy.python.org/dev/peps/pep-0441/>`_
+Shiv is a command line utility for building fully self-contained Python zipapps as outlined in `PEP 441 <http://legacy.python.org/dev/peps/pep-0441/>`_
 but with all their dependencies included!
 
 Shiv's primary goal is making distributing Python applications fast & easy.
@@ -23,7 +22,7 @@ In order to build self-contained single-artifact executables, shiv leverages ``p
     dependencies into the resulting binary, and then at bootstrap time extracts it into a ``~/.shiv``
     cache directory. More on this in the `Bootstrapping` section.
 
-shiv accepts only a few command line parameters of it's own, and any unprocessed parameters are
+shiv accepts only a few command line parameters of its own, and any unprocessed parameters are
 delegated to ``pip install``.
 
 For example, if you wanted to create an executable for Pipenv, you'd specify the required
@@ -58,7 +57,7 @@ environment, since the ``pyz`` files can be used as a shebang!
 Bootstrapping
 ^^^^^^^^^^^^^
 
-When you run an executable created with shiv a special bootstrap function is called. This function
+When you run an executable created with shiv, a special bootstrap function is called. This function
 unpacks dependencies into a uniquely named subdirectory of ``~/.shiv`` and then runs your entry point
 (or interactive interpreter) with those dependencies added to your ``sys.path``. Once the
 dependencies have been extracted to disk, any further invocations will re-use the 'cached'
