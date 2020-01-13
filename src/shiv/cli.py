@@ -177,7 +177,7 @@ def main(
                 for sp in site_packages:
                     _copytree(Path(sp), Path(tmp_site_packages))
             else:
-                sources.extend(map(lambda p: Path(p).expanduser(), site_packages))
+                sources.extend([Path(p).expanduser() for p in site_packages])
 
         if pip_args:
             # Install dependencies into staged site-packages.
