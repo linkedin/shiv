@@ -19,20 +19,37 @@ from .constants import BUILD_AT_TIMESTAMP_FORMAT, DISALLOWED_ARGS, DISALLOWED_PI
 __version__ = "0.0.52"
 
 
-def find_entry_point(site_packages: Path, console_script: str) -> str:
+def find_entry_point(site_packages_dirs: List[Path], console_script: str) -> str:
     """Find a console_script in a site-packages directory.
 
     Console script metadata is stored in entry_points.txt per setuptools
     convention. This function searches all entry_points.txt files and
     returns the import string for a given console_script argument.
 
-    :param site_packages: A path to a site-packages directory on disk.
+    :param site_packages_dirs: Paths to site-packages directories on disk.
     :param console_script: A console_script string.
     """
 
     config_parser = ConfigParser()
-    config_parser.read(site_packages.rglob("entry_points.txt"))
+    for site_packages in site_packages_dirs:
+        config_parser.read(site_packages.rglob("entry_points.txt"))
     return config_parser["console_scripts"][console_script]
+
+
+def console_script_exists(site_packages_dirs: List[Path], console_script: str) -> bool:
+    """Return true if the console script with provided name exists in one
+    of the site-packages directories.
+
+    Console script is expected to be in the 'bin' directory of site packages.
+
+    :param site_packages_dirs: Paths to site-packages directories on disk.
+    :param console_script: A console script name.
+    """
+    for site_packages in site_packages_dirs:
+        if (site_packages / 'bin' / console_script).exists():
+            return True
+
+    return False
 
 
 def _interpreter_path(append_version: bool = False) -> str:
@@ -99,7 +116,7 @@ def _copytree(src: Path, dst: Path) -> None:
 @click.option(
     "--site-packages",
     help="The path to an existing site-packages directory to copy into the zipapp",
-    type=click.Path(exists=True),
+    type=click.Path(exists=True), multiple=True,
 )
 @click.option("--compressed/--uncompressed", default=True, help="Whether or not to compress your zip.")
 @click.option(
@@ -150,27 +167,29 @@ def main(
             if supplied_arg in disallowed:
                 sys.exit(DISALLOWED_PIP_ARGS.format(arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed]))
 
+    sources: List[Path] = []
     with TemporaryDirectory() as tmp_site_packages:
 
         # If both site_packages and pip_args are present, we need to copy the site_packages
         # dir into our staging area (tmp_site_packages) as pip may modify the contents.
         if site_packages:
             if pip_args:
-                _copytree(Path(site_packages), Path(tmp_site_packages))
+                for sp in site_packages:
+                    _copytree(Path(sp), Path(tmp_site_packages))
             else:
-                tmp_site_packages = site_packages
+                sources.extend(map(lambda p: Path(p).expanduser(), site_packages))
 
         if pip_args:
             # Install dependencies into staged site-packages.
             pip.install(["--target", tmp_site_packages] + list(pip_args))
+            sources.append(Path(tmp_site_packages).expanduser())
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
             try:
-                entry_point = find_entry_point(Path(tmp_site_packages), console_script)
-
+                entry_point = find_entry_point(sources, console_script)
             except KeyError:
-                if not Path(tmp_site_packages, "bin", console_script).exists():
+                if not console_script_exists(sources, console_script):
                     sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
 
         # Some projects need reproducible artifacts, so they can use SOURCE_DATE_EPOCH
@@ -192,7 +211,7 @@ def main(
 
         # create the zip
         builder.create_archive(
-            Path(tmp_site_packages).expanduser(),
+            sources,
             target=Path(output_file).expanduser(),
             interpreter=python or _interpreter_path(),
             main="_bootstrap:bootstrap",

@@ -14,7 +14,7 @@ import zipfile
 
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import IO, Any, Optional, Tuple, Union
+from typing import IO, Any, List, Optional, Tuple, Union
 
 from . import bootstrap
 from .bootstrap.environment import Environment
@@ -81,7 +81,7 @@ def _write_to_zip_app(
 
 
 def create_archive(
-    source: Path, target: Path, interpreter: str, main: str, env: Environment, compressed: bool = True
+    sources: List[Path], target: Path, interpreter: str, main: str, env: Environment, compressed: bool = True
 ) -> None:
     """Create an application archive from SOURCE.
 
@@ -112,20 +112,19 @@ def create_archive(
 
         # Pack zipapp with dependencies.
         with zipfile.ZipFile(fd, "w", compression=compression) as z:
-
             site_packages = Path("site-packages")
 
-            # Glob is known to return results in undetermenistic order.
-            # We need to sort them by in-archive paths to ensure
-            # that archive contents are reproducible.
-            for child in sorted(source.rglob("*"), key=str):
+            for source in sources:
+                # Glob is known to return results in undetermenistic order.
+                # We need to sort them by in-archive paths to ensure
+                # that archive contents are reproducible.
+                for child in sorted(source.rglob("*"), key=str):
+                    # Skip compiled files and directories
+                    if child.suffix == ".pyc" or child.is_dir():
+                        continue
 
-                # Skip compiled files and directories
-                if child.suffix == ".pyc" or child.is_dir():
-                    continue
-
-                arcname = str(site_packages / child.relative_to(source))
-                _write_to_zip_app(z, arcname, child, zipinfo_datetime, compression, contents_hash)
+                    arcname = str(site_packages / child.relative_to(source))
+                    _write_to_zip_app(z, arcname, child, zipinfo_datetime, compression, contents_hash)
 
             bootstrap_target = Path("_bootstrap")
 
