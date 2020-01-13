@@ -1,6 +1,7 @@
+import os
 import shutil
 import sys
-import uuid
+import time
 
 from configparser import ConfigParser
 from datetime import datetime
@@ -12,7 +13,8 @@ import click
 
 from . import builder, pip
 from .bootstrap.environment import Environment
-from .constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_ENTRY_POINT, NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES
+from .constants import BUILD_AT_TIMESTAMP_FORMAT, DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_ENTRY_POINT,\
+                       NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES, SOURCE_DATE_EPOCH_ENV, SOURCE_DATE_EPOCH_DEFAULT
 
 __version__ = "0.0.52"
 
@@ -111,6 +113,13 @@ def _copytree(src: Path, dst: Path) -> None:
     default=False,
     help="Add the contents of the zipapp to PYTHONPATH (for subprocesses).",
 )
+@click.option(
+    "--reproducible/--not-reproducible",
+    default=False,
+    help="Generate a reproducible zipapp by overwriting all files timestamps to a default value. "
+         "Timestamp can be overwritten by SOURCE_DATE_EPOCH env variable. "
+         "If SOURCE_DATE_EPOCH is set, this option will be implicitly set to true too.",
+)
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
@@ -121,6 +130,7 @@ def main(
     compressed: bool,
     compile_pyc: bool,
     extend_pythonpath: bool,
+    reproducible: bool,
     pip_args: List[str],
 ) -> None:
     """
@@ -163,10 +173,16 @@ def main(
                 if not Path(tmp_site_packages, "bin", console_script).exists():
                     sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
 
+        # Some projects need reproducible artifacts, so they can use SOURCE_DATE_EPOCH
+        # environment variable to specify the timestamps in the zipapp
+        timestamp = int(os.environ.get(
+            SOURCE_DATE_EPOCH_ENV,
+            SOURCE_DATE_EPOCH_DEFAULT if reproducible else time.time()
+        ))
+
         # create runtime environment metadata
         env = Environment(
-            built_at=str(datetime.now()),
-            build_id=str(uuid.uuid4()),
+            built_at=datetime.utcfromtimestamp(timestamp).strftime(BUILD_AT_TIMESTAMP_FORMAT),
             entry_point=entry_point,
             script=console_script,
             compile_pyc=compile_pyc,
