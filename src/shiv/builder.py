@@ -4,18 +4,21 @@ This module is a modified implementation of Python's "zipapp" module.
 We've copied a lot of zipapp's code here in order to backport support for compression.
 https://docs.python.org/3.7/library/zipapp.html#cmdoption-zipapp-c
 """
-import contextlib
+import hashlib
+import os
 import stat
 import sys
+import time
 import zipapp
 import zipfile
 
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import IO, Any, Generator, List, Union
+from typing import IO, Any, List, Optional, Tuple, Union
 
 from . import bootstrap
 from .bootstrap.environment import Environment
-from .constants import BINPRM_ERROR
+from .constants import BINPRM_ERROR, BUILD_AT_TIMESTAMP_FORMAT
 
 try:
     import importlib.resources as importlib_resources  # type: ignore
@@ -46,14 +49,35 @@ def write_file_prefix(f: IO[Any], interpreter: str) -> None:
     f.write(b"#!" + interpreter.encode(sys.getfilesystemencoding()) + b"\n")
 
 
-@contextlib.contextmanager
-def maybe_open(archive: Union[str, Path], mode: str) -> Generator[IO[Any], None, None]:
-    if isinstance(archive, (str, Path)):
-        with Path(archive).open(mode=mode) as f:
-            yield f
+def _write_to_zip_app(
+    arhive: zipfile.ZipFile,
+    arcname: str,
+    data_source: Union[Path, bytes],
+    date_time: Tuple[int, int, int, int, int, int],
+    compression: int,
+    contents_hash: hashlib.sha3_256,
+) -> None:
+    """Write a file or a bytestring to a ZipFile as a separate entry and
+    update contents_hash as a side effect
 
+    The approach is borrowed from 'wheel' code.
+    """
+    if isinstance(data_source, Path):
+        with data_source.open('rb') as f:
+            data = f.read()
+            st: Optional[os.stat_result] = os.fstat(f.fileno())
     else:
-        yield archive
+        data = data_source
+        st = None
+
+    contents_hash.update(data)
+
+    zinfo = zipfile.ZipInfo(arcname, date_time=date_time)
+    zinfo.compress_type = compression
+    if st is not None:
+        zinfo.external_attr = (stat.S_IMODE(st.st_mode) | stat.S_IFMT(st.st_mode)) << 16
+
+    arhive.writestr(zinfo, data)
 
 
 def create_archive(
@@ -74,8 +98,11 @@ def create_archive(
         raise zipapp.ZipAppError("Invalid entry point: " + main)
 
     main_py = MAIN_TEMPLATE.format(module=mod, fn=fn)
+    timestamp = datetime.strptime(env.built_at, BUILD_AT_TIMESTAMP_FORMAT).replace(tzinfo=timezone.utc).timestamp()
+    zipinfo_datetime: Tuple[int, int, int, int, int, int] = time.gmtime(int(timestamp))[0:6]
+    contents_hash = hashlib.sha256()
 
-    with maybe_open(target, "wb") as fd:
+    with target.open(mode="wb") as fd:
 
         # Write shebang.
         write_file_prefix(fd, interpreter)
@@ -92,13 +119,12 @@ def create_archive(
                 # We need to sort them by in-archive paths to ensure
                 # that archive contents are reproducible.
                 for child in sorted(source.rglob("*"), key=str):
-
-                    # Skip compiled files.
-                    if child.suffix == ".pyc":
+                    # Skip compiled files and directories
+                    if child.suffix == ".pyc" or child.is_dir():
                         continue
 
-                    arcname = site_packages / child.relative_to(source)
-                    z.write(child, arcname)
+                    arcname = str(site_packages / child.relative_to(source))
+                    _write_to_zip_app(z, arcname, child, zipinfo_datetime, compression, contents_hash)
 
             bootstrap_target = Path("_bootstrap")
 
@@ -106,13 +132,21 @@ def create_archive(
             for bootstrap_file in importlib_resources.contents(bootstrap):  # type: ignore
                 if importlib_resources.is_resource(bootstrap, bootstrap_file):  # type: ignore
                     with importlib_resources.path(bootstrap, bootstrap_file) as f:  # type: ignore
-                        z.write(f.absolute(), bootstrap_target / f.name)
+                        _write_to_zip_app(z, str(bootstrap_target / f.name), f.absolute(), zipinfo_datetime,
+                                          compression, contents_hash)
 
-            # write environment
-            z.writestr("environment.json", env.to_json().encode("utf-8"))
+            # Write environment info in json file.
+            # Environment file contains build_id which is an effective SHA-256 checksum of all site-packages contents.
+            # environment.json itself and __main__.py are not used to calculate the checksum which is correct
+            # because checksum is only used for local caching of site-packages and these files are always read from
+            # archive.
+            if contents_hash is not None:
+                env.build_id = contents_hash.hexdigest()
+            _write_to_zip_app(z, "environment.json", env.to_json().encode("utf-8"), zipinfo_datetime, compression,
+                              contents_hash)
 
             # write main
-            z.writestr("__main__.py", main_py.encode("utf-8"))
+            _write_to_zip_app(z, "__main__.py", main_py.encode("utf-8"), zipinfo_datetime, compression, contents_hash)
 
     # Make pyz executable (on windows this is no-op).
     target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)

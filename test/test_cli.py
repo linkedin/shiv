@@ -1,4 +1,5 @@
 import contextlib
+import hashlib
 import json
 import os
 import stat
@@ -41,8 +42,10 @@ class TestCLI:
     @pytest.fixture
     def runner(self):
         """Returns a click test runner."""
+        def invoke(args, env=None):
+            return CliRunner().invoke(main, args, env=env)
 
-        return lambda args: CliRunner().invoke(main, args)
+        return invoke
 
     @pytest.fixture
     def info_runner(self):
@@ -235,3 +238,39 @@ class TestCLI:
 
         assert proc.returncode == 0
         assert "hello" in proc.stdout.decode()
+
+    def test_results_are_binary_identical_with_env_and_build_id(self, shiv_root, runner, package_location):
+        first_output_file = Path(shiv_root, "test_one.pyz")
+        second_output_file = Path(shiv_root, "test_two.pyz")
+
+        result_one = runner(["-e", "hello:main", "-o", str(first_output_file), "--reproducible",
+                             str(package_location)],
+                            env={'SOURCE_DATE_EPOCH': '1234567890'})  # 2009-02-13 23:31:30 UTC
+
+        result_two = runner(["-e", "hello:main", "-o", str(second_output_file), "--reproducible",
+                             str(package_location)],
+                            env={'SOURCE_DATE_EPOCH': '1234567890'})  # 2009-02-13 23:31:30 UTC
+
+        # check that both commands successfully completed
+        assert result_one.exit_code == 0
+        assert result_two.exit_code == 0
+
+        # check that both executables are binary identical
+        with first_output_file.open('rb') as f:
+            first_hash = hashlib.md5(f.read()).hexdigest()
+        with second_output_file.open('rb') as f:
+            second_hash = hashlib.md5(f.read()).hexdigest()
+
+        assert first_hash == second_hash
+
+        # finally, check that one of the result works
+        proc = subprocess.run(
+            [str(first_output_file)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
+            env=os.environ,
+        )
+
+        assert proc.returncode == 0
+        assert 'hello' in proc.stdout.decode()

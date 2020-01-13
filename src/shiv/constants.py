@@ -20,3 +20,9 @@ DISALLOWED_ARGS: Dict[Tuple[str, ...], str] = {
     ("-d", "--download"): "Shiv needs to actually perform an install, not merely a download.",
     ("--user", "--root", "--prefix"): "Which conflicts with Shiv's internal use of '--target'.",
 }
+
+SOURCE_DATE_EPOCH_ENV = 'SOURCE_DATE_EPOCH'
+# This is the timestamp for beginning of the day Jan 1 1980, which is the minimum timestamp
+# value you can use in zip archives
+SOURCE_DATE_EPOCH_DEFAULT = 315554400
+BUILD_AT_TIMESTAMP_FORMAT = '%Y-%m-%d %H:%M:%S'
