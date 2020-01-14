@@ -13,10 +13,18 @@ import click
 
 from . import builder, pip
 from .bootstrap.environment import Environment
-from .constants import BUILD_AT_TIMESTAMP_FORMAT, DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_ENTRY_POINT,\
-                       NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES, SOURCE_DATE_EPOCH_ENV, SOURCE_DATE_EPOCH_DEFAULT
+from .constants import (
+    BUILD_AT_TIMESTAMP_FORMAT,
+    DISALLOWED_ARGS,
+    DISALLOWED_PIP_ARGS,
+    NO_ENTRY_POINT,
+    NO_OUTFILE,
+    NO_PIP_ARGS_OR_SITE_PACKAGES,
+    SOURCE_DATE_EPOCH_DEFAULT,
+    SOURCE_DATE_EPOCH_ENV,
+)
 
-__version__ = "0.0.52"
+__version__ = "0.1.0"
 
 
 def find_entry_point(site_packages_dirs: List[Path], console_script: str) -> str:
@@ -31,22 +39,25 @@ def find_entry_point(site_packages_dirs: List[Path], console_script: str) -> str
     """
 
     config_parser = ConfigParser()
+
     for site_packages in site_packages_dirs:
         config_parser.read(site_packages.rglob("entry_points.txt"))
+
     return config_parser["console_scripts"][console_script]
 
 
 def console_script_exists(site_packages_dirs: List[Path], console_script: str) -> bool:
-    """Return true if the console script with provided name exists in one
-    of the site-packages directories.
+    """Return true if the console script with provided name exists in one of the site-packages directories.
 
     Console script is expected to be in the 'bin' directory of site packages.
 
     :param site_packages_dirs: Paths to site-packages directories on disk.
     :param console_script: A console script name.
     """
+
     for site_packages in site_packages_dirs:
-        if (site_packages / 'bin' / console_script).exists():
+
+        if (site_packages / "bin" / console_script).exists():
             return True
 
     return False
@@ -116,7 +127,8 @@ def _copytree(src: Path, dst: Path) -> None:
 @click.option(
     "--site-packages",
     help="The path to an existing site-packages directory to copy into the zipapp",
-    type=click.Path(exists=True), multiple=True,
+    type=click.Path(exists=True),
+    multiple=True,
 )
 @click.option("--compressed/--uncompressed", default=True, help="Whether or not to compress your zip.")
 @click.option(
@@ -133,9 +145,11 @@ def _copytree(src: Path, dst: Path) -> None:
 @click.option(
     "--reproducible/--not-reproducible",
     default=False,
-    help="Generate a reproducible zipapp by overwriting all files timestamps to a default value. "
-         "Timestamp can be overwritten by SOURCE_DATE_EPOCH env variable. "
-         "If SOURCE_DATE_EPOCH is set, this option will be implicitly set to true too.",
+    help=(
+        "Generate a reproducible zipapp by overwriting all files timestamps to a default value. "
+        "Timestamp can be overwritten by SOURCE_DATE_EPOCH env variable. "
+        "If SOURCE_DATE_EPOCH is set, this option will be implicitly set to true too."
+    ),
 )
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
@@ -168,6 +182,7 @@ def main(
                 sys.exit(DISALLOWED_PIP_ARGS.format(arg=supplied_arg, reason=DISALLOWED_ARGS[disallowed]))
 
     sources: List[Path] = []
+
     with TemporaryDirectory() as tmp_site_packages:
 
         # If both site_packages and pip_args are present, we need to copy the site_packages
@@ -182,7 +197,7 @@ def main(
         if pip_args:
             # Install dependencies into staged site-packages.
             pip.install(["--target", tmp_site_packages] + list(pip_args))
-            sources.append(Path(tmp_site_packages).expanduser())
+            sources.append(Path(tmp_site_packages).absolute())
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
@@ -193,11 +208,10 @@ def main(
                     sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
 
         # Some projects need reproducible artifacts, so they can use SOURCE_DATE_EPOCH
-        # environment variable to specify the timestamps in the zipapp
-        timestamp = int(os.environ.get(
-            SOURCE_DATE_EPOCH_ENV,
-            SOURCE_DATE_EPOCH_DEFAULT if reproducible else time.time()
-        ))
+        # environment variable to specify the timestamps in the zipapp.
+        timestamp = int(
+            os.environ.get(SOURCE_DATE_EPOCH_ENV, SOURCE_DATE_EPOCH_DEFAULT if reproducible else time.time())
+        )
 
         # create runtime environment metadata
         env = Environment(

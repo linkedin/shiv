@@ -49,7 +49,7 @@ def write_file_prefix(f: IO[Any], interpreter: str) -> None:
     f.write(b"#!" + interpreter.encode(sys.getfilesystemencoding()) + b"\n")
 
 
-def _write_to_zip_app(
+def _write_to_zipapp(
     arhive: zipfile.ZipFile,
     arcname: str,
     data_source: Union[Path, bytes],
@@ -63,7 +63,7 @@ def _write_to_zip_app(
     The approach is borrowed from 'wheel' code.
     """
     if isinstance(data_source, Path):
-        with data_source.open('rb') as f:
+        with data_source.open("rb") as f:
             data = f.read()
             st: Optional[os.stat_result] = os.fstat(f.fileno())
     else:
@@ -85,7 +85,7 @@ def create_archive(
 ) -> None:
     """Create an application archive from SOURCE.
 
-    A modified version of stdlib's
+    This function is a heavily modified version of stdlib's
     `zipapp.create_archive <https://docs.python.org/3/library/zipapp.html#zipapp.create_archive>`_
 
     """
@@ -97,6 +97,7 @@ def create_archive(
     if not (sep == ":" and mod_ok and fn_ok):
         raise zipapp.ZipAppError("Invalid entry point: " + main)
 
+    # Collect our timestamp data and create our content hash.
     main_py = MAIN_TEMPLATE.format(module=mod, fn=fn)
     timestamp = datetime.strptime(env.built_at, BUILD_AT_TIMESTAMP_FORMAT).replace(tzinfo=timezone.utc).timestamp()
     zipinfo_datetime: Tuple[int, int, int, int, int, int] = time.gmtime(int(timestamp))[0:6]
@@ -111,20 +112,23 @@ def create_archive(
         compression = zipfile.ZIP_DEFLATED if compressed else zipfile.ZIP_STORED
 
         # Pack zipapp with dependencies.
-        with zipfile.ZipFile(fd, "w", compression=compression) as z:
+        with zipfile.ZipFile(fd, "w", compression=compression) as archive:
+
             site_packages = Path("site-packages")
 
             for source in sources:
-                # Glob is known to return results in undetermenistic order.
+
+                # Glob is known to return results in non-determenistic order.
                 # We need to sort them by in-archive paths to ensure
                 # that archive contents are reproducible.
                 for child in sorted(source.rglob("*"), key=str):
-                    # Skip compiled files and directories
+
+                    # Skip compiled files and directories (as they are not required to be present in the zip).
                     if child.suffix == ".pyc" or child.is_dir():
                         continue
 
                     arcname = str(site_packages / child.relative_to(source))
-                    _write_to_zip_app(z, arcname, child, zipinfo_datetime, compression, contents_hash)
+                    _write_to_zipapp(archive, arcname, child, zipinfo_datetime, compression, contents_hash)
 
             bootstrap_target = Path("_bootstrap")
 
@@ -132,21 +136,31 @@ def create_archive(
             for bootstrap_file in importlib_resources.contents(bootstrap):  # type: ignore
                 if importlib_resources.is_resource(bootstrap, bootstrap_file):  # type: ignore
                     with importlib_resources.path(bootstrap, bootstrap_file) as f:  # type: ignore
-                        _write_to_zip_app(z, str(bootstrap_target / f.name), f.absolute(), zipinfo_datetime,
-                                          compression, contents_hash)
+                        _write_to_zipapp(
+                            archive,
+                            str(bootstrap_target / f.name),
+                            f.absolute(),
+                            zipinfo_datetime,
+                            compression,
+                            contents_hash,
+                        )
 
-            # Write environment info in json file.
-            # Environment file contains build_id which is an effective SHA-256 checksum of all site-packages contents.
-            # environment.json itself and __main__.py are not used to calculate the checksum which is correct
-            # because checksum is only used for local caching of site-packages and these files are always read from
-            # archive.
             if contents_hash is not None:
                 env.build_id = contents_hash.hexdigest()
-            _write_to_zip_app(z, "environment.json", env.to_json().encode("utf-8"), zipinfo_datetime, compression,
-                              contents_hash)
+
+            # Write environment info in json file.
+            #
+            # The environment file contains build_id which is a SHA-256 checksum of all **site-packages** contents.
+            # environment.json and __main__.py are not used to calculate the checksum, is it's only used for local
+            # caching of site-packages and these files are always read from archive.
+            _write_to_zipapp(
+                archive, "environment.json", env.to_json().encode("utf-8"), zipinfo_datetime, compression, contents_hash
+            )
 
             # write main
-            _write_to_zip_app(z, "__main__.py", main_py.encode("utf-8"), zipinfo_datetime, compression, contents_hash)
+            _write_to_zipapp(
+                archive, "__main__.py", main_py.encode("utf-8"), zipinfo_datetime, compression, contents_hash
+            )
 
     # Make pyz executable (on windows this is no-op).
     target.chmod(target.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)

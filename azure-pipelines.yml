@@ -11,6 +11,10 @@ strategy:
       imageName: 'ubuntu-16.04'
       python.version: '3.7'
       tox.env: py37
+    linux38:
+      imageName: 'ubuntu-16.04'
+      python.version: '3.8'
+      tox.env: py38
     mac36:
       imageName: 'macos-10.13'
       python.version: '3.6'
@@ -19,6 +23,10 @@ strategy:
       imageName: 'macos-10.13'
       python.version: '3.7'
       tox.env: py37
+    mac38:
+      imageName: 'macos-10.13'
+      python.version: '3.8'
+      tox.env: py38
     windows36:
       imageName: 'vs2017-win2016'
       python.version: '3.6'
@@ -27,6 +35,10 @@ strategy:
       imageName: 'vs2017-win2016'
       python.version: '3.7'
       tox.env: py37
+    windows38:
+      imageName: 'vs2017-win2016'
+      python.version: '3.8'
+      tox.env: py38
 
 steps:
 - task: UsePythonVersion@0
