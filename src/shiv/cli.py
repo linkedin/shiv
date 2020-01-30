@@ -96,6 +96,21 @@ def _interpreter_path(append_version: bool = False) -> str:
         return sys.executable
 
 
+def _interpreter_interpolate(python: Optional[str]) -> Optional[str]:
+    """Inject metadata into the interpreter string.
+
+    :param python: Interpreter / shebang value.
+    """
+
+    if python:
+        namespace = dict(
+            py=sys.version_info,
+        )
+        python = python.format(**namespace)
+
+    return python
+
+
 def _copytree(src: Path, dst: Path) -> None:
     """A utility function for syncing directories.
 
@@ -227,7 +242,7 @@ def main(
         builder.create_archive(
             sources,
             target=Path(output_file).expanduser(),
-            interpreter=python or _interpreter_path(),
+            interpreter=_interpreter_interpolate(python) or _interpreter_path(),
             main="_bootstrap:bootstrap",
             env=env,
             compressed=compressed,
