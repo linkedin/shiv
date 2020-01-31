@@ -17,7 +17,7 @@ binary file that we could then distribute!
 However, as our tools matured and picked up additional dependencies, we became acutely aware of the
 performance issues being imposed on us by ``pkg_resources``'s
 `Issue 510 <https://github.com/pypa/setuptools/issues/510>`_. Since PEX leans heavily on
-``pkg_resources`` to bootstrap it's environment, we found ourselves at an impass: lose out on the
+``pkg_resources`` to bootstrap its environment, we found ourselves at an impass: lose out on the
 ability to neatly package our tools in favor of invocation speed, or impose a few second
 performance penalty for the benefit of easy packaging.
 
