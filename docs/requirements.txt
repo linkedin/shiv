@@ -1,0 +1,2 @@
+# Requirements to build docs on RTD
+sphinx-click
