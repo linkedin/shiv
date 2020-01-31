@@ -115,6 +115,7 @@ Table of Contents
 .. toctree::
    :maxdepth: 2
 
+   cli-reference
    history
    api
    django
