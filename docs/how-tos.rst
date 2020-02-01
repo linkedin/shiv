@@ -76,3 +76,14 @@ The underscore prefix in the zipapp name indicates this is not a command
 humans would normally use – alternatively you can deploy into e.g.
 ``/usr/local/lib/python3.6/`` and then use an absolute path instead of
 an ``env`` call in the script's shebang.
+
+
+External Resources
+==================
+
+Here are some links to related articles on the web.
+
+* `Enabling Easy Zipapp Installs on Windows`_ – Describes the required steps to make zipapps really shine on Windows (i.e. make them work pretty much like on POSIX systems).
+
+
+.. _`Enabling Easy Zipapp Installs on Windows`: https://py-generic-project.readthedocs.io/en/latest/installing.html#enabling-easy-zipapp-installs-on-windows
