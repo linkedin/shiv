@@ -31,9 +31,16 @@ Note that we do not provide an entry point here, which means this zipapp
 drops into the given Python interpreter and is thus usable *as* an
 interpeter, but with the dependencies of the project added.
 
-The ``-IS`` options ensure this zipapp runs isolated (for increased security),
+The ``-IS`` options in ``-p`` ensure this zipapp runs isolated (for increased security),
 with neither the current working directory
 nor the host's site packages in the Python path.
+
+.. tip::
+
+    Replace the ``.`` at the end of the ``shiv`` call
+    by a literal list of PyPI packages,
+    or load them from a requirements file (``-r lib-requirements.txt``),
+    and you don't need an extra project for getting your base set defined.
 
 Now we can exploit this to write a script using the zipapp as its interpreter::
 
