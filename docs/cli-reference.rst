@@ -36,7 +36,7 @@ On Windows, the Python launcher ``py`` knows how to handle shebangs using ``env`
 so it's overall the best choice if you target multiple platforms with a pure Python zipapp.
 
 If you have ``coreutils`` with at least version 8.30 on your Linux system,
-then you can use env shebangs *and* pass argument to Python, like in this example:
+then you can use env shebangs *and* pass arguments to Python, like in this example:
 
 .. code-block:: shell
 
