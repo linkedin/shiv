@@ -89,9 +89,8 @@ tox
 To build documentation when you changed something in `docs`:
 
 ```sh
-pip install sphinx
+pip install -r docs/requirements.txt
 sphinx-build docs build/html
-xdg-open build/html/index.html
 ```
 
 ### gotchas
