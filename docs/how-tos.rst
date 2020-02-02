@@ -83,7 +83,9 @@ External Resources
 
 Here are some links to related articles on the web.
 
+* `Python Alternative to Docker`_ – Comparing shiv to Docker as the core tool of a deployment workflow, what are the differences between and  advantages of both options.
 * `Enabling Easy Zipapp Installs on Windows`_ – Describes the required steps to make zipapps really shine on Windows (i.e. make them work pretty much like on POSIX systems).
 
 
+.. _`Python alternative to Docker`: https://www.mattlayman.com/blog/2019/python-alternative-docker/
 .. _`Enabling Easy Zipapp Installs on Windows`: https://py-generic-project.readthedocs.io/en/latest/installing.html#enabling-easy-zipapp-installs-on-windows
