@@ -5,6 +5,9 @@ It is used to enter an interactive interpreter session from an executable create
 """
 import code
 import sys
+import runpy
+
+from pathlib import Path
 
 
 def _exec_function(ast, globals_map):
@@ -13,38 +16,54 @@ def _exec_function(ast, globals_map):
     return locals_map
 
 
-def execute_content(name, content):
+def execute_content(name, content, argv0=None):
+    argv0 = argv0 or name
+
     try:
         ast = compile(content, name, "exec", flags=0, dont_inherit=1)
     except SyntaxError:
         raise RuntimeError(f"Unable to parse {name}. Is it a Python script? Syntax correct?")
 
-    old_name, old_file = globals().get("__name__"), globals().get("__file__")
+    sys.argv[0] = argv0
+    globals_ = globals().copy()
+    globals_["__name__"] = "__main__"
+    globals_["__file__"] = name
+    _exec_function(ast, globals_)
 
-    try:
-        globals()["__name__"] = "__main__"
-        globals()["__file__"] = name
-        _exec_function(ast, globals())
-    finally:
-        if old_name:
-            globals()["__name__"] = old_name
-        else:
-            globals().pop("__name__")
-        if old_file:
-            globals()["__file__"] = old_file
-        else:
-            globals().pop("__file__")
+
+def execute_module(module_name):
+    runpy.run_module(module_name, run_name='__main__')
 
 
 def execute_interpreter():
-    if sys.argv[1:]:
-        try:
-            with open(sys.argv[1]) as fp:
-                name, content = sys.argv[1], fp.read()
-        except (FileNotFoundError, IsADirectoryError, PermissionError) as e:
-            raise RuntimeError(f"Could not open {sys.argv[1]} in the environment [{sys.argv[0]}]: {e}")
+    args = sys.argv[1:]
 
-        sys.argv = sys.argv[1:]
-        execute_content(name, content)
+    if args:
+
+        arg = args[0]
+
+        if arg == "-c":
+            content = args[1]
+            sys.argv = [arg, *args[2:]]
+            execute_content('-c <cmd>', content, argv0=arg)
+
+        elif arg == "-m":
+            module = args[1]
+            sys.argv = args[1:]
+            execute_module(module)
+
+        else:
+            if arg == "-":
+                content = sys.stdin.read()
+
+            else:
+                try:
+                    content = Path(arg).read_text()
+                except (FileNotFoundError, IsADirectoryError, PermissionError) as e:
+                    raise RuntimeError(f"Could not open '{arg}' in the environment [{sys.argv[0]}]: {e}")
+
+            sys.argv = args
+            execute_content(arg, content)
+
     else:
         code.interact()
