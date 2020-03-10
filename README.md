@@ -86,6 +86,13 @@ pip install tox
 tox
 ```
 
+To build documentation when you changed something in `docs`:
+
+```sh
+pip install -r docs/requirements.txt
+sphinx-build docs build/html
+```
+
 ### gotchas
 
 Zipapps created with shiv are not guaranteed to be cross-compatible with other architectures. For example, a `pyz`
