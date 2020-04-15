@@ -102,7 +102,7 @@ def extract_site_packages(archive, target_path, compile_pyc=False, compile_worke
     """
     parent = target_path.parent
     target_path_tmp = Path(parent, target_path.stem + ".tmp")
-    lock = Path(parent, target_path.stem + ".lock")
+    lock = Path(parent, f".{target_path.stem}_lock")
 
     # If this is the first time that a pyz is being extracted, we'll need to create the ~/.shiv dir
     if not parent.exists():

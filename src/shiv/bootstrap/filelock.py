@@ -87,11 +87,3 @@ class FileLock:
                 fcntl.flock(fd, fcntl.LOCK_UN)
 
             os.close(fd)
-
-            try:
-                os.remove(self.lock_file)
-
-            # Probably another instance of the application
-            # that acquired the file lock.
-            except OSError:
-                pass
