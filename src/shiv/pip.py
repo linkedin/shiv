@@ -61,7 +61,7 @@ def install(args: List[str]) -> None:
             universal_newlines=True,
         )
 
-    for output in process.stdout:
+    for output in process.stdout:  # type: ignore
         if output:
             click.echo(output.rstrip())
 
