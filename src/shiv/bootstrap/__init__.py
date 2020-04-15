@@ -22,7 +22,7 @@ def run(module):  # pragma: no cover
     If a single pyz has multiple callers, we want to remove these vars as we no longer need them
     and they can cause subprocesses to fail with a ModuleNotFoundError.
 
-    :param callable module: The entry point to invoke the pyz with.
+    :param Callable module: The entry point to invoke the pyz with.
     """
     with suppress(KeyError):
         del os.environ[Environment.MODULE]
@@ -43,11 +43,13 @@ def current_zipfile():
 def import_string(import_name):
     """Returns a callable for a given setuptools style import string
 
-    :param import_name: A console_scripts style import string
+    :param str import_name: A console_scripts style import string
     """
     import_name = str(import_name).replace(":", ".")
+
     try:
         import_module(import_name)
+
     except ImportError:
         if "." not in import_name:
             # this is a case like "import name", where continuing to the
@@ -61,8 +63,10 @@ def import_string(import_name):
     # this is a case where the previous attempt may have failed due to
     # not being importable. ("not a package", etc)
     module_name, obj_name = import_name.rsplit(".", 1)
+
     try:
         module = __import__(module_name, None, None, [obj_name])
+
     except ImportError:
         # Recurse to support importing modules not yet set up by the parent module
         # (or package for that matter)
@@ -79,18 +83,22 @@ def cache_path(archive, root_dir, build_id):
     """Returns a ~/.shiv cache directory for unzipping site-packages during bootstrap.
 
     :param ZipFile archive: The zipfile object we are bootstrapping from.
-    :param str buidl_id: The build id generated at zip creation.
+    :param Path root_dir: Optional, the path to a SHIV_ROOT.
+    :param str build_id: The build id generated at zip creation.
     """
     root = root_dir or Path("~/.shiv").expanduser()
     name = Path(archive.filename).resolve().stem
     return root / f"{name}_{build_id}"
 
 
-def extract_site_packages(archive, target_path, compile_pyc, compile_workers=0, force=False):
+def extract_site_packages(archive, target_path, compile_pyc=False, compile_workers=0, force=False):
     """Extract everything in site-packages to a specified path.
 
     :param ZipFile archive: The zipfile object we are bootstrapping from.
     :param Path target_path: The path to extract our zip to.
+    :param bool compile_pyc: A boolean to dictate whether we pre-compile pyc.
+    :param int compile_workers: An int representing the number of pyc compiler workers.
+    :param bool force: A boolean to dictate whether or not we force extraction.
     """
     parent = target_path.parent
     target_path_tmp = Path(parent, target_path.stem + ".tmp")
