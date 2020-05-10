@@ -42,6 +42,7 @@ class TestCLI:
     @pytest.fixture
     def runner(self):
         """Returns a click test runner."""
+
         def invoke(args, env=None):
             return CliRunner().invoke(main, args, env=env)
 
@@ -65,9 +66,9 @@ class TestCLI:
 
     def test_console_script_exists(self, tmpdir, package_location):
         """Test that we can check console_script presence."""
-        install_dir = os.path.join(tmpdir, 'install')
+        install_dir = os.path.join(tmpdir, "install")
         install(["-t", str(install_dir), str(package_location)])
-        empty_dir = os.path.join(tmpdir, 'empty')
+        empty_dir = os.path.join(tmpdir, "empty")
         os.makedirs(empty_dir)
 
         assert console_script_exists([Path(empty_dir), Path(install_dir)], "hello")
@@ -201,8 +202,18 @@ class TestCLI:
         other_package_dir.mkdir()
         main_script.write_text(env_client_code)
 
-        result = runner(["-e", "hello_client:main", "-o", str(output_file), "--site-packages", str(package_dir),
-                         "--site-packages", str(other_package_dir)])
+        result = runner(
+            [
+                "-e",
+                "hello_client:main",
+                "-o",
+                str(output_file),
+                "--site-packages",
+                str(package_dir),
+                "--site-packages",
+                str(other_package_dir),
+            ]
+        )
 
         # check that the command successfully completed
         assert result.exit_code == 0
@@ -212,7 +223,7 @@ class TestCLI:
 
         # now run the produced zipapp and confirm that output is ok
         proc = subprocess.run([str(output_file)], stdout=subprocess.PIPE, shell=True, env=os.environ)
-        assert 'hello!' in proc.stdout.decode()
+        assert "hello!" in proc.stdout.decode()
 
     def test_no_entrypoint(self, shiv_root, runner, package_location, monkeypatch):
 
@@ -243,34 +254,32 @@ class TestCLI:
         first_output_file = Path(shiv_root, "test_one.pyz")
         second_output_file = Path(shiv_root, "test_two.pyz")
 
-        result_one = runner(["-e", "hello:main", "-o", str(first_output_file), "--reproducible",
-                             str(package_location)],
-                            env={'SOURCE_DATE_EPOCH': '1234567890'})  # 2009-02-13 23:31:30 UTC
+        result_one = runner(
+            ["-e", "hello:main", "-o", str(first_output_file), "--reproducible", str(package_location)],
+            env={"SOURCE_DATE_EPOCH": "1234567890"},
+        )  # 2009-02-13 23:31:30 UTC
 
-        result_two = runner(["-e", "hello:main", "-o", str(second_output_file), "--reproducible",
-                             str(package_location)],
-                            env={'SOURCE_DATE_EPOCH': '1234567890'})  # 2009-02-13 23:31:30 UTC
+        result_two = runner(
+            ["-e", "hello:main", "-o", str(second_output_file), "--reproducible", str(package_location)],
+            env={"SOURCE_DATE_EPOCH": "1234567890"},
+        )  # 2009-02-13 23:31:30 UTC
 
         # check that both commands successfully completed
         assert result_one.exit_code == 0
         assert result_two.exit_code == 0
 
         # check that both executables are binary identical
-        with first_output_file.open('rb') as f:
+        with first_output_file.open("rb") as f:
             first_hash = hashlib.md5(f.read()).hexdigest()
-        with second_output_file.open('rb') as f:
+        with second_output_file.open("rb") as f:
             second_hash = hashlib.md5(f.read()).hexdigest()
 
         assert first_hash == second_hash
 
         # finally, check that one of the result works
         proc = subprocess.run(
-            [str(first_output_file)],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=True,
-            env=os.environ,
+            [str(first_output_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, env=os.environ,
         )
 
         assert proc.returncode == 0
-        assert 'hello' in proc.stdout.decode()
+        assert "hello" in proc.stdout.decode()

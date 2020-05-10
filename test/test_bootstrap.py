@@ -161,8 +161,8 @@ class TestEnvironment:
         env_from_json = Environment.from_json(env_as_json)
         assert env.__dict__ == env_from_json.__dict__
 
-    def test_lock(self):
-        with FileLock("lockfile") as f:
+    def test_lock(self, tmpdir):
+        with FileLock(str(Path(tmpdir, "lockfile"))) as f:
             assert f.is_locked
 
         assert not f.is_locked

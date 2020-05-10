@@ -32,7 +32,7 @@ def execute_content(name, content, argv0=None):
 
 
 def execute_module(module_name):
-    runpy.run_module(module_name, run_name='__main__')
+    runpy.run_module(module_name, run_name="__main__")
 
 
 def execute_interpreter():
@@ -45,7 +45,7 @@ def execute_interpreter():
         if arg == "-c":
             content = args[1]
             sys.argv = [arg, *args[2:]]
-            execute_content('-c <cmd>', content, argv0=arg)
+            execute_content("-c <cmd>", content, argv0=arg)
 
         elif arg == "-m":
             module = args[1]

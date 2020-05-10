@@ -29,7 +29,7 @@ def package_location(request):
 
 @pytest.fixture
 def sp():
-    return [Path(__file__).absolute().parent / 'sp' / 'site-packages']
+    return [Path(__file__).absolute().parent / "sp" / "site-packages"]
 
 
 @pytest.fixture
