@@ -41,6 +41,7 @@ def find_entry_point(site_packages_dirs: List[Path], console_script: str) -> str
     config_parser = ConfigParser()
 
     for site_packages in site_packages_dirs:
+        # noinspection PyTypeChecker
         config_parser.read(site_packages.rglob("entry_points.txt"))
 
     return config_parser["console_scripts"][console_script]

@@ -18,7 +18,7 @@ def main(print_as_json, pyz):
 
     else:
         click.echo()
-        click.secho(f"pyz file: ", fg="green", bold=True, nl=False)
+        click.secho("pyz file: ", fg="green", bold=True, nl=False)
         click.secho(pyz, fg="white")
         click.echo()
 

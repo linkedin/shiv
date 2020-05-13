@@ -72,4 +72,7 @@ activate
 *.iws
 
 # VS Code
-/.vscode
+.vscode/
+
+# Gradle
+.gradle/
