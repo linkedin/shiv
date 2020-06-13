@@ -1,10 +1,8 @@
-import contextlib
 import hashlib
 import json
 import os
 import stat
 import subprocess
-import sys
 import tempfile
 
 from pathlib import Path
@@ -18,15 +16,6 @@ from shiv.info import main as info_main
 from shiv.pip import install
 
 UGOX = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
-
-
-@contextlib.contextmanager
-def mocked_sys_prefix():
-    attribute_to_mock = "real_prefix" if hasattr(sys, "real_prefix") else "base_prefix"
-    original = getattr(sys, attribute_to_mock)
-    setattr(sys, attribute_to_mock, "/fake/dir")
-    yield
-    setattr(sys, attribute_to_mock, original)
 
 
 class TestCLI:
@@ -95,14 +84,6 @@ class TestCLI:
 
         assert Path(interpreter).exists()
         assert Path(interpreter).is_file()
-
-    def test_find_interpreter_false(self):
-
-        with mocked_sys_prefix():
-            interpreter = _interpreter_path()
-
-        # should fall back on the current sys.executable
-        assert interpreter == sys.executable
 
     @pytest.mark.parametrize("arg", [arg for tup in DISALLOWED_ARGS.keys() for arg in tup])
     def test_disallowed_args(self, runner, arg):

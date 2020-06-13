@@ -64,37 +64,19 @@ def console_script_exists(site_packages_dirs: List[Path], console_script: str) -
     return False
 
 
-def _interpreter_path(append_version: bool = False) -> str:
+def _interpreter_path() -> str:
     """A function to return the path to the current Python interpreter.
 
     Even when inside a venv, this will return the interpreter the venv was created with.
 
     """
 
-    base_dir = Path(getattr(sys, "real_prefix", sys.base_prefix)).resolve()
-    sys_exec = Path(sys.executable)
-    name = sys_exec.stem
-    suffix = sys_exec.suffix
+    virtual_prefix = Path(sys.exec_prefix)
+    bin_python = Path(sys.executable).relative_to(virtual_prefix)
 
-    if append_version:
-        name += str(sys.version_info.major)
+    prefix = Path(sys.base_exec_prefix)
 
-    name += suffix
-
-    try:
-        return str(next(iter(base_dir.rglob(name))))
-
-    except StopIteration:
-
-        if not append_version:
-            # If we couldn't find an interpreter, it's likely that we looked for
-            # "python" when we should've been looking for "python3"
-            # so we try again with append_version=True
-            return _interpreter_path(append_version=True)
-
-        # If we were still unable to find a real interpreter for some reason
-        # we fallback to the current runtime's interpreter
-        return sys.executable
+    return str(prefix / bin_python)
 
 
 def _copytree(src: Path, dst: Path) -> None:
