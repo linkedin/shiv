@@ -147,11 +147,11 @@ def _extend_python_path(environ, paths):
     python_path = environ["PYTHONPATH"].split(os.pathsep) if "PYTHONPATH" in environ else []
 
     # extend the supplied paths to include any existing PYTHONPATH
-    paths.extend(python_path)
+    paths = python_path + paths
 
     # put it back into the environment so that PYTHONPATH contains the shiv-manipulated paths
     # and any existing PYTHONPATH values.
-    environ["PYTHONPATH"] = os.pathsep.join(set(paths))
+    environ["PYTHONPATH"] = os.pathsep.join(paths)
 
 
 def bootstrap():  # pragma: no cover
