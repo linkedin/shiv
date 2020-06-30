@@ -140,18 +140,13 @@ def _first_sitedir_index():
             return index
 
 
-def _extend_python_path(environ, paths):
+def _extend_python_path(environ, additional_paths):
     """Create or extend a PYTHONPATH variable with the frozen environment we are bootstrapping with."""
 
     # we don't want to clobber any existing PYTHONPATH value, so check for it.
     python_path = environ["PYTHONPATH"].split(os.pathsep) if "PYTHONPATH" in environ else []
-
-    # extend the supplied paths to include any existing PYTHONPATH
-    paths = python_path + paths
-
-    # put it back into the environment so that PYTHONPATH contains the shiv-manipulated paths
-    # and any existing PYTHONPATH values.
-    environ["PYTHONPATH"] = os.pathsep.join(paths)
+    python_path.extend(additional_paths)
+    environ["PYTHONPATH"] = os.pathsep.join(python_path)
 
 
 def bootstrap():  # pragma: no cover
