@@ -141,6 +141,9 @@ def _first_sitedir_index():
 
 
 def _extend_python_path(environ, additional_paths):
+    """Create or extend a PYTHONPATH variable with the frozen environment we are bootstrapping with."""
+
+    # we don't want to clobber any existing PYTHONPATH value, so check for it.
     python_path = environ["PYTHONPATH"].split(os.pathsep) if "PYTHONPATH" in environ else []
     python_path.extend(additional_paths)
     environ["PYTHONPATH"] = os.pathsep.join(python_path)
@@ -172,12 +175,12 @@ def bootstrap():  # pragma: no cover
     # so as to handle .pth files correctly
     site.addsitedir(site_packages)
 
-    # add our site-packages to the environment, if requested
-    if env.extend_pythonpath:
-        _extend_python_path(os.environ, sys.path[index:])
-
     # reorder to place our site-packages before any others found
     sys.path = sys.path[:index] + sys.path[length:] + sys.path[index:length]
+
+    # add our site-packages to the environment, if requested
+    if env.extend_pythonpath:
+        _extend_python_path(os.environ, sys.path.copy())
 
     # first check if we should drop into interactive mode
     if not env.interpreter:

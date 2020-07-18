@@ -106,10 +106,17 @@ class TestBootstrap:
     @pytest.mark.parametrize("additional_paths", (["test"], ["test", ".pth"]))
     def test_extend_path(self, additional_paths):
 
-        env = os.environ.copy()
+        env = {}
 
         _extend_python_path(env, additional_paths)
         assert env["PYTHONPATH"] == os.pathsep.join(additional_paths)
+
+    def test_extend_path_existing_pythonpath(self):
+        """When PYTHONPATH exists, extending it preserves the existing values."""
+        env = {"PYTHONPATH": "hello"}
+
+        _extend_python_path(env, ["test", ".pth"])
+        assert env["PYTHONPATH"] == os.pathsep.join(["hello", "test", ".pth"])
 
 
 class TestEnvironment:
