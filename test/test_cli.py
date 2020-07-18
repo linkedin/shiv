@@ -44,6 +44,7 @@ class TestCLI:
         """Returns a click test runner."""
 
         def invoke(args, env=None):
+            args.extend(["-p", "/usr/bin/env python3"])
             return CliRunner().invoke(main, args, env=env)
 
         return invoke
@@ -112,9 +113,7 @@ class TestCLI:
         result = runner(["-o", "tmp", arg])
 
         # get the 'reason' message:
-        for disallowed in DISALLOWED_ARGS:
-            if arg in disallowed:
-                reason = DISALLOWED_ARGS[disallowed]
+        reason = next(iter([DISALLOWED_ARGS[disallowed] for disallowed in DISALLOWED_ARGS if arg in disallowed]))
 
         assert result.exit_code == 1
 
