@@ -5,7 +5,6 @@ import os
 import stat
 import subprocess
 import sys
-import tempfile
 
 from pathlib import Path
 
@@ -31,12 +30,9 @@ def mocked_sys_prefix():
 
 class TestCLI:
     @pytest.fixture
-    def shiv_root(self, monkeypatch, tmpdir):
-
-        with tempfile.TemporaryDirectory(dir=tmpdir) as tmpdir:
-            os.environ["SHIV_ROOT"] = tmpdir
-            yield tmpdir
-
+    def shiv_root(self, monkeypatch, tmp_path):
+        os.environ["SHIV_ROOT"] = str(tmp_path)
+        yield tmp_path
         os.environ.pop("SHIV_ROOT")
 
     @pytest.fixture
@@ -65,14 +61,14 @@ class TestCLI:
         install(["-t", str(tmpdir), str(package_location)])
         assert find_entry_point([Path(tmpdir)], "hello") == "hello:main"
 
-    def test_console_script_exists(self, tmpdir, package_location):
+    def test_console_script_exists(self, tmp_path, package_location):
         """Test that we can check console_script presence."""
-        install_dir = os.path.join(tmpdir, "install")
+        install_dir = tmp_path / "install"
         install(["-t", str(install_dir), str(package_location)])
-        empty_dir = os.path.join(tmpdir, "empty")
-        os.makedirs(empty_dir)
+        empty_dir = tmp_path / "empty"
+        empty_dir.mkdir()
 
-        assert console_script_exists([Path(empty_dir), Path(install_dir)], "hello")
+        assert console_script_exists([empty_dir, install_dir], "hello.exe" if os.name == "nt" else "hello")
 
     def test_no_args(self, runner):
         """This should fail with a warning about supplying pip arguments"""
@@ -123,7 +119,7 @@ class TestCLI:
     @pytest.mark.parametrize("compile_option", ["--compile-pyc", "--no-compile-pyc"])
     @pytest.mark.parametrize("force", ["yes", "no"])
     def test_hello_world(self, runner, info_runner, shiv_root, package_location, compile_option, force):
-        output_file = Path(shiv_root, "test.pyz")
+        output_file = shiv_root / "test.pyz"
 
         result = runner(["-e", "hello:main", "-o", str(output_file), str(package_location), compile_option])
 
@@ -164,6 +160,7 @@ class TestCLI:
         package_dir = Path(shiv_root, "package")
         main_script = Path(package_dir, "env.py")
 
+        # noinspection PyPep8Naming
         MAIN_PROG = "\n".join(["import os", "def main():", "    print(os.environ.get('PYTHONPATH', ''))"])
 
         package_dir.mkdir()
@@ -184,17 +181,17 @@ class TestCLI:
         assert extend_path.startswith("--no") != pythonpath_has_root
 
     def test_multiple_site_packages(self, shiv_root, runner):
-        output_file = Path(shiv_root, "test_multiple_sp.pyz")
-        package_dir = Path(shiv_root, "package")
-        main_script = Path(package_dir, "hello.py")
+        output_file = shiv_root / "test_multiple_sp.pyz"
+        package_dir = shiv_root / "package"
+        main_script = package_dir / "hello.py"
 
         env_code = "\n".join(["import os", "def hello():", "    print('hello!')"])
 
         package_dir.mkdir()
         main_script.write_text(env_code)
 
-        other_package_dir = Path(shiv_root, "dependent_package")
-        main_script = Path(package_dir, "hello_client.py")
+        other_package_dir = shiv_root / "dependent_package"
+        main_script = package_dir / "hello_client.py"
 
         env_client_code = "\n".join(["import os", "from hello import hello", "def main():", "    hello()"])
 
@@ -224,9 +221,9 @@ class TestCLI:
         proc = subprocess.run([str(output_file)], stdout=subprocess.PIPE, shell=True, env=os.environ)
         assert "hello!" in proc.stdout.decode()
 
-    def test_no_entrypoint(self, shiv_root, runner, package_location, monkeypatch):
+    def test_no_entrypoint(self, shiv_root, runner, package_location):
 
-        output_file = Path(shiv_root, "test.pyz")
+        output_file = shiv_root / "test.pyz"
 
         result = runner(["-o", str(output_file), str(package_location)])
 
@@ -249,9 +246,12 @@ class TestCLI:
         assert proc.returncode == 0
         assert "hello" in proc.stdout.decode()
 
+    @pytest.mark.skipif(
+        os.name == "nt", reason="windows creates .exe files for entry points, which are not reproducible :("
+    )
     def test_results_are_binary_identical_with_env_and_build_id(self, shiv_root, runner, package_location):
-        first_output_file = Path(shiv_root, "test_one.pyz")
-        second_output_file = Path(shiv_root, "test_two.pyz")
+        first_output_file = shiv_root / "test_one.pyz"
+        second_output_file = shiv_root / "test_two.pyz"
 
         result_one = runner(
             ["-e", "hello:main", "-o", str(first_output_file), "--reproducible", str(package_location)],
@@ -268,12 +268,10 @@ class TestCLI:
         assert result_two.exit_code == 0
 
         # check that both executables are binary identical
-        with first_output_file.open("rb") as f:
-            first_hash = hashlib.md5(f.read()).hexdigest()
-        with second_output_file.open("rb") as f:
-            second_hash = hashlib.md5(f.read()).hexdigest()
-
-        assert first_hash == second_hash
+        assert (
+            hashlib.md5(first_output_file.read_bytes()).hexdigest()
+            == hashlib.md5(second_output_file.read_bytes()).hexdigest()
+        )
 
         # finally, check that one of the result works
         proc = subprocess.run(

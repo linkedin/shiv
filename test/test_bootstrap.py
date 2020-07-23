@@ -83,10 +83,10 @@ class TestBootstrap:
     @pytest.mark.parametrize("nested", (False, True))
     @pytest.mark.parametrize("compile_pyc", (False, True))
     @pytest.mark.parametrize("force", (False, True))
-    def test_extract_site_packages(self, tmpdir, zip_location, nested, compile_pyc, force):
+    def test_extract_site_packages(self, tmp_path, zip_location, nested, compile_pyc, force):
 
         zipfile = ZipFile(str(zip_location))
-        target = Path(tmpdir, "test")
+        target = tmp_path / "test"
 
         if nested:
             # we want to test for not-yet-created shiv root dirs
@@ -170,8 +170,8 @@ class TestEnvironment:
         env_from_json = Environment.from_json(env_as_json)
         assert env.__dict__ == env_from_json.__dict__
 
-    def test_lock(self, tmpdir):
-        with FileLock(str(Path(tmpdir, "lockfile"))) as f:
+    def test_lock(self, tmp_path):
+        with FileLock(str(tmp_path / "lockfile")) as f:
             assert f.is_locked
 
         assert not f.is_locked

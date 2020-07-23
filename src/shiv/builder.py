@@ -23,6 +23,7 @@ from .constants import BINPRM_ERROR, BUILD_AT_TIMESTAMP_FORMAT
 try:
     import importlib.resources as importlib_resources  # type: ignore
 except ImportError:
+    # noinspection PyUnresolvedReferences
     import importlib_resources  # type: ignore
 
 # Typical maximum length for a shebang line
@@ -50,7 +51,7 @@ def write_file_prefix(f: IO[Any], interpreter: str) -> None:
 
 
 def _write_to_zipapp(
-    arhive: zipfile.ZipFile,
+    archive: zipfile.ZipFile,
     arcname: str,
     data_source: Union[Path, bytes],
     date_time: Tuple[int, int, int, int, int, int],
@@ -77,7 +78,7 @@ def _write_to_zipapp(
     if st is not None:
         zinfo.external_attr = (stat.S_IMODE(st.st_mode) | stat.S_IFMT(st.st_mode)) << 16
 
-    arhive.writestr(zinfo, data)
+    archive.writestr(zinfo, data)
 
 
 def create_archive(

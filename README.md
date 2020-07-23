@@ -1,9 +1,9 @@
-[![PyPI](https://img.shields.io/pypi/v/shiv.svg)](https://pypi.python.org/pypi/shiv)
-[![Build Status](https://dev.azure.com/lcarvalh/shiv/_apis/build/status/linkedin.shiv?branchName=master)](https://dev.azure.com/lcarvalh/shiv/_build/latest?definitionId=1&branchName=master)
-[![Coverage Status](https://coveralls.io/repos/github/linkedin/shiv/badge.svg)](https://coveralls.io/github/linkedin/shiv)
-[![Documentation Status](https://readthedocs.org/projects/shiv/badge/?version=latest)](http://shiv.readthedocs.io/en/latest/?badge=latest)
-[![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
-[![Supported](https://img.shields.io/pypi/pyversions/shiv.svg)](https://pypi.python.org/pypi/shiv)
+[![pypi](https://img.shields.io/pypi/v/shiv.svg)](https://pypi.python.org/pypi/shiv)
+![ci](https://github.com/linkedin/shiv/workflows/ci/badge.svg)
+[![codecov](https://codecov.io/gh/linkedin/shiv/branch/master/graph/badge.svg)](https://codecov.io/gh/linkedin/shiv)
+[![docs](https://readthedocs.org/projects/shiv/badge/?version=latest)](http://shiv.readthedocs.io/en/latest/?badge=latest)
+[![license](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
+[![supported](https://img.shields.io/pypi/pyversions/shiv.svg)](https://pypi.python.org/pypi/shiv)
 
 ![snake](https://github.com/linkedin/shiv/raw/master/logo.png)
 
