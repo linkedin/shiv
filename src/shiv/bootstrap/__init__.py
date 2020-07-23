@@ -6,7 +6,7 @@ import site
 import sys
 import zipfile
 
-from contextlib import suppress
+from contextlib import contextmanager, suppress
 from functools import partial
 from importlib import import_module
 from pathlib import Path
@@ -33,11 +33,14 @@ def run(module):  # pragma: no cover
     sys.exit(module())
 
 
+@contextmanager
 def current_zipfile():
     """A function to vend the current zipfile, if any"""
     if zipfile.is_zipfile(sys.argv[0]):
-        fd = open(sys.argv[0], "rb")
-        return zipfile.ZipFile(fd)
+        with zipfile.ZipFile(sys.argv[0]) as fd:
+            yield fd
+    else:
+        yield None
 
 
 def import_string(import_name):
@@ -156,17 +159,23 @@ def bootstrap():  # pragma: no cover
     """Actually bootstrap our shiv environment."""
 
     # get a handle of the currently executing zip file
-    archive = current_zipfile()
+    with current_zipfile() as archive:
 
-    # create an environment object (a combination of env vars and json metadata)
-    env = Environment.from_json(archive.read("environment.json").decode())
+        # create an environment object (a combination of env vars and json metadata)
+        env = Environment.from_json(archive.read("environment.json").decode())
 
-    # get a site-packages directory (from env var or via build id)
-    site_packages = cache_path(archive, env.root, env.build_id) / "site-packages"
+        # get a site-packages directory (from env var or via build id)
+        site_packages = cache_path(archive, env.root, env.build_id) / "site-packages"
 
-    # determine if first run or forcing extract
-    if not site_packages.exists() or env.force_extract:
-        extract_site_packages(archive, site_packages.parent, env.compile_pyc, env.compile_workers, env.force_extract)
+        # determine if first run or forcing extract
+        if not site_packages.exists() or env.force_extract:
+            extract_site_packages(
+                archive,
+                site_packages.parent,
+                env.compile_pyc,
+                env.compile_workers,
+                env.force_extract,
+            )
 
     # get sys.path's length
     length = len(sys.path)
