@@ -55,14 +55,16 @@ class TestBootstrap:
 
     def test_is_zipfile(self, zip_location):
         with mock.patch.object(sys, "argv", [zip_location]):
-            assert isinstance(current_zipfile(), ZipFile)
+            with current_zipfile() as zipfile:
+                assert isinstance(zipfile, ZipFile)
 
     # When the tests are run via tox, sys.argv[0] is the full path to 'pytest.EXE',
     # i.e. a native launcher created by pip to from console_scripts entry points.
     # These are indeed a form of zip files, thus the following assertion could fail.
     @pytest.mark.skipif(os.name == "nt", reason="this may give false positive on win")
     def test_argv0_is_not_zipfile(self):
-        assert not current_zipfile()
+        with current_zipfile() as zipfile:
+            assert not zipfile
 
     def test_cache_path(self):
         mock_zip = mock.MagicMock(spec=ZipFile)
