@@ -1,5 +1,5 @@
 [![pypi](https://img.shields.io/pypi/v/shiv.svg)](https://pypi.python.org/pypi/shiv)
-![ci](https://github.com/linkedin/shiv/workflows/ci/badge.svg)
+[![ci](https://github.com/linkedin/shiv/workflows/ci/badge.svg)](https://github.com/linkedin/shiv/actions?query=workflow%3Aci)
 [![codecov](https://codecov.io/gh/linkedin/shiv/branch/master/graph/badge.svg)](https://codecov.io/gh/linkedin/shiv)
 [![docs](https://readthedocs.org/projects/shiv/badge/?version=latest)](http://shiv.readthedocs.io/en/latest/?badge=latest)
 [![license](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
