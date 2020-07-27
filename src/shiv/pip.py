@@ -7,7 +7,7 @@ from typing import Generator, List
 
 import click
 
-from .bootstrap import _extend_python_path, _first_sitedir_index
+from .bootstrap import extend_python_path, get_first_sitedir_index
 from .constants import PIP_INSTALL_ERROR, PIP_REQUIRE_VIRTUALENV
 
 
@@ -50,8 +50,8 @@ def install(args: List[str]) -> None:
         # site-packages when subprocessing since there is no guarantee that pip
         # will be available
         subprocess_env = os.environ.copy()
-        sitedir_index = _first_sitedir_index()
-        _extend_python_path(subprocess_env, sys.path[sitedir_index:])
+        sitedir_index = get_first_sitedir_index()
+        extend_python_path(subprocess_env, sys.path[sitedir_index:])
 
         process = subprocess.Popen(
             [sys.executable, "-m", "pip", "--disable-pip-version-check", "install", *args],

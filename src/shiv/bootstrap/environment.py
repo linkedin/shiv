@@ -28,18 +28,24 @@ class Environment:
         self,
         built_at,
         shiv_version,
-        build_id=None,
-        entry_point=None,
-        script=None,
         always_write_cache=False,
+        build_id=None,
         compile_pyc=True,
+        entry_point=None,
         extend_pythonpath=False,
+        hashes=None,
+        no_modify=False,
+        reproducible=False,
+        script=None,
     ):
-        self.built_at = built_at
-        self.shiv_version = shiv_version
-        self.build_id = build_id
         self.always_write_cache = always_write_cache
+        self.build_id = build_id
+        self.built_at = built_at
+        self.hashes = hashes or {}
+        self.no_modify = no_modify
+        self.reproducible = reproducible
         self.script = script
+        self.shiv_version = shiv_version
 
         # properties
         self._entry_point = entry_point
@@ -87,3 +93,4 @@ class Environment:
             return int(os.environ.get(self.COMPILE_WORKERS, 0))
         except ValueError:
             return 0
+

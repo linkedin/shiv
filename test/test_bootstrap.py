@@ -13,15 +13,17 @@ from zipfile import ZipFile
 import pytest
 
 from shiv.bootstrap import (
-    _extend_python_path,
-    _first_sitedir_index,
     cache_path,
     current_zipfile,
+    ensure_no_modify,
+    extend_python_path,
     extract_site_packages,
+    get_first_sitedir_index,
     import_string,
 )
 from shiv.bootstrap.environment import Environment
 from shiv.bootstrap.filelock import FileLock
+from shiv.pip import install
 
 
 @contextmanager
@@ -75,10 +77,10 @@ class TestBootstrap:
 
     def test_first_sitedir_index(self):
         with mock.patch.object(sys, "path", ["site-packages", "dir", "dir", "dir"]):
-            assert _first_sitedir_index() == 0
+            assert get_first_sitedir_index() == 0
 
         with mock.patch.object(sys, "path", []):
-            assert _first_sitedir_index() is None
+            assert get_first_sitedir_index() is None
 
     @pytest.mark.parametrize("nested", (False, True))
     @pytest.mark.parametrize("compile_pyc", (False, True))
@@ -110,14 +112,14 @@ class TestBootstrap:
 
         env = {}
 
-        _extend_python_path(env, additional_paths)
+        extend_python_path(env, additional_paths)
         assert env["PYTHONPATH"] == os.pathsep.join(additional_paths)
 
     def test_extend_path_existing_pythonpath(self):
         """When PYTHONPATH exists, extending it preserves the existing values."""
         env = {"PYTHONPATH": "hello"}
 
-        _extend_python_path(env, ["test", ".pth"])
+        extend_python_path(env, ["test", ".pth"])
         assert env["PYTHONPATH"] == os.pathsep.join(["hello", "test", ".pth"])
 
 
@@ -162,6 +164,9 @@ class TestEnvironment:
         with env_var("SHIV_COMPILE_WORKERS", "one bazillion"):
             assert env.compile_workers == 0
 
+        with env_var("SHIV_NO_MODIFY", "1"):
+            assert env.no_modify == 1
+
     def test_roundtrip(self):
         now = str(datetime.now())
         version = "0.0.1"
@@ -175,3 +180,23 @@ class TestEnvironment:
             assert f.is_locked
 
         assert not f.is_locked
+
+    @pytest.mark.skipif(
+        os.name == "nt", reason="windows creates .exe files for entry points, which are not reproducible :("
+    )
+    def test_ensure_no_modify(self, tmp_path, package_location):
+
+        # Populate a site-packages dir
+        site_packages = tmp_path / "site-packages"
+        install(["-t", str(site_packages), str(package_location)])
+
+        for test_hash in [{"abc": "123"}, {"hello/__init__.py": "123"}]:
+            with pytest.raises(RuntimeError):
+                ensure_no_modify(site_packages, test_hash)
+
+        # the hash of the only source file the test package provides
+        hashes = {
+            "hello/__init__.py": "1e8d5b8a6839487a4211229f69b76a5f901515dcad7f111a4bdd5b30d9e96020"
+        }
+
+        ensure_no_modify(site_packages, hashes)
