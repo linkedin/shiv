@@ -3,6 +3,8 @@ import os
 import runpy
 import shutil
 import site
+
+import hashlib
 import sys
 import zipfile
 
@@ -137,13 +139,13 @@ def extract_site_packages(archive, target_path, compile_pyc=False, compile_worke
             shutil.move(str(target_path_tmp), str(target_path))
 
 
-def _first_sitedir_index():
+def get_first_sitedir_index():
     for index, part in enumerate(sys.path):
         if Path(part).stem in ("site-packages", "dist-packages"):
             return index
 
 
-def _extend_python_path(environ, additional_paths):
+def extend_python_path(environ, additional_paths):
     """Create or extend a PYTHONPATH variable with the frozen environment we are bootstrapping with."""
 
     # we don't want to clobber any existing PYTHONPATH value, so check for it.
@@ -153,6 +155,18 @@ def _extend_python_path(environ, additional_paths):
     # put it back into the environment so that PYTHONPATH contains the shiv-manipulated paths
     # and any pre-existing PYTHONPATH values with no duplicates.
     environ["PYTHONPATH"] = os.pathsep.join(sorted(set(python_path), key=python_path.index))
+
+
+def ensure_no_modify(site_packages, hashes):
+    """Compare the sha256 hash of the unpacked source files to the files when they were added to the pyz."""
+
+    for path in site_packages.rglob("**/*.py"):
+
+        if hashlib.sha256(path.read_bytes()).hexdigest() != hashes.get(str(path.relative_to(site_packages))):
+            raise RuntimeError(
+                "A Python source file has been modified! File: {}. "
+                "Try again with SHIV_FORCE_EXTRACT=1 to overwrite the modified source file(s).".format(str(path))
+            )
 
 
 def bootstrap():  # pragma: no cover
@@ -170,18 +184,14 @@ def bootstrap():  # pragma: no cover
         # determine if first run or forcing extract
         if not site_packages.exists() or env.force_extract:
             extract_site_packages(
-                archive,
-                site_packages.parent,
-                env.compile_pyc,
-                env.compile_workers,
-                env.force_extract,
+                archive, site_packages.parent, env.compile_pyc, env.compile_workers, env.force_extract,
             )
 
     # get sys.path's length
     length = len(sys.path)
 
     # Find the first instance of an existing site-packages on sys.path
-    index = _first_sitedir_index() or length
+    index = get_first_sitedir_index() or length
 
     # append site-packages using the stdlib blessed way of extending path
     # so as to handle .pth files correctly
@@ -190,9 +200,13 @@ def bootstrap():  # pragma: no cover
     # reorder to place our site-packages before any others found
     sys.path = sys.path[:index] + sys.path[length:] + sys.path[index:length]
 
+    # check if source files have been modified, if required
+    if env.no_modify:
+        ensure_no_modify(site_packages, env.hashes)
+
     # add our site-packages to the environment, if requested
     if env.extend_pythonpath:
-        _extend_python_path(os.environ, sys.path.copy())
+        extend_python_path(os.environ, sys.path.copy())
 
     # first check if we should drop into interactive mode
     if not env.interpreter:

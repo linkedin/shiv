@@ -1,5 +1,7 @@
 import os
 import shutil
+
+import hashlib
 import sys
 import time
 
@@ -64,7 +66,7 @@ def console_script_exists(site_packages_dirs: List[Path], console_script: str) -
     return False
 
 
-def _interpreter_path(append_version: bool = False) -> str:
+def get_interpreter_path(append_version: bool = False) -> str:
     """A function to return the path to the current Python interpreter.
 
     Even when inside a venv, this will return the interpreter the venv was created with.
@@ -90,14 +92,14 @@ def _interpreter_path(append_version: bool = False) -> str:
             # If we couldn't find an interpreter, it's likely that we looked for
             # "python" when we should've been looking for "python3"
             # so we try again with append_version=True
-            return _interpreter_path(append_version=True)
+            return get_interpreter_path(append_version=True)
 
         # If we were still unable to find a real interpreter for some reason
         # we fallback to the current runtime's interpreter
         return sys.executable
 
 
-def _copytree(src: Path, dst: Path) -> None:
+def copytree(src: Path, dst: Path) -> None:
     """A utility function for syncing directories.
 
     This function is based on shutil.copytree. In Python versions that are
@@ -113,7 +115,7 @@ def _copytree(src: Path, dst: Path) -> None:
 
         # If we encounter a subdirectory, recurse.
         if path.is_dir():
-            _copytree(path, dst / path.relative_to(src))
+            copytree(path, dst / path.relative_to(src))
 
         else:
             shutil.copy2(str(path), str(dst / path.relative_to(src)))
@@ -121,35 +123,41 @@ def _copytree(src: Path, dst: Path) -> None:
 
 @click.command(context_settings=dict(help_option_names=["-h", "--help", "--halp"], ignore_unknown_options=True))
 @click.version_option(version=__version__, prog_name="shiv")
-@click.option("--entry-point", "-e", default=None, help="The entry point to invoke.")
+@click.option(
+    "--entry-point", "-e", default=None, help="The entry point to invoke (takes precedence over --console-script)."
+)
 @click.option("--console-script", "-c", default=None, help="The console_script to invoke.")
-@click.option("--output-file", "-o", help="The file for shiv to create.")
-@click.option("--python", "-p", help="The path to a python interpreter to use.")
+@click.option("--output-file", "-o", help="The path to the output file for shiv to create.")
+@click.option("--python", "-p", help="The python interpreter to set as the shebang (such as '/usr/bin/env python3')")
 @click.option(
     "--site-packages",
-    help="The path to an existing site-packages directory to copy into the zipapp",
+    help="The path to an existing site-packages directory to copy into the zipapp.",
     type=click.Path(exists=True),
     multiple=True,
 )
 @click.option("--compressed/--uncompressed", default=True, help="Whether or not to compress your zip.")
 @click.option(
-    "--compile-pyc/--no-compile-pyc",
-    default=False,
-    help="Whether or not to compile pyc files during initial bootstrap.",
+    "--compile-pyc", is_flag=True, help="Whether or not to compile pyc files during initial bootstrap.",
 )
 @click.option(
-    "--extend-pythonpath/--no-extend-pythonpath",
-    "-E",
-    default=False,
-    help="Add the contents of the zipapp to PYTHONPATH (for subprocesses).",
+    "--extend-pythonpath", "-E", is_flag=True, help="Add the contents of the zipapp to PYTHONPATH (for subprocesses).",
 )
 @click.option(
-    "--reproducible/--not-reproducible",
-    default=False,
+    "--reproducible",
+    is_flag=True,
     help=(
         "Generate a reproducible zipapp by overwriting all files timestamps to a default value. "
         "Timestamp can be overwritten by SOURCE_DATE_EPOCH env variable. "
-        "If SOURCE_DATE_EPOCH is set, this option will be implicitly set to true too."
+        "Note: If SOURCE_DATE_EPOCH is set, this option will be implicitly set to true."
+    ),
+)
+@click.option(
+    "--no-modify",
+    is_flag=True,
+    help=(
+        "If specified, this modifies the runtime of the zipapp to raise "
+        "a RuntimeException if the source files (in ~/.shiv or SHIV_ROOT) have been modified. "
+        """It's recommended to use Python's "--check-hash-based-pycs always" option with this feature."""
     ),
 )
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
@@ -163,6 +171,7 @@ def main(
     compile_pyc: bool,
     extend_pythonpath: bool,
     reproducible: bool,
+    no_modify: bool,
     pip_args: List[str],
 ) -> None:
     """
@@ -191,7 +200,7 @@ def main(
         if site_packages:
             if pip_args:
                 for sp in site_packages:
-                    _copytree(Path(sp), Path(tmp_site_packages))
+                    copytree(Path(sp), Path(tmp_site_packages))
             else:
                 sources.extend([Path(p).expanduser() for p in site_packages])
 
@@ -199,6 +208,15 @@ def main(
             # Install dependencies into staged site-packages.
             pip.install(["--target", tmp_site_packages] + list(pip_args))
             sources.append(Path(tmp_site_packages).absolute())
+
+        if no_modify:
+            # if no_modify is specified, we need to build a map of source files and their
+            # sha256 hashes, to be checked at runtime:
+            hashes = {}
+
+            for source in sources:
+                for path in source.rglob("**/*.py"):
+                    hashes[str(path.relative_to(source))] = hashlib.sha256(path.read_bytes()).hexdigest()
 
         # if entry_point is a console script, get the callable
         if entry_point is None and console_script is not None:
@@ -222,13 +240,18 @@ def main(
             compile_pyc=compile_pyc,
             extend_pythonpath=extend_pythonpath,
             shiv_version=__version__,
+            no_modify=no_modify,
+            reproducible=reproducible,
         )
+
+        if no_modify:
+            env.hashes = hashes
 
         # create the zip
         builder.create_archive(
             sources,
             target=Path(output_file).expanduser(),
-            interpreter=python or _interpreter_path(),
+            interpreter=python or get_interpreter_path(),
             main="_bootstrap:bootstrap",
             env=env,
             compressed=compressed,

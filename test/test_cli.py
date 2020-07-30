@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from click.testing import CliRunner
-from shiv.cli import _interpreter_path, console_script_exists, find_entry_point, main
+from shiv.cli import get_interpreter_path, console_script_exists, find_entry_point, main
 from shiv.constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES
 from shiv.info import main as info_main
 from shiv.pip import install
@@ -88,7 +88,7 @@ class TestCLI:
 
     def test_find_interpreter(self):
 
-        interpreter = _interpreter_path()
+        interpreter = get_interpreter_path()
 
         assert Path(interpreter).exists()
         assert Path(interpreter).is_file()
@@ -96,7 +96,7 @@ class TestCLI:
     def test_find_interpreter_false(self):
 
         with mocked_sys_prefix():
-            interpreter = _interpreter_path()
+            interpreter = get_interpreter_path()
 
         # should fall back on the current sys.executable
         assert interpreter == sys.executable
@@ -116,12 +116,12 @@ class TestCLI:
         # assert we got the correct reason
         assert DISALLOWED_PIP_ARGS.format(arg=arg, reason=reason) in result.output
 
-    @pytest.mark.parametrize("compile_option", ["--compile-pyc", "--no-compile-pyc"])
+    @pytest.mark.parametrize("compile_option", [["--compile-pyc"], []])
     @pytest.mark.parametrize("force", ["yes", "no"])
     def test_hello_world(self, runner, info_runner, shiv_root, package_location, compile_option, force):
         output_file = shiv_root / "test.pyz"
 
-        result = runner(["-e", "hello:main", "-o", str(output_file), str(package_location), compile_option])
+        result = runner(["-e", "hello:main", "-o", str(output_file), str(package_location), *compile_option])
 
         # check that the command successfully completed
         assert result.exit_code == 0
@@ -153,7 +153,7 @@ class TestCLI:
                 == UGOX
             )
 
-    @pytest.mark.parametrize("extend_path", ["--extend-pythonpath", "--no-extend-pythonpath", "-E"])
+    @pytest.mark.parametrize("extend_path", [["--extend-pythonpath"], ["-E"], []])
     def test_extend_pythonpath(self, shiv_root, runner, extend_path):
 
         output_file = Path(shiv_root, "test_pythonpath.pyz")
@@ -166,7 +166,7 @@ class TestCLI:
         package_dir.mkdir()
         main_script.write_text(MAIN_PROG)
 
-        result = runner(["-e", "env:main", "-o", str(output_file), "--site-packages", str(package_dir), extend_path])
+        result = runner(["-e", "env:main", "-o", str(output_file), "--site-packages", str(package_dir), *extend_path])
 
         # check that the command successfully completed
         assert result.exit_code == 0
@@ -178,7 +178,8 @@ class TestCLI:
         proc = subprocess.run([str(output_file)], stdout=subprocess.PIPE, shell=True, env=os.environ)
 
         pythonpath_has_root = str(shiv_root) in proc.stdout.decode()
-        assert extend_path.startswith("--no") != pythonpath_has_root
+        if extend_path:
+            assert pythonpath_has_root
 
     def test_multiple_site_packages(self, shiv_root, runner):
         output_file = shiv_root / "test_multiple_sp.pyz"
@@ -254,12 +255,12 @@ class TestCLI:
         second_output_file = shiv_root / "test_two.pyz"
 
         result_one = runner(
-            ["-e", "hello:main", "-o", str(first_output_file), "--reproducible", str(package_location)],
+            ["-e", "hello:main", "-o", str(first_output_file), "--reproducible", "--no-modify", str(package_location)],
             env={"SOURCE_DATE_EPOCH": "1234567890"},
         )  # 2009-02-13 23:31:30 UTC
 
         result_two = runner(
-            ["-e", "hello:main", "-o", str(second_output_file), "--reproducible", str(package_location)],
+            ["-e", "hello:main", "-o", str(second_output_file), "--reproducible", "--no-modify", str(package_location)],
             env={"SOURCE_DATE_EPOCH": "1234567890"},
         )  # 2009-02-13 23:31:30 UTC
 

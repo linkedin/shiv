@@ -24,6 +24,10 @@ def main(print_as_json, pyz):
 
         for key, value in data.items():
             click.secho(f"{key}: ", fg="blue", bold=True, nl=False)
-            click.secho(f"{value}", fg="white")
+
+            if key == "hashes":
+                click.secho(json.dumps(value, sort_keys=True, indent=2))
+            else:
+                click.secho(f"{value}", fg="white")
 
         click.echo()
