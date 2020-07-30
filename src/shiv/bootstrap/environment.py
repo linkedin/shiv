@@ -93,4 +93,3 @@ class Environment:
             return int(os.environ.get(self.COMPILE_WORKERS, 0))
         except ValueError:
             return 0
-
