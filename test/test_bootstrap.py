@@ -164,9 +164,6 @@ class TestEnvironment:
         with env_var("SHIV_COMPILE_WORKERS", "one bazillion"):
             assert env.compile_workers == 0
 
-        with env_var("SHIV_NO_MODIFY", "1"):
-            assert env.no_modify == 1
-
     def test_roundtrip(self):
         now = str(datetime.now())
         version = "0.0.1"
