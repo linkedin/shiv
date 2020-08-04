@@ -6,6 +6,7 @@ import site
 
 import hashlib
 import sys
+import subprocess
 import zipfile
 
 from contextlib import contextmanager, suppress
@@ -207,6 +208,22 @@ def bootstrap():  # pragma: no cover
     # add our site-packages to the environment, if requested
     if env.extend_pythonpath:
         extend_python_path(os.environ, sys.path.copy())
+
+    # if a preamble script was provided, run it
+    if env.preamble:
+
+        # path to the preamble
+        preamble_bin = site_packages / "bin" / env.preamble
+
+        if preamble_bin.suffix == ".py":
+            runpy.run_path(
+                preamble_bin,
+                init_globals={"env": env, "site_packages": site_packages},
+                run_name="__main__",
+            )
+
+        else:
+            subprocess.run([preamble_bin])
 
     # first check if we should drop into interactive mode
     if not env.interpreter:
