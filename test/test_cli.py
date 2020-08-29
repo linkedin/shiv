@@ -281,3 +281,68 @@ class TestCLI:
 
         assert proc.returncode == 0
         assert "hello" in proc.stdout.decode()
+
+    @pytest.mark.skipif(
+        os.name == "nt", reason="can't run a shell script on windows"
+    )
+    @pytest.mark.parametrize(
+        "preamble, contents",
+        [
+            ("preamble.py", "#!/usr/bin/env python3\nprint('hello from preamble')"),
+            ("preamble.sh", "#!/bin/sh\necho 'hello from preamble'"),
+        ],
+    )
+    def test_preamble(self, preamble, contents, shiv_root, runner, package_location, tmp_path):
+        """Test the --preamble argument."""
+
+        output_file = shiv_root / "test.pyz"
+        preamble = tmp_path / preamble
+        preamble.write_text(contents)
+        preamble.chmod(preamble.stat().st_mode | stat.S_IEXEC)
+
+        result = runner(
+            ["-e", "hello:main", "--preamble", str(preamble), "-o", str(output_file), str(package_location)]
+        )
+
+        # check that the command successfully completed
+        assert result.exit_code == 0
+
+        # ensure the created file actually exists
+        assert output_file.exists()
+
+        # now run the produced zipapp
+        proc = subprocess.run(
+            [str(output_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, env=os.environ,
+        )
+
+        assert proc.returncode == 0
+        assert proc.stdout.decode().splitlines() == ["hello from preamble", "hello world"]
+
+    def test_preamble_no_pip(self, shiv_root, runner, package_location, tmp_path):
+        """Test that the preamble script is created even with no pip installed packages."""
+
+        output_file = shiv_root / "test.pyz"
+        target = tmp_path / "target"
+        preamble = tmp_path / "preamble.py"
+        preamble.write_text("#!/usr/bin/env python3\nprint('hello from preamble')")
+        preamble.chmod(preamble.stat().st_mode | stat.S_IEXEC)
+
+        # first, by installing our test package into a target
+        install(["-t", str(target), str(package_location)])
+        result = runner(
+            ["-e", "hello:main", "--preamble", str(preamble), "-o", str(output_file), "--site-packages", target]
+        )
+
+        # check that the command successfully completed
+        assert result.exit_code == 0
+
+        # ensure the created file actually exists
+        assert output_file.exists()
+
+        # now run the produced zipapp
+        proc = subprocess.run(
+            [str(output_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, env=os.environ,
+        )
+
+        assert proc.returncode == 0
+        assert proc.stdout.decode().splitlines() == ["hello from preamble", "hello world"]

@@ -192,8 +192,6 @@ class TestEnvironment:
                 ensure_no_modify(site_packages, test_hash)
 
         # the hash of the only source file the test package provides
-        hashes = {
-            "hello/__init__.py": "1e8d5b8a6839487a4211229f69b76a5f901515dcad7f111a4bdd5b30d9e96020"
-        }
+        hashes = {"hello/__init__.py": "1e8d5b8a6839487a4211229f69b76a5f901515dcad7f111a4bdd5b30d9e96020"}
 
         ensure_no_modify(site_packages, hashes)
