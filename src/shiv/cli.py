@@ -26,7 +26,7 @@ from .constants import (
     SOURCE_DATE_EPOCH_ENV,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 
 def find_entry_point(site_packages_dirs: List[Path], console_script: str) -> str:
