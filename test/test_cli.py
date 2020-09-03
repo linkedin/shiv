@@ -116,7 +116,7 @@ class TestCLI:
         # assert we got the correct reason
         assert DISALLOWED_PIP_ARGS.format(arg=arg, reason=reason) in result.output
 
-    @pytest.mark.parametrize("compile_option", [["--compile-pyc"], []])
+    @pytest.mark.parametrize("compile_option", [["--compile-pyc"], ["--build-id", "42424242"], []])
     @pytest.mark.parametrize("force", ["yes", "no"])
     def test_hello_world(self, runner, info_runner, shiv_root, package_location, compile_option, force):
         output_file = shiv_root / "test.pyz"
@@ -147,6 +147,8 @@ class TestCLI:
         # ensure that executable permissions were retained (skip test on windows)
         if os.name != "nt":
             build_id = json.loads(info_runner([str(output_file), "--json"]).output)["build_id"]
+            if "--build-id" in compile_option:
+                assert build_id == compile_option[1]
             assert (
                 Path(shiv_root, f"{output_file.stem}_{build_id}", "site-packages", "hello", "script.sh").stat().st_mode
                 & UGOX
