@@ -107,7 +107,7 @@ def create_archive(
 
             for source in sources:
 
-                # Glob is known to return results in non-determenistic order.
+                # Glob is known to return results in non-deterministic order.
                 # We need to sort them by in-archive paths to ensure
                 # that archive contents are reproducible.
                 for path in sorted(source.rglob("*"), key=str):
