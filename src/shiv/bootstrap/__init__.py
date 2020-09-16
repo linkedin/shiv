@@ -218,7 +218,7 @@ def bootstrap():  # pragma: no cover
         if preamble_bin.suffix == ".py":
             runpy.run_path(
                 preamble_bin,
-                init_globals={"env": env, "script_name": sys.argv[0], "site_packages": site_packages},
+                init_globals={"archive": sys.argv[0], "env": env, "site_packages": site_packages},
                 run_name="__main__",
             )
 
