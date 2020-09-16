@@ -150,6 +150,7 @@ If the preamble file is written in Python (e.g. ends in ``.py``) then shiv will 
 that may be useful to preamble authors:
 
 * ``env``: an instance of the ``:ref:`Environment <api:bootstrap.environment.Environment>` object.
+* ``script_path``: path to the running PYZ file, equivalent to ``sys.argv[0]``
 * ``site_packages``: a pathlib.Path of the directory where the current PYZ's site_packages were extracted to during bootsrap.
 
 For an example, a preamble file that cleans up prior extracted ``~/.shiv`` directories might look like::
