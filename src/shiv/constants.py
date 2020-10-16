@@ -17,7 +17,7 @@ DISALLOWED_ARGS: Dict[Tuple[str, ...], str] = {
         "--editable",
     ): "Editable installs don't actually install via pip (they are just linked), so they are not allowed.",
     ("-d", "--download"): "Shiv needs to actually perform an install, not merely a download.",
-    ("--user", "--root", "--prefix"): "Which conflicts with Shiv's internal use of '--target'.",
+    ("--user", "--prefix"): "Which conflicts with Shiv's internal use of '--target'.",
 }
 
 SOURCE_DATE_EPOCH_ENV = "SOURCE_DATE_EPOCH"

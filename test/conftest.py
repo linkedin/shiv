@@ -1,3 +1,6 @@
+import os
+
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -31,3 +34,15 @@ def env():
         extend_pythonpath=False,
         shiv_version="0.0.1",
     )
+
+
+@pytest.fixture
+def env_var():
+
+    @contextmanager
+    def _env_var(key, value):
+        os.environ[key] = value
+        yield
+        del os.environ[key]
+
+    return _env_var

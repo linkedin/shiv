@@ -5,8 +5,6 @@ overrides defined at runtime (via environment variables).
 import json
 import os
 
-from pathlib import Path
-
 
 def str_bool(v):
     if not isinstance(v, bool):
@@ -38,6 +36,7 @@ class Environment:
         reproducible=False,
         script=None,
         preamble=None,
+        root=None,
     ):
         self.always_write_cache = always_write_cache
         self.build_id = build_id
@@ -53,6 +52,7 @@ class Environment:
         self._entry_point = entry_point
         self._compile_pyc = compile_pyc
         self._extend_pythonpath = extend_pythonpath
+        self._root = root
 
     @classmethod
     def from_json(cls, json_data):
@@ -74,8 +74,8 @@ class Environment:
 
     @property
     def root(self):
-        root = os.environ.get(self.ROOT)
-        return Path(root) if root is not None else None
+        root = os.environ.get(self.ROOT, self._root)
+        return root
 
     @property
     def force_extract(self):

@@ -2,7 +2,6 @@ import os
 import sys
 
 from code import interact
-from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from site import addsitedir
@@ -24,13 +23,6 @@ from shiv.bootstrap import (
 from shiv.bootstrap.environment import Environment
 from shiv.bootstrap.filelock import FileLock
 from shiv.pip import install
-
-
-@contextmanager
-def env_var(key, value):
-    os.environ[key] = value
-    yield
-    del os.environ[key]
 
 
 class TestBootstrap:
@@ -68,12 +60,15 @@ class TestBootstrap:
         with current_zipfile() as zipfile:
             assert not zipfile
 
-    def test_cache_path(self):
+    def test_cache_path(self, env_var):
         mock_zip = mock.MagicMock(spec=ZipFile)
         mock_zip.filename = "test"
         uuid = str(uuid4())
 
-        assert cache_path(mock_zip, Path.cwd(), uuid) == Path.cwd() / f"test_{uuid}"
+        assert cache_path(mock_zip, 'foo', uuid) == Path("foo", f"test_{uuid}")
+
+        with env_var("FOO", "foo"):
+            assert cache_path(mock_zip, '$FOO', uuid) == Path("foo", f"test_{uuid}")
 
     def test_first_sitedir_index(self):
         with mock.patch.object(sys, "path", ["site-packages", "dir", "dir", "dir"]):
@@ -124,7 +119,7 @@ class TestBootstrap:
 
 
 class TestEnvironment:
-    def test_overrides(self):
+    def test_overrides(self, env_var):
         now = str(datetime.now())
         version = "0.0.1"
         env = Environment(now, version)
@@ -142,7 +137,7 @@ class TestEnvironment:
 
         assert env.root is None
         with env_var("SHIV_ROOT", "tmp"):
-            assert env.root == Path("tmp")
+            assert env.root == "tmp"
 
         assert env.force_extract is False
         with env_var("SHIV_FORCE_EXTRACT", "1"):
