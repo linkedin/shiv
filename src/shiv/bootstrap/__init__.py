@@ -89,9 +89,17 @@ def cache_path(archive, root_dir, build_id):
     """Returns a ~/.shiv cache directory for unzipping site-packages during bootstrap.
 
     :param ZipFile archive: The zipfile object we are bootstrapping from.
-    :param Path root_dir: Optional, the path to a SHIV_ROOT.
+    :param str root_dir: Optional, either a path or environment variable pointing to a SHIV_ROOT.
     :param str build_id: The build id generated at zip creation.
     """
+
+    if root_dir:
+
+        if root_dir.startswith("$"):
+            root_dir = os.environ.get(root_dir[1:], root_dir[1:])
+
+        root_dir = Path(root_dir)
+
     root = root_dir or Path("~/.shiv").expanduser()
     name = Path(archive.filename).resolve().stem
     return root / f"{name}_{build_id}"

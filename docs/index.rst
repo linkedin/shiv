@@ -24,7 +24,7 @@ unpack those dependencies to a known location, add them to your interpreter's se
 .. note::
     "Conventional" zipapps don't include any dependencies, which is what sets shiv apart from the stdlib zipapp module.
 
-shiv accepts only a few command line parameters of its own, `described here <cli-reference>`_, and any unprocessed parameters are
+shiv accepts only a few command line parameters of its own, `described here <cli-reference.html>`_, and any unprocessed parameters are
 delegated to ``pip install``. This allows users to fully leverage all the functionality that pip provides.
 
 For example, if you wanted to create an executable for ``flake8``, you'd specify the required
@@ -94,7 +94,7 @@ Influencing Runtime
 -------------------
 
 Whenever you are creating a zipapp with ``shiv``, you can specify a few flags that influence the runtime.
-For example, the `-c/--console-script` and `-e/--entry-point` options already mentioned in this doc.
+For example, the ``-c/--console-script`` and ``-e/--entry-point`` options already mentioned in this doc.
 To see the full list of command line options, see this page.
 
 In addition to options that are settable during zipapp creation, there are a number of environment variables
@@ -117,7 +117,7 @@ dropping into an interactive session in the environment of a built cli utility.
 SHIV_ENTRY_POINT
 ^^^^^^^^^^^^^^^^
 
-.. note:: Same functionality as "-e/--entry-point" at build time
+.. note:: Same functionality as ``-e/--entry-point`` at build time
 
 This should be populated with a setuptools-style callable, e.g. "module.main:main". This will
 execute the pyz with whatever callable entry point you supply. Useful for sharing a single pyz
@@ -132,7 +132,7 @@ hotfixes/modifications to the 'cached' dependencies, this will overwrite them.
 SHIV_EXTEND_PYTHONPATH
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. note:: Same functionality as "-E/--extend-pythonpath" at build time.
+.. note:: Same functionality as ``-E/--extend-pythonpath`` at build time.
 
 This is a boolean that adds the modules bundled into the zipapp into the ``PYTHONPATH`` environment
 variable. It is not needed for most applications, but if an application calls Python as a

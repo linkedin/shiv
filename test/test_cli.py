@@ -346,3 +346,54 @@ class TestCLI:
 
         assert proc.returncode == 0
         assert proc.stdout.decode().splitlines() == ["hello from preamble", "hello world"]
+
+    def test_alternate_root(self, runner, package_location, tmp_path):
+        """Test that the --root argument properly sets the extraction root."""
+
+        output_file = tmp_path / "test.pyz"
+        shiv_root = tmp_path / "root"
+        result = runner(
+            ["-e", "hello:main", "--root", str(shiv_root), "-o", str(output_file), str(package_location)]
+        )
+
+        # check that the command successfully completed
+        assert result.exit_code == 0
+
+        # ensure the created file actually exists
+        assert output_file.exists()
+
+        # now run the produced zipapp
+        proc = subprocess.run(
+            [str(output_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, env=os.environ,
+        )
+
+        assert proc.returncode == 0
+        assert "hello" in proc.stdout.decode()
+        assert shiv_root.exists()
+
+    def test_alternate_root_environment_variable(self, runner, package_location, tmp_path, env_var):
+        """Test that the --root argument works with environment variables."""
+
+        output_file = tmp_path / "test.pyz"
+        shiv_root_var = "NEW_ROOT"
+        shiv_root_path = tmp_path / 'new_root'
+        result = runner(
+            ["-e", "hello:main", "--root", "$" + shiv_root_var, "-o", str(output_file), str(package_location)]
+        )
+
+        with env_var(shiv_root_var, str(shiv_root_path)):
+
+            # check that the command successfully completed
+            assert result.exit_code == 0
+
+            # ensure the created file actually exists
+            assert output_file.exists()
+
+            # now run the produced zipapp
+            proc = subprocess.run(
+                [str(output_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, env=os.environ,
+            )
+
+        assert proc.returncode == 0
+        assert "hello" in proc.stdout.decode()
+        assert shiv_root_path.exists()
