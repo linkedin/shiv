@@ -151,7 +151,7 @@ that may be useful to preamble authors:
 
 * ``archive``: path to the current PYZ file, equivalent to ``sys.argv[0]``
 * ``env``: an instance of the :ref:`Environment <api:bootstrap.environment.Environment>` object.
-* ``site_packages``: a pathlib.Path of the directory where the current PYZ's site_packages were extracted to during bootsrap.
+* ``site_packages``: a ``pathlib.Path`` of the directory where the current PYZ's site_packages were extracted to during bootsrap.
 
 For an example, a preamble file that cleans up prior extracted ``~/.shiv`` directories might look like::
 
