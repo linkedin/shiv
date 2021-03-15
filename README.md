@@ -33,7 +33,7 @@ $ ~/bin/flake8 --version
 3.7.8 (mccabe: 0.6.1, pycodestyle: 2.5.0, pyflakes: 2.1.1) CPython 3.7.4 on Darwin
 ```
 
-`-c flake` specifies the console script that should be invoked when the executable runs, `-o ~/bin/flake8` specifies the location of the generated executable file and `flake8` is the dependency that should be installed from PyPI.
+`-c flake8` specifies the console script that should be invoked when the executable runs, `-o ~/bin/flake8` specifies the location of the generated executable file and `flake8` is the dependency that should be installed from PyPI.
 
 Creating an interactive executable with the boto library:
 
