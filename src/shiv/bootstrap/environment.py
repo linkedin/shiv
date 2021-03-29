@@ -15,6 +15,7 @@ def str_bool(v):
 class Environment:
     INTERPRETER = "SHIV_INTERPRETER"
     ENTRY_POINT = "SHIV_ENTRY_POINT"
+    CONSOLE_SCRIPT = "SHIV_CONSOLE_SCRIPT"
     MODULE = "SHIV_MODULE"
     ROOT = "SHIV_ROOT"
     FORCE_EXTRACT = "SHIV_FORCE_EXTRACT"
@@ -44,7 +45,6 @@ class Environment:
         self.hashes = hashes or {}
         self.no_modify = no_modify
         self.reproducible = reproducible
-        self.script = script
         self.shiv_version = shiv_version
         self.preamble = preamble
 
@@ -53,6 +53,7 @@ class Environment:
         self._compile_pyc = compile_pyc
         self._extend_pythonpath = extend_pythonpath
         self._root = root
+        self._script = script
 
     @classmethod
     def from_json(cls, json_data):
@@ -67,6 +68,10 @@ class Environment:
     @property
     def entry_point(self):
         return os.environ.get(self.ENTRY_POINT, os.environ.get(self.MODULE, self._entry_point))
+
+    @property
+    def script(self):
+        return os.environ.get(self.CONSOLE_SCRIPT, self._script)
 
     @property
     def interpreter(self):
