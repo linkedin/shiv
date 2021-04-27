@@ -131,6 +131,10 @@ class TestEnvironment:
         with env_var("SHIV_ENTRY_POINT", "test"):
             assert env.entry_point == "test"
 
+        assert env.script is None
+        with env_var("SHIV_CONSOLE_SCRIPT", "test"):
+            assert env.script == "test"
+
         assert env.interpreter is None
         with env_var("SHIV_INTERPRETER", "1"):
             assert env.interpreter is not None
