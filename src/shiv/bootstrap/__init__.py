@@ -240,7 +240,7 @@ def bootstrap():  # pragma: no cover
     if not env.interpreter:
 
         # do entry point import and call
-        if env.entry_point is not None:
+        if env.entry_point is not None and not env.script:
             run(import_string(env.entry_point))
 
         elif env.script is not None:
