@@ -235,10 +235,12 @@ def main(
                 for path in source.rglob("**/*.py"):
                     hashes[str(path.relative_to(source))] = hashlib.sha256(path.read_bytes()).hexdigest()
 
-        # if entry_point is a console script, get the callable
+        # if entry_point is a console script, get the callable and null out the console_script variable
+        # so that we avoid modifying sys.argv in bootstrap.py
         if entry_point is None and console_script is not None:
             try:
                 entry_point = find_entry_point(sources, console_script)
+                console_script = None
             except KeyError:
                 if not console_script_exists(sources, console_script):
                     sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
