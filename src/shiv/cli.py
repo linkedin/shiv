@@ -26,7 +26,7 @@ from .constants import (
     SOURCE_DATE_EPOCH_ENV,
 )
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 
 def find_entry_point(site_packages_dirs: List[Path], console_script: str) -> str:
@@ -240,10 +240,11 @@ def main(
         if entry_point is None and console_script is not None:
             try:
                 entry_point = find_entry_point(sources, console_script)
-                console_script = None
             except KeyError:
                 if not console_script_exists(sources, console_script):
                     sys.exit(NO_ENTRY_POINT.format(entry_point=console_script))
+            else:
+                console_script = None
 
         # Some projects need reproducible artifacts, so they can use SOURCE_DATE_EPOCH
         # environment variable to specify the timestamps in the zipapp.
