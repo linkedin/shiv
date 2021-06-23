@@ -29,7 +29,7 @@ How?
 
 Shiv exploits the same features of Python as PEX, packing ``__main__.py`` into a zipfile with a
 shebang prepended (akin to zipapps, as defined by
-`PEP 441 <https://www.python.org/dev/peps/pep-0441/>`_, extracting a dependency directory and
+`PEP 441 <https://www.python.org/dev/peps/pep-0441/>`_), extracting a dependency directory and
 injecting said dependencies at runtime. We have to credit the great work by @wickman, @kwlzn,
 @jsirois and the other PEX contributors for laying the groundwork!
 
