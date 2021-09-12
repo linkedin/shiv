@@ -55,7 +55,7 @@ Let's break this command down,
 This creates an executable (``~/bin/flake8``) containing all the dependencies specified (``flake8``)
 that, when invoked, executes the provided console_script (``flake8``)!
 
-If you were to omit the entry point/console script flag, invoking the resulting executable wwould drop you into an interpreter that
+If you were to omit the entry point/console script flag, invoking the resulting executable would drop you into an interpreter that
 is bootstrapped with the dependencies you've specified. This can be useful for creating a single-artifact executable
 Python environment:
 
