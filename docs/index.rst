@@ -107,7 +107,7 @@ site-packages unless they are deleted or moved.
 
     Just as an example, shared objects loaded via the dlopen syscall require a regular filesystem.
     In addition, many libraries also expect a filesystem in order to do things like building paths via ``__file__`` (which doesn't work when a module is imported from a zip), etc.
-    To learn more, check out this resource about the setuptools `"zip_safe" flag <https://setuptools.readthedocs.io/en/latest/setuptools.html#setting-the-zip-safe-flag/>`_.
+    To learn more, check out this resource about the setuptools `"zip_safe" flag <https://setuptools.pypa.io/en/latest/userguide/miscellaneous.html#setting-the-zip-safe-flag>`_.
 
     **2.) Performance reasons**
 
