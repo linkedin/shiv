@@ -84,7 +84,7 @@ def get_interpreter_path(append_version: bool = False) -> str:
     name += suffix
 
     try:
-        return str(next(f for f in base_dir.rglob(name) if f.is_file()))
+        return str(next(f for f in base_dir.rglob(name) if f.is_file() and os.access(f, os.X_OK)))
 
     except StopIteration:
 
