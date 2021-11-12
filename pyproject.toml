@@ -1,2 +1,5 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+
 [black]
 line_length = 120
