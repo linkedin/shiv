@@ -4,8 +4,8 @@ The code in this module is adapted from https://github.com/pantsbuild/pex/blob/m
 It is used to enter an interactive interpreter session from an executable created with ``shiv``.
 """
 import code
-import sys
 import runpy
+import sys
 
 from pathlib import Path
 

@@ -1,12 +1,11 @@
 import compileall
+import hashlib
 import os
 import runpy
 import shutil
 import site
-
-import hashlib
-import sys
 import subprocess
+import sys
 import zipfile
 
 from contextlib import contextmanager, suppress
@@ -196,7 +195,11 @@ def bootstrap():  # pragma: no cover
         # determine if first run or forcing extract
         if not site_packages.exists() or env.force_extract:
             extract_site_packages(
-                archive, site_packages.parent, env.compile_pyc, env.compile_workers, env.force_extract,
+                archive,
+                site_packages.parent,
+                env.compile_pyc,
+                env.compile_workers,
+                env.force_extract,
             )
 
     # get sys.path's length
@@ -228,7 +231,7 @@ def bootstrap():  # pragma: no cover
 
         if preamble_bin.suffix == ".py":
             runpy.run_path(
-                preamble_bin.as_posix(),
+                str(preamble_bin),
                 init_globals={"archive": sys.argv[0], "env": env, "site_packages": site_packages},
                 run_name="__main__",
             )
