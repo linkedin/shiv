@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from click.testing import CliRunner
-from shiv.cli import get_interpreter_path, console_script_exists, find_entry_point, main
+from shiv.cli import console_script_exists, find_entry_point, main
 from shiv.constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES
 from shiv.info import main as info_main
 from shiv.pip import install
@@ -85,21 +85,6 @@ class TestCLI:
 
         assert result.exit_code == 1
         assert NO_OUTFILE in result.output
-
-    def test_find_interpreter(self):
-
-        interpreter = get_interpreter_path()
-
-        assert Path(interpreter).exists()
-        assert Path(interpreter).is_file()
-
-    def test_find_interpreter_false(self):
-
-        with mocked_sys_prefix():
-            interpreter = get_interpreter_path()
-
-        # should fall back on the current sys.executable
-        assert interpreter == sys.executable
 
     @pytest.mark.parametrize("arg", [arg for tup in DISALLOWED_ARGS.keys() for arg in tup])
     def test_disallowed_args(self, runner, arg):

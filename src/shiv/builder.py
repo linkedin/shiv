@@ -126,7 +126,8 @@ def create_archive(
                     write_to_zipapp(archive, arcname, data, zipinfo_datetime, compression, stat=path.stat())
 
             if env.build_id is None:
-                # now that we have a hash of all the source files, use it as our build id
+                # Now that we have a hash of all the source files, use it as our build id if the user did not
+                # specify a custom one.
                 env.build_id = contents_hash.hexdigest()
 
             # now let's add the shiv bootstrap code.

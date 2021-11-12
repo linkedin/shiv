@@ -27,5 +27,6 @@ SOURCE_DATE_EPOCH_DEFAULT = 315554400
 BUILD_AT_TIMESTAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 # The default shebang to use at the top of the pyz.
-# We use "/usr/bin/env" here because it's cross-platform compatible (https://docs.python.org/3/using/windows.html#shebang-lines)
+# We use "/usr/bin/env" here because it's cross-platform compatible
+# https://docs.python.org/3/using/windows.html#shebang-lines
 DEFAULT_SHEBANG = "/usr/bin/env python3"
