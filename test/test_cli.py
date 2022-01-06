@@ -135,7 +135,7 @@ class TestCLI:
             if "--build-id" in compile_option:
                 assert build_id == compile_option[1]
             assert (
-                Path(shiv_root, f"{output_file.stem}_{build_id}", "site-packages", "hello", "script.sh").stat().st_mode
+                Path(shiv_root, f"{output_file.name}_{build_id}", "site-packages", "hello", "script.sh").stat().st_mode
                 & UGOX
                 == UGOX
             )
