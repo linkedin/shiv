@@ -103,7 +103,7 @@ def cache_path(archive, root_dir, build_id):
         root_dir = Path(root_dir).expanduser()
 
     root = root_dir or Path("~/.shiv").expanduser()
-    name = Path(archive.filename).resolve().stem
+    name = Path(archive.filename).resolve().name
     return root / f"{name}_{build_id}"
 
 
@@ -117,8 +117,8 @@ def extract_site_packages(archive, target_path, compile_pyc=False, compile_worke
     :param bool force: A boolean to dictate whether or not we force extraction.
     """
     parent = target_path.parent
-    target_path_tmp = Path(parent, target_path.stem + ".tmp")
-    lock = Path(parent, f".{target_path.stem}_lock")
+    target_path_tmp = Path(parent, target_path.name + ".tmp")
+    lock = Path(parent, f".{target_path.name}_lock")
 
     # If this is the first time that a pyz is being extracted, we'll need to create the ~/.shiv dir
     if not parent.exists():
