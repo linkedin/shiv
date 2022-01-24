@@ -100,7 +100,7 @@ def cache_path(archive, root_dir, build_id):
         if root_dir.startswith("$"):
             root_dir = os.environ.get(root_dir[1:], root_dir[1:])
 
-        root_dir = Path(root_dir)
+        root_dir = Path(root_dir).expanduser()
 
     root = root_dir or Path("~/.shiv").expanduser()
     name = Path(archive.filename).resolve().stem
