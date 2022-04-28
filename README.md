@@ -78,7 +78,9 @@ git clone git@github.com:linkedin/shiv.git
 cd shiv
 python3 -m venv venv
 source ./venv/bin/activate
-python3 setup.py develop
+python3 -m pip install --upgrade build
+python3 -m build
+python3 -m pip install dist/<wheelname>
 ```
 
 Don't forget to run and write tests:
