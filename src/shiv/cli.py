@@ -178,8 +178,12 @@ def main(
     as outlined in PEP 441, but with all their dependencies included!
     """
 
-    if not pip_args and not site_packages:
-        sys.exit(NO_PIP_ARGS_OR_SITE_PACKAGES)
+    if pip_args is None:
+        pip_args = []
+        
+    # convert a str pip_args to a list of str
+    if isinstance(pip_args, str):
+        pip_args = pip_args.split()
 
     if output_file is None:
         sys.exit(NO_OUTFILE)
