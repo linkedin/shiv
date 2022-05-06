@@ -110,21 +110,26 @@ def create_archive(
                 # Glob is known to return results in non-deterministic order.
                 # We need to sort them by in-archive paths to ensure
                 # that archive contents are reproducible.
-                for path in sorted(source.rglob("*"), key=str):
-
+                # For empty source, we add an empty '_sentinel' file to add the folder to the zip file
+                for path in sorted(source.rglob("*"), key=str)  or [source / "_sentinel"]:
                     # Skip compiled files and directories (as they are not required to be present in the zip).
                     if path.suffix == ".pyc" or path.is_dir():
                         continue
 
-                    data = path.read_bytes()
+                    if path.exists(): # real file
+                        data = path.read_bytes()
+                        stat = path.stat()
+                    else: # sentinel file
+                        data = b""
+                        stat = Path(__file__).stat()
 
                     # update the contents hash
                     contents_hash.update(data)
 
                     arcname = str(site_packages / path.relative_to(source))
 
-                    write_to_zipapp(archive, arcname, data, zipinfo_datetime, compression, stat=path.stat())
-
+                    write_to_zipapp(archive, arcname, data, zipinfo_datetime, compression, stat=stat)
+                    
             if env.build_id is None:
                 # Now that we have a hash of all the source files, use it as our build id if the user did not
                 # specify a custom one.
