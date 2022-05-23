@@ -5,7 +5,7 @@ Why?
 ----
 
 At LinkedIn we ship hundreds of command line utilities to every machine in our data-centers and all
-of our employees workstations. The vast majority of these utilties are written in Python. In
+of our employees workstations. The vast majority of these utilities are written in Python. In
 addition to these utilities we also have many internal libraries that are uprev'd daily.
 
 Because of differences in iteration rate and the inherent problems present when dealing with such a
