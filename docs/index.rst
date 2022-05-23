@@ -124,7 +124,7 @@ If the preamble file is written in Python (e.g. ends in ``.py``) then shiv will 
 
 * ``archive``: (a string) path to the current PYZ file
 * ``env``: an instance of the `Environment <api:bootstrap.environment.Environment>`_ object.
-* ``site_packages``: a :py:class:`pathlib.Path` of the directory where the current PYZ's site_packages were extracted to during bootsrap.
+* ``site_packages``: a :py:class:`pathlib.Path` of the directory where the current PYZ's site_packages were extracted to during bootstrap.
 
 For an example, a preamble file that cleans up prior extracted ``~/.shiv`` directories might look like:
 
