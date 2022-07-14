@@ -153,7 +153,7 @@ def create_archive(
             # Write environment info in json file.
             #
             # The environment file contains build_id which is a SHA-256 checksum of all **site-packages** contents.
-            # the bootstarp code, environment.json and __main__.py are not used to calculate the checksum, is it's
+            # the bootstrap code, environment.json and __main__.py are not used to calculate the checksum, is it's
             # only used for local caching of site-packages and these files are always read from archive.
             write_to_zipapp(archive, "environment.json", env.to_json().encode("utf-8"), zipinfo_datetime, compression)
 
