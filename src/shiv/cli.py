@@ -1,6 +1,7 @@
 import hashlib
 import os
 import shutil
+import subprocess
 import sys
 import time
 
@@ -156,6 +157,11 @@ def copytree(src: Path, dst: Path) -> None:
     ),
 )
 @click.option("--root", type=click.Path(), help="Override the 'root' path (default is ~/.shiv).")
+@click.option(
+    "--pip-use-shebang-python",
+    is_flag=True,
+    help="Use the python interpreter from the shebang line when installing the pip packages.",
+)
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
@@ -172,6 +178,7 @@ def main(
     preamble: Optional[str],
     root: Optional[str],
     pip_args: List[str],
+    pip_use_shebang_python: bool,
 ) -> None:
     """
     Shiv is a command line utility for building fully self-contained Python zipapps
@@ -180,7 +187,15 @@ def main(
 
     if pip_args is None:
         pip_args = []
-        
+
+    if python:
+        python = str(python)
+    else:
+        if os.name == "nt":
+            python = sys.executable
+        else:
+            python = DEFAULT_SHEBANG
+
     # convert a str pip_args to a list of str
     if isinstance(pip_args, str):
         pip_args = pip_args.split()
@@ -216,7 +231,23 @@ def main(
 
         if pip_args:
             # Install dependencies into staged site-packages.
-            pip.install(["--target", tmp_site_packages] + list(pip_args))
+            if pip_use_shebang_python:
+                assert python is not None, "You should have specified a python interpreter."
+                pip_interpreter = python
+            else:
+                version_sys = subprocess.run([sys.executable, "-V"], capture_output=True).stdout.decode().rstrip()
+                version_shebang = subprocess.run([python, "-V"], capture_output=True).stdout.decode().rstrip()
+                if version_sys != version_shebang:
+                    click.secho(
+                        f"You are installing pip packages with your current python interpreter ({version_sys}) "
+                        f"while the python interpreter used in your shebang line is ({version_shebang}). "
+                        f"If you want to use the python interpreter from your shebang line to install the "
+                        f"pip packages, you must activate the option 'pip_use_shebang_python'.",
+                        err=True,
+                        fg="red",
+                    )
+                pip_interpreter = sys.executable
+            pip.install(["--target", tmp_site_packages] + list(pip_args), pip_interpreter=pip_interpreter)
 
         if preamble:
             bin_dir = Path(tmp_site_packages, "bin")
@@ -273,7 +304,7 @@ def main(
         builder.create_archive(
             sources,
             target=Path(output_file).expanduser(),
-            interpreter=python or DEFAULT_SHEBANG,
+            interpreter=python,
             main="_bootstrap:bootstrap",
             env=env,
             compressed=compressed,
