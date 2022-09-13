@@ -120,6 +120,8 @@ def create_archive(
 
                     # update the contents hash
                     contents_hash.update(data)
+                    # take filenames into account as well - build_id should change if a file is moved or renamed
+                    contents_hash.update(str(path.relative_to(source)).encode())
 
                     arcname = str(site_packages / path.relative_to(source))
 
