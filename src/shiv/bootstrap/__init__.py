@@ -208,6 +208,9 @@ def bootstrap():  # pragma: no cover
     # Find the first instance of an existing site-packages on sys.path
     index = get_first_sitedir_index() or length
 
+    # copy sys.path to determine diff
+    sys_path_before = sys.path.copy()
+
     # append site-packages using the stdlib blessed way of extending path
     # so as to handle .pth files correctly
     site.addsitedir(site_packages)
@@ -215,13 +218,16 @@ def bootstrap():  # pragma: no cover
     # reorder to place our site-packages before any others found
     sys.path = sys.path[:index] + sys.path[length:] + sys.path[index:length]
 
+    # determine newly added paths
+    new_paths = [p for p in sys.path if p not in sys_path_before]
+
     # check if source files have been modified, if required
     if env.no_modify:
         ensure_no_modify(site_packages, env.hashes)
 
-    # add our site-packages to the environment, if requested
+    # add any new paths to the environment, if requested
     if env.extend_pythonpath:
-        extend_python_path(os.environ, sys.path.copy())
+        extend_python_path(os.environ, new_paths)
 
     # if a preamble script was provided, run it
     if env.preamble:
