@@ -12,9 +12,10 @@ import zipapp
 import zipfile
 
 from datetime import datetime, timezone
+from itertools import chain
 from pathlib import Path
 from stat import S_IFMT, S_IMODE, S_IXGRP, S_IXOTH, S_IXUSR
-from typing import IO, Any, List, Optional, Tuple
+from typing import Generator, IO, Any, List, Optional, Tuple
 
 from . import bootstrap
 from .bootstrap.environment import Environment
@@ -69,6 +70,15 @@ def write_to_zipapp(
     archive.writestr(zinfo, data)
 
 
+def rglob_follow_symlinks(path: Path, glob: str) -> Generator[Path, None, None]:
+    """Path.rglob extended to follow symlinks, while we wait for Python 3.13."""
+    for p in path.rglob('*'):
+        if p.is_symlink() and p.is_dir():
+            yield from chain([p], rglob_follow_symlinks(p, glob))
+        else:
+            yield p
+
+
 def create_archive(
     sources: List[Path], target: Path, interpreter: str, main: str, env: Environment, compressed: bool = True
 ) -> None:
@@ -110,7 +120,11 @@ def create_archive(
                 # Glob is known to return results in non-deterministic order.
                 # We need to sort them by in-archive paths to ensure
                 # that archive contents are reproducible.
-                for path in sorted(source.rglob("*"), key=str):
+                #
+                # NOTE: https://github.com/linkedin/shiv/issues/236
+                # this special rglob function can be replaced with "rglob('*', follow_symlinks=True)"
+                # when Python 3.13 becomes the lowest supported version
+                for path in sorted(rglob_follow_symlinks(source, "*"), key=str):
 
                     # Skip compiled files and directories (as they are not required to be present in the zip).
                     if path.suffix == ".pyc" or path.is_dir():

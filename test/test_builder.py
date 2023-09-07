@@ -9,7 +9,7 @@ from zipapp import ZipAppError
 
 import pytest
 
-from shiv.builder import create_archive, write_file_prefix
+from shiv.builder import create_archive, rglob_follow_symlinks, write_file_prefix
 
 UGOX = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
 
@@ -38,6 +38,16 @@ class TestBuilder:
     def test_binprm_error(self):
         with pytest.raises(SystemExit):
             tmp_write_prefix(f"/{'c' * 200}/python")
+
+    def test_rglob_follow_symlinks(self, tmp_path):
+        real_dir = tmp_path / 'real_dir'
+        real_dir.mkdir()
+        real_file = real_dir / 'real_file'
+        real_file.touch()
+        sym_dir = tmp_path / 'sym_dir'
+        sym_dir.symlink_to(real_dir)
+        sym_file = sym_dir / real_file.name
+        assert sorted(rglob_follow_symlinks(tmp_path, '*'), key=str) == [real_dir, real_file, sym_dir, sym_file]
 
     def test_create_archive(self, sp, env):
         with tempfile.TemporaryDirectory() as tmpdir:
