@@ -9,7 +9,6 @@ import sys
 import zipfile
 
 from contextlib import contextmanager, suppress
-from functools import partial
 from importlib import import_module
 from pathlib import Path
 
@@ -18,13 +17,11 @@ from .filelock import FileLock
 from .interpreter import execute_interpreter
 
 
-def run(module):  # pragma: no cover
-    """Run a module in a scrubbed environment.
+def scrub_environment():  # pragma: no cover
+    """Scrubs the environment.
 
     If a single pyz has multiple callers, we want to remove these vars as we no longer need them
     and they can cause subprocesses to fail with a ModuleNotFoundError.
-
-    :param Callable module: The entry point to invoke the pyz with.
     """
     with suppress(KeyError):
         del os.environ[Environment.MODULE]
@@ -34,8 +31,6 @@ def run(module):  # pragma: no cover
 
     with suppress(KeyError):
         del os.environ[Environment.CONSOLE_SCRIPT]
-
-    sys.exit(module())
 
 
 @contextmanager
@@ -250,10 +245,14 @@ def bootstrap():  # pragma: no cover
 
         # do entry point import and call
         if env.entry_point is not None and not env.script:
-            run(import_string(env.entry_point))
+            scrub_environment()
+            entry_callable = import_string(env.entry_point)
+            sys.exit(entry_callable())
 
         elif env.script is not None:
-            run(partial(runpy.run_path, str(site_packages / "bin" / env.script), run_name="__main__"))
+            scrub_environment()
+            runpy.run_path(str(site_packages / "bin" / env.script), run_name="__main__")
+            sys.exit()
 
     # all other options exhausted, drop into interactive mode
     execute_interpreter()
