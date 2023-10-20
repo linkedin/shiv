@@ -88,95 +88,37 @@ def copytree(src: Path, dst: Path) -> None:
             shutil.copy2(str(path), str(dst / path.relative_to(src)))
 
 
-@click.command(context_settings=dict(help_option_names=["-h", "--help", "--halp"], ignore_unknown_options=True))
-@click.version_option(version=__version__, prog_name="shiv")
-@click.option(
-    "--entry-point", "-e", default=None, help="The entry point to invoke (takes precedence over --console-script)."
-)
-@click.option("--console-script", "-c", default=None, help="The console_script to invoke.")
-@click.option("--output-file", "-o", help="The path to the output file for shiv to create.")
-@click.option(
-    "--python",
-    "-p",
-    help=(
-        "The python interpreter to set as the shebang, a.k.a. whatever you want after '#!' "
-        "(default is '/usr/bin/env python3')"
-    ),
-)
-@click.option(
-    "--site-packages",
-    help="The path to an existing site-packages directory to copy into the zipapp.",
-    type=click.Path(exists=True),
-    multiple=True,
-)
-@click.option(
-    "--build-id",
-    default=None,
-    help=(
-        "Use a custom build id instead of the default (a SHA256 hash of the contents of the build). "
-        "Warning: must be unique per build!"
-    ),
-)
-@click.option("--compressed/--uncompressed", default=True, help="Whether or not to compress your zip.")
-@click.option(
-    "--compile-pyc",
-    is_flag=True,
-    help="Whether or not to compile pyc files during initial bootstrap.",
-)
-@click.option(
-    "--extend-pythonpath",
-    "-E",
-    is_flag=True,
-    help="Add the contents of the zipapp to PYTHONPATH (for subprocesses).",
-)
-@click.option(
-    "--reproducible",
-    is_flag=True,
-    help=(
-        "Generate a reproducible zipapp by overwriting all files timestamps to a default value. "
-        "Timestamp can be overwritten by SOURCE_DATE_EPOCH env variable. "
-        "Note: If SOURCE_DATE_EPOCH is set, this option will be implicitly set to true."
-    ),
-)
-@click.option(
-    "--no-modify",
-    is_flag=True,
-    help=(
-        "If specified, this modifies the runtime of the zipapp to raise "
-        "a RuntimeException if the source files (in ~/.shiv or SHIV_ROOT) have been modified. "
-        """It's recommended to use Python's "--check-hash-based-pycs always" option with this feature."""
-    ),
-)
-@click.option(
-    "--preamble",
-    type=click.Path(exists=True),
-    help=(
-        "Provide a path to a preamble script that is invoked by shiv's runtime after bootstrapping the environment, "
-        "but before invoking your entry point."
-    ),
-)
-@click.option("--root", type=click.Path(), help="Override the 'root' path (default is ~/.shiv).")
-@click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
+    *,
     output_file: str,
-    entry_point: Optional[str],
-    console_script: Optional[str],
-    python: Optional[str],
-    site_packages: Optional[str],
-    build_id: Optional[str],
-    compressed: bool,
-    compile_pyc: bool,
-    extend_pythonpath: bool,
-    reproducible: bool,
-    no_modify: bool,
-    preamble: Optional[str],
-    root: Optional[str],
-    pip_args: List[str],
+    entry_point: Optional[str] = None,
+    console_script: Optional[str] = None,
+    python: Optional[str] = None,
+    site_packages: Optional[str] = None,
+    build_id: Optional[str] = None,
+    # Optional switches and flags
+    compressed: bool = True,
+    # Default inactive flags
+    compile_pyc: bool = False,
+    extend_pythonpath: bool = False,
+    reproducible: bool = False,
+    no_modify: bool = False,
+    preamble: Optional[str] = None,
+    root: Optional[str] = None,
+    # Unprocessed args passed to pip
+    pip_args: Optional[List[str]] = None
 ) -> None:
+    """ Main routine wrapped by `shiv` command.
+
+    Enables direct use from python scripts:
+
+    .. code-block:: py
+
+        >>> main(output_file='numpy.pyz', compile_pyc=True, pip_args=['numpy'])
     """
-    Shiv is a command line utility for building fully self-contained Python zipapps
-    as outlined in PEP 441, but with all their dependencies included!
-    """
+
+    if pip_args is None:
+        pip_args = []
 
     if not pip_args and not site_packages:
         sys.exit(NO_PIP_ARGS_OR_SITE_PACKAGES)
@@ -277,4 +219,5 @@ def main(
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()
+    from shiv.commands import shiv
+    shiv()
