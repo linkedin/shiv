@@ -30,17 +30,17 @@ except ImportError:
 
 # N.B.: `importlib.resources.{contents,is_resource,path}` are deprecated in 3.11 and gone in 3.13.
 if sys.version_info < (3, 11):
-    def iter_package_files(package: Union[str, ModuleType]) -> Iterator[Path]:
+    def iter_package_files(package: Union[str, ModuleType]) -> Iterator[Tuple[Path, str]]:
         for bootstrap_file in importlib_resources.contents(bootstrap):
             if importlib_resources.is_resource(bootstrap, bootstrap_file):
                 with importlib_resources.path(bootstrap, bootstrap_file) as path:
-                    yield path
+                    yield (path, bootstrap_file)
 else:
-    def iter_package_files(package: Union[str, ModuleType]) -> Iterator[Path]:
+    def iter_package_files(package: Union[str, ModuleType]) -> Iterator[Tuple[Path, str]]:
         for resource in importlib_resources.files(package).iterdir():
             if resource.is_file():
                 with importlib_resources.as_file(resource) as path:
-                    yield path
+                    yield (path, resource.name)
 
 # Typical maximum length for a shebang line
 BINPRM_BUF_SIZE = 128
@@ -164,12 +164,12 @@ def create_archive(
             # now let's add the shiv bootstrap code.
             bootstrap_target = Path("_bootstrap")
 
-            for path in iter_package_files(bootstrap):
+            for path, name in iter_package_files(bootstrap):
                 data = path.read_bytes()
 
                 write_to_zipapp(
                     archive,
-                    str(bootstrap_target / path.name),
+                    str(bootstrap_target / name),
                     data,
                     zipinfo_datetime,
                     compression,
