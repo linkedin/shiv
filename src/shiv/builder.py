@@ -15,7 +15,8 @@ from datetime import datetime, timezone
 from itertools import chain
 from pathlib import Path
 from stat import S_IFMT, S_IMODE, S_IXGRP, S_IXOTH, S_IXUSR
-from typing import Generator, IO, Any, List, Optional, Tuple
+from types import ModuleType
+from typing import Any, Generator, IO, Iterator, List, Optional, Tuple, Union
 
 from . import bootstrap
 from .bootstrap.environment import Environment
@@ -26,6 +27,20 @@ try:
 except ImportError:
     # noinspection PyUnresolvedReferences
     import importlib_resources  # type: ignore
+
+# N.B.: `importlib.resources.{contents,is_resource,path}` are deprecated in 3.11 and gone in 3.13.
+if sys.version_info < (3, 11):
+    def iter_package_files(package: Union[str, ModuleType]) -> Iterator[Path]:
+        for bootstrap_file in importlib_resources.contents(bootstrap):
+            if importlib_resources.is_resource(bootstrap, bootstrap_file):
+                with importlib_resources.path(bootstrap, bootstrap_file) as path:
+                    yield path
+else:
+    def iter_package_files(package: Union[str, ModuleType]) -> Iterator[Path]:
+        for resource in importlib_resources.files(package).iterdir():
+            if resource.is_file():
+                with importlib_resources.as_file(resource) as path:
+                    yield path
 
 # Typical maximum length for a shebang line
 BINPRM_BUF_SIZE = 128
@@ -149,22 +164,17 @@ def create_archive(
             # now let's add the shiv bootstrap code.
             bootstrap_target = Path("_bootstrap")
 
-            for bootstrap_file in importlib_resources.contents(bootstrap):  # type: ignore
+            for path in iter_package_files(bootstrap):
+                data = path.read_bytes()
 
-                if importlib_resources.is_resource(bootstrap, bootstrap_file):  # type: ignore
-
-                    with importlib_resources.path(bootstrap, bootstrap_file) as path:  # type: ignore
-
-                        data = path.read_bytes()
-
-                        write_to_zipapp(
-                            archive,
-                            str(bootstrap_target / path.name),
-                            data,
-                            zipinfo_datetime,
-                            compression,
-                            stat=path.stat(),
-                        )
+                write_to_zipapp(
+                    archive,
+                    str(bootstrap_target / path.name),
+                    data,
+                    zipinfo_datetime,
+                    compression,
+                    stat=path.stat(),
+                )
 
             # Write environment info in json file.
             #
