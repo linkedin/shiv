@@ -285,6 +285,7 @@ Table of Contents
    :maxdepth: 2
 
    cli-reference
+   how-tos
    history
    api
    django
