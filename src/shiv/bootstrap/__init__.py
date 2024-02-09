@@ -87,8 +87,33 @@ def import_string(import_name):
         raise ImportError(e)
 
 
+def get_default_cache_root():
+    """Returns the platform dependent default cache directory."""
+
+    # Previous versions used "~/.shiv". If it exists, continue using it.
+    legacy_root = Path("~/.shiv").expanduser()
+    if legacy_root.is_dir():
+        return legacy_root
+
+    # Loosely based on https://github.com/platformdirs/platformdirs
+
+    if sys.platform == "win32":
+        local_app_data = os.environ.get("LOCALAPPDATA", "")
+        if local_app_data.strip():
+            return Path(os.path.normpath(local_app_data)) / "shiv" / "cache"
+
+    if sys.platform == "darwin":
+        return Path("~/Library/Caches/shiv").expanduser()
+
+    xdg_cache_home = os.environ.get("XDG_CACHE_HOME", "")
+    if xdg_cache_home.strip():
+        return Path(os.path.normpath(xdg_cache_home)) / "shiv"
+
+    return Path("~/.cache/shiv").expanduser()
+
+
 def cache_path(archive, root_dir, build_id):
-    """Returns a ~/.shiv cache directory for unzipping site-packages during bootstrap.
+    """Returns a cache directory for unzipping site-packages during bootstrap.
 
     :param ZipFile archive: The zipfile object we are bootstrapping from.
     :param str root_dir: Optional, either a path or environment variable pointing to a SHIV_ROOT.
@@ -102,7 +127,7 @@ def cache_path(archive, root_dir, build_id):
 
         root_dir = Path(root_dir).expanduser()
 
-    root = root_dir or Path("~/.shiv").expanduser()
+    root = root_dir or get_default_cache_root()
     name = Path(archive.filename).resolve().name
     return root / f"{name}_{build_id}"
 
@@ -120,7 +145,7 @@ def extract_site_packages(archive, target_path, compile_pyc=False, compile_worke
     target_path_tmp = Path(parent, target_path.name + ".tmp")
     lock = Path(parent, f".{target_path.name}_lock")
 
-    # If this is the first time that a pyz is being extracted, we'll need to create the ~/.shiv dir
+    # If this is the first time that a pyz is being extracted, we'll need to create the cache root dir
     if not parent.exists():
         parent.mkdir(parents=True, exist_ok=True)
 

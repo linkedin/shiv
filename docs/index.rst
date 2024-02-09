@@ -93,7 +93,7 @@ Bootstrapping
 ^^^^^^^^^^^^^
 
 As mentioned above, when you run an executable created with ``shiv``, a special bootstrap function is called.
-This function unpacks the dependencies into a uniquely named subdirectory of ``~/.shiv`` and then runs your entry point
+This function unpacks the dependencies into a uniquely named subdirectory of ``~/.cache/shiv`` (platform dependent) and then runs your entry point
 (or interactive interpreter) with those dependencies added to your interpreter's search path (``sys.path``).
 
 To improve performance, once the dependencies have been extracted to disk, any further invocations will re-use the 'cached'
@@ -126,7 +126,7 @@ If the preamble file is written in Python (e.g. ends in ``.py``) then shiv will 
 * ``env``: an instance of the `Environment <api:bootstrap.environment.Environment>`_ object.
 * ``site_packages``: a :py:class:`pathlib.Path` of the directory where the current PYZ's site_packages were extracted to during bootstrap.
 
-For an example, a preamble file that cleans up prior extracted ``~/.shiv`` directories might look like:
+For an example, a preamble file that cleans up prior extracted ``~/.cache/shiv`` directories might look like:
 
 .. code-block:: py
 
@@ -225,7 +225,7 @@ you can specify to influence a zipapp created with shiv at run time.
 SHIV_ROOT
 ^^^^^^^^^
 
-This should be populated with a full path, it overrides ``~/.shiv`` as the default base dir for shiv's extraction cache.
+This should be populated with a full path, it overrides ``~/.cache/shiv`` (platform dependent) as the default base dir for shiv's extraction cache.
 
 This is useful if you want to collect the contents of a zipapp to inspect them, or if you want to make a quick edit to
 a source file, but don't want to taint the extraction cache.
