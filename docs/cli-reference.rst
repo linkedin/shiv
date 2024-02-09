@@ -40,3 +40,7 @@ Also note that you can always fix the shebang during installation of a zipapp us
 .. code-block:: shell
 
    python3 -m zipapp -p '/usr/bin/env python3.7' -o ~/bin/foo foo.pyz
+
+If the interpreter you run is different from the interpreter of the sheband line,
+you can use the :option:`--pip-use-shebang-python` to use the shebang interpreter when installing packages through pip
+(important for version specific packages).

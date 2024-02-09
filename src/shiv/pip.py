@@ -28,10 +28,10 @@ def clean_pip_env() -> Generator[None, None, None]:
             os.environ[PIP_REQUIRE_VIRTUALENV] = require_venv
 
 
-def install(args: List[str]) -> None:
+def install(args: List[str], pip_interpreter: str) -> None:
     """`pip install` as a function.
 
-    Accepts a list of pip arguments.
+    Accepts a list of pip arguments and the python interpreter to use when running pip.
 
     .. code-block:: py
 
@@ -54,7 +54,7 @@ def install(args: List[str]) -> None:
         extend_python_path(subprocess_env, sys.path[sitedir_index:])
 
         process = subprocess.Popen(
-            [sys.executable, "-m", "pip", "--disable-pip-version-check", "install", *args],
+            [pip_interpreter, "-m", "pip", "--disable-pip-version-check", "install", *args],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             env=subprocess_env,
