@@ -6,7 +6,6 @@ from datetime import datetime
 from pathlib import Path
 from site import addsitedir
 from unittest import mock
-from uuid import uuid4
 from zipfile import ZipFile
 
 import pytest
@@ -61,14 +60,33 @@ class TestBootstrap:
             assert not zipfile
 
     def test_cache_path(self, env_var):
-        mock_zip = mock.MagicMock(spec=ZipFile)
-        mock_zip.filename = "test"
-        uuid = str(uuid4())
+        # specified root
+        assert cache_path(Path('/a/b/test'), 'foo', False, '1234') == Path("foo", "test_1234")
 
-        assert cache_path(mock_zip, 'foo', uuid) == Path("foo", f"test_{uuid}")
-
+        # same with envvar
         with env_var("FOO", "foo"):
-            assert cache_path(mock_zip, '$FOO', uuid) == Path("foo", f"test_{uuid}")
+            assert cache_path(Path('/a/b/test'), '$FOO', False, '1234') == Path("foo", "test_1234")
+
+        # same with platform-compat otherwise enabled
+        assert cache_path(Path('/a/b/test'), 'foo', True, '1234') == Path("foo", "test_1234")
+
+        # platform-compat disabled and root unspecified
+        assert cache_path(Path('/a/b/test'), None, False, '1234') == Path.home() / ".shiv" / "test_1234"
+
+        # platform-compat enabled and root unspecified
+        if sys.platform == 'linux':
+            cache_spec = '.cache'
+        elif sys.platform == 'darwin':
+            cache_spec = 'Library/Caches'
+        elif sys.platform == 'win32':
+            cache_spec = 'AppData/Local'
+        else:
+            cache_spec = None
+
+        cache_dir = (Path.home() / ".shiv" / "test_1234" if cache_spec is None
+                     else Path.home() / cache_spec / "test" / "test_1234")
+
+        assert cache_path(Path('/a/b/test'), None, True, '1234') == cache_dir
 
     def test_first_sitedir_index(self):
         with mock.patch.object(sys, "path", ["site-packages", "dir", "dir", "dir"]):
