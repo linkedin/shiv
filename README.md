@@ -16,7 +16,7 @@ shiv's primary goal is making distributing Python applications fast & easy.
 
 ### sys requirements
 
-- python3.6+
+- python3.8+
 - linux/osx/windows
 
 ### quickstart
