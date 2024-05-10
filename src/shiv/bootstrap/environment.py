@@ -38,6 +38,7 @@ class Environment:
         script=None,
         preamble=None,
         root=None,
+        platform_root=False,
     ):
         self.always_write_cache = always_write_cache
         self.build_id = build_id
@@ -47,6 +48,7 @@ class Environment:
         self.reproducible = reproducible
         self.shiv_version = shiv_version
         self.preamble = preamble
+        self.platform_root = platform_root
 
         # properties
         self._entry_point = entry_point

@@ -154,7 +154,12 @@ def copytree(src: Path, dst: Path) -> None:
         "but before invoking your entry point."
     ),
 )
-@click.option("--root", type=click.Path(), help="Override the 'root' path (default is ~/.shiv).")
+@click.option("--root", type=click.Path(), help="Override the 'root' path (default is ~/.shiv or platform-dependent).")
+@click.option(
+    "--platform-root",
+    is_flag=True,
+    help="If specified, the default 'root' path will attempt to conform to platform convention (rather than ~/.shiv).",
+)
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
@@ -170,6 +175,7 @@ def main(
     no_modify: bool,
     preamble: Optional[str],
     root: Optional[str],
+    platform_root: bool,
     pip_args: List[str],
 ) -> None:
     """
@@ -259,6 +265,7 @@ def main(
             reproducible=reproducible,
             preamble=Path(preamble).name if preamble else None,
             root=root,
+            platform_root=platform_root,
         )
 
         if no_modify:

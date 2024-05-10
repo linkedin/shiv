@@ -12,6 +12,7 @@ from contextlib import contextmanager, suppress
 from functools import partial
 from importlib import import_module
 from pathlib import Path
+from typing import Optional, Union
 
 from .environment import Environment
 from .filelock import FileLock
@@ -87,24 +88,149 @@ def import_string(import_name):
         raise ImportError(e)
 
 
-def cache_path(archive, root_dir, build_id):
-    """Returns a ~/.shiv cache directory for unzipping site-packages during bootstrap.
+def is_dir_writeable(path: Path) -> bool:
+    """Whether the given Path `path` is writeable or createable.
 
-    :param ZipFile archive: The zipfile object we are bootstrapping from.
-    :param str root_dir: Optional, either a path or environment variable pointing to a SHIV_ROOT.
-    :param str build_id: The build id generated at zip creation.
+    Returns whether the *extant portion* of the given path is writeable.
+    If so, the path is either extant and writeable or its nearest extant
+    parent is writeable (and as such the path may be created in a
+    writeable form).
+
     """
+    while not path.exists():
+        parent = path.parent
 
+        # reliably determine whether this is the root
+        if parent == path:
+            break
+
+        path = parent
+
+    return os.access(path, os.W_OK)
+
+
+#
+# support for py38
+#
+def is_relative_to(path: Path, root: Union[Path, str]) -> bool:
+    """Return True if the path is relative to another path or False."""
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    else:
+        return True
+
+
+def is_system_path(path: Path) -> Optional[bool]:
+    """Whether the given `path` appears to be a non-user path.
+
+    Returns bool – or None if called on an unsupported platform
+    (_i.e._ implicitly False).
+
+    """
+    if sys.platform == 'linux':
+        return not is_relative_to(path, '/home') and not is_relative_to(path, '/root')
+
+    if sys.platform == 'darwin':
+        return not is_relative_to(path, '/Users')
+
+    return None
+
+
+def system_root() -> Optional[Path]:
+    """The platform-preferred global/system-wide path for cached files.
+
+    Returns Path – or None if called on an unsupported platform.
+
+    """
+    if sys.platform == 'linux':
+        return Path('/var/cache')
+
+    if sys.platform == 'darwin':
+        return Path('/Library/Caches')
+
+    return None
+
+
+def user_root() -> Optional[Path]:
+    """The platform-preferred user-specific path for cached files.
+
+    Returns Path – or None if called on an unsupported platform.
+
+    """
+    if sys.platform == 'win32':
+        root = os.environ.get('LOCALAPPDATA', '').strip() or '~/AppData/Local'
+    elif sys.platform == 'linux':
+        root = os.environ.get('XDG_CACHE_HOME', '').strip() or '~/.cache'
+    elif sys.platform == 'darwin':
+        root = '~/Library/Caches'
+    else:
+        root = None
+
+    return Path(root).expanduser() if root is not None else None
+
+
+def platform_cache(archive_path: Path, build_id: str) -> Optional[Path]:
+    """Return a platform-compatible default extraction path.
+
+    * If the archive is installed to a system path and a system-wide
+      cache is either already populated or writeable by the current user:
+      then the system cache will be used.
+
+    * Otherwise: an appropriate user cache will be used, if any.
+
+    """
+    #
+    # 1) let's see about a system_root
+    #
+    if is_system_path(archive_path):
+        system_base = system_root()
+
+        if system_base is not None:
+            root = system_base / archive_path.name
+
+            cache = cache_path(archive_path, str(root), False, build_id)
+            site_packages = cache / 'site-packages'
+
+            if site_packages.exists() or is_dir_writeable(cache):
+                return root
+
+    #
+    # 2) let's try a user path
+    #
+    user_base = user_root()
+
+    if user_base is not None:
+        return user_base / archive_path.name
+
+    return None
+
+
+def cache_path(archive_path, root_dir, platform_compat, build_id):
+    """Returns a shiv cache directory for unzipping site-packages during bootstrap.
+
+    :param Path archive_path: The Path of the archive we are bootstrapping from.
+    :param str root_dir: Optional, either a path or environment variable pointing to a SHIV_ROOT.
+    :param bool platform_compat: Whether to attempt to fall back to a platform-conventional root.
+    :param str build_id: The build id generated at zip creation.
+
+    """
     if root_dir:
-
         if root_dir.startswith("$"):
             root_dir = os.environ.get(root_dir[1:], root_dir[1:])
 
-        root_dir = Path(root_dir).expanduser()
+        root = Path(root_dir).expanduser()
+    elif platform_compat:
+        root = platform_cache(archive_path, build_id)
+    else:
+        root = None
 
-    root = root_dir or Path("~/.shiv").expanduser()
-    name = Path(archive.filename).resolve().name
-    return root / f"{name}_{build_id}"
+    # platform_compat may be False *OR* platform_cache may return None
+    if root is None:
+        root = Path.home() / ".shiv"
+
+    return root / f"{archive_path.name}_{build_id}"
 
 
 def extract_site_packages(archive, target_path, compile_pyc=False, compile_workers=0, force=False):
@@ -190,7 +316,8 @@ def bootstrap():  # pragma: no cover
         env = Environment.from_json(archive.read("environment.json").decode())
 
         # get a site-packages directory (from env var or via build id)
-        site_packages = cache_path(archive, env.root, env.build_id) / "site-packages"
+        archive_path = Path(archive.filename).resolve()
+        site_packages = cache_path(archive_path, env.root, env.platform_root, env.build_id) / "site-packages"
 
         # determine if first run or forcing extract
         if not site_packages.exists() or env.force_extract:
