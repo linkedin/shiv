@@ -269,6 +269,15 @@ variable. It is not needed for most applications, but if an application calls Py
 subprocess, expecting to be able to import the modules bundled in the zipapp, this will allow it
 to do so successfully.
 
+
+SHIV_PREPEND_PYTHONPATH
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The value of this environment variable will be prepended to ``sys.path`` during the bootstrap process
+before running the application. This is useful to load code from additional locations that are outside
+the shiv-created file, for example for debugging purposes. This variable takes precedence over
+``PYTHONPATH``.
+
 Reproducibility
 ^^^^^^^^^^^^^^^
 
