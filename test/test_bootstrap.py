@@ -19,6 +19,7 @@ from shiv.bootstrap import (
     extract_site_packages,
     get_first_sitedir_index,
     import_string,
+    prepend_pythonpath,
 )
 from shiv.bootstrap.environment import Environment
 from shiv.bootstrap.filelock import FileLock
@@ -117,6 +118,25 @@ class TestBootstrap:
         extend_python_path(env, ["test", ".pth"])
         assert env["PYTHONPATH"] == os.pathsep.join(["hello", "test", ".pth"])
 
+    @pytest.mark.parametrize("extra_path", [
+        None,
+        "/path/to/other_package",
+    ])
+    def test_prepend_pythonpath(self, env, extra_path):
+        # Save old path to be able to restore it after executing the test
+        old_path = sys.path.copy()
+
+        env._prepend_pythonpath = extra_path
+        prepend_pythonpath(env)
+        if extra_path is not None:
+            assert len(sys.path) == len(old_path) + 1
+            assert sys.path[0] == extra_path
+        else:
+            assert len(sys.path) == len(old_path)
+
+        # Cleanup
+        sys.path = old_path
+
 
 class TestEnvironment:
     def test_overrides(self, env_var):
@@ -162,6 +182,10 @@ class TestEnvironment:
         # ensure that non-digits are ignored
         with env_var("SHIV_COMPILE_WORKERS", "one bazillion"):
             assert env.compile_workers == 0
+
+        assert env.prepend_pythonpath is None
+        with env_var(Environment.PREPEND_PYTHONPATH, "/path/to/other_package"):
+            assert env.prepend_pythonpath == "/path/to/other_package"
 
     def test_roundtrip(self):
         now = str(datetime.now())
