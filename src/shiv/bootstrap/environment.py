@@ -4,7 +4,7 @@ overrides defined at runtime (via environment variables).
 """
 import json
 import os
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 
 def str_bool(v) -> bool:
@@ -35,7 +35,7 @@ class Environment:
         entry_point: Optional[str] = None,
         extend_pythonpath: bool = False,
         prepend_pythonpath: Optional[str] = None,
-        hashes: Optional[dict[str, Any]] = None,
+        hashes: Optional[Dict[str, Any]] = None,
         no_modify: bool = False,
         reproducible: bool = False,
         script: Optional[str] = None,
@@ -46,7 +46,7 @@ class Environment:
         self.always_write_cache: bool = always_write_cache
         self.build_id: Optional[str] = build_id
         self.built_at: str = built_at
-        self.hashes: Optional[dict[str, Any]] = hashes or {}
+        self.hashes: Optional[Dict[str, Any]] = hashes or {}
         self.no_modify: bool = no_modify
         self.reproducible: bool = reproducible
         self.preamble: Optional[str] = preamble
