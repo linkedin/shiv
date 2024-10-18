@@ -2,6 +2,7 @@
 This module contains the ``Environment`` object, which combines settings decided at build time with
 overrides defined at runtime (via environment variables).
 """
+from __future__ import annotations
 import json
 import os
 from typing import Any, Optional
