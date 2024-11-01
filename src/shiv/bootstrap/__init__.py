@@ -191,12 +191,17 @@ def bootstrap():  # pragma: no cover
 
     # get a handle of the currently executing zip file
     with current_zipfile() as archive:
+        if archive:
+            # create an environment object (a combination of env vars and json metadata)
+            env = Environment.from_json(archive.read("environment.json").decode())
 
-        # create an environment object (a combination of env vars and json metadata)
-        env = Environment.from_json(archive.read("environment.json").decode())
-
-        # get a site-packages directory (from env var or via build id)
-        site_packages = cache_path(archive, env.root, env.build_id) / "site-packages"
+            # get a site-packages directory (from env var or via build id)
+            site_packages = cache_path(archive, env.root, env.build_id) / "site-packages"
+        else:
+            # not in zip file, now it is in a directory
+            parent_dir = Path(os.path.abspath(sys.argv[0])).parent
+            env = Environment.from_json(open(parent_dir / 'environment.json').read())
+            site_packages = Path(parent_dir / 'site-packages')        
 
         # determine if first run or forcing extract
         if not site_packages.exists() or env.force_extract:
