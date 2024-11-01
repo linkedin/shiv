@@ -1,6 +1,8 @@
 name: ci
 
-on: [push]
+on:
+  - push
+  - pull_request
 
 jobs:
   build:
@@ -33,6 +35,7 @@ jobs:
         run: "python -m coverage xml"
 
       - name: "upload coverage to codecov"
+        if: ${{ github.event_name == 'push' }}
         uses: "codecov/codecov-action@v1"
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
