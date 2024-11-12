@@ -13,11 +13,11 @@ Available Commands
 .. contents::
    :local:
 
-.. click:: shiv.cli:main
+.. click:: shiv.commands:shiv
    :prog: shiv
    :show-nested:
 
-.. click:: shiv.info:main
+.. click:: shiv.commands:shiv_info
    :prog: shiv-info
    :show-nested:
 

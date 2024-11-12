@@ -11,9 +11,9 @@ from pathlib import Path
 import pytest
 
 from click.testing import CliRunner
-from shiv.cli import console_script_exists, find_entry_point, main
+from shiv import commands
+from shiv.cli import console_script_exists, find_entry_point
 from shiv.constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES
-from shiv.info import main as info_main
 from shiv.pip import install
 
 UGOX = stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
@@ -41,7 +41,7 @@ class TestCLI:
 
         def invoke(args, env=None):
             args.extend(["-p", "/usr/bin/env python3"])
-            return CliRunner().invoke(main, args, env=env)
+            return CliRunner().invoke(commands.shiv, args, env=env)
 
         return invoke
 
@@ -49,7 +49,7 @@ class TestCLI:
     def info_runner(self):
         """Returns a click test runner (for shiv-info)."""
 
-        return lambda args: CliRunner().invoke(info_main, args)
+        return lambda args: CliRunner().invoke(commands.shiv_info, args)
 
     def test_find_entry_point(self, tmpdir, package_location):
         """Test that we can find console_script metadata."""
