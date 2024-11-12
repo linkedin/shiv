@@ -142,7 +142,7 @@ def copytree(src: Path, dst: Path) -> None:
     is_flag=True,
     help=(
         "If specified, this modifies the runtime of the zipapp to raise "
-        "a RuntimeException if the source files (in ~/.shiv or SHIV_ROOT) have been modified. "
+        "a RuntimeException if the source files (in ~/.cache/shiv or SHIV_ROOT) have been modified. "
         """It's recommended to use Python's "--check-hash-based-pycs always" option with this feature."""
     ),
 )
@@ -154,7 +154,11 @@ def copytree(src: Path, dst: Path) -> None:
         "but before invoking your entry point."
     ),
 )
-@click.option("--root", type=click.Path(), help="Override the 'root' path (default is ~/.shiv).")
+@click.option(
+    "--root",
+    type=click.Path(),
+    help="Override the 'root' path (default is platform dependent, e.g. ~/.cache/shiv).",
+)
 @click.argument("pip_args", nargs=-1, type=click.UNPROCESSED)
 def main(
     output_file: str,
