@@ -3,7 +3,8 @@ from typing import Dict, Tuple
 
 # errors:
 DISALLOWED_PIP_ARGS = "\nYou supplied a disallowed pip argument! '{arg}'\n\n{reason}\n"
-NO_PIP_ARGS_OR_SITE_PACKAGES = "\nYou must supply PIP ARGS or --site-packages!\n"
+NO_PIP_ARGS_SCRIPT_OR_SITE_PACKAGES = "\nYou must supply PIP ARGS, --script, or --site-packages!\n"
+SCRIPT_NOT_ANNOTATED = "\nThe provided script is not annotated with PEP-723 metadata!\n"
 NO_OUTFILE = "\nYou must provide an output file option! (--output-file/-o)\n"
 NO_ENTRY_POINT = "\nNo entry point '{entry_point}' found in console_scripts or the bin dir!\n"
 BINPRM_ERROR = "\nShebang is too long, it would exceed BINPRM_BUF_SIZE! Consider /usr/bin/env\n"

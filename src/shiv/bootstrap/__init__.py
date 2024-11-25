@@ -18,13 +18,14 @@ from .filelock import FileLock
 from .interpreter import execute_interpreter
 
 
-def run(module):  # pragma: no cover
+def run(module, inline_script=False):  # pragma: no cover
     """Run a module in a scrubbed environment.
 
     If a single pyz has multiple callers, we want to remove these vars as we no longer need them
     and they can cause subprocesses to fail with a ModuleNotFoundError.
 
     :param Callable module: The entry point to invoke the pyz with.
+    :param bool inline_script: Whether the script is annotated with inline metadata.
     """
     with suppress(KeyError):
         del os.environ[Environment.MODULE]
@@ -35,7 +36,12 @@ def run(module):  # pragma: no cover
     with suppress(KeyError):
         del os.environ[Environment.CONSOLE_SCRIPT]
 
-    sys.exit(module())
+    if inline_script:
+        # inline script will just return a globals dict from the module
+        module()
+        sys.exit()
+    else:
+        sys.exit(module())
 
 
 @contextmanager
@@ -260,6 +266,10 @@ def bootstrap():  # pragma: no cover
         # do entry point import and call
         if env.entry_point is not None and not env.script:
             run(import_string(env.entry_point))
+
+        elif env.inline_script is not None:
+            run(partial(runpy.run_path, str(site_packages / "bin" / env.script),
+                        run_name="__main__"), inline_script=True)
 
         elif env.script is not None:
             run(partial(runpy.run_path, str(site_packages / "bin" / env.script), run_name="__main__"))
