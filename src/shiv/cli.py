@@ -6,7 +6,10 @@ import time
 
 from configparser import ConfigParser
 from datetime import datetime
+from packaging.version import Version
+from packaging.specifiers import SpecifierSet
 from pathlib import Path
+from platform import python_version
 from tempfile import TemporaryDirectory
 from typing import List, Optional
 
@@ -27,6 +30,7 @@ from .constants import (
     SCRIPT_NOT_ANNOTATED,
     SOURCE_DATE_EPOCH_DEFAULT,
     SOURCE_DATE_EPOCH_ENV,
+    MIN_PYTHON_VERSION_ERROR,
 )
 
 
@@ -228,6 +232,9 @@ def main(
             if "script" not in metadata:
                 sys.exit(SCRIPT_NOT_ANNOTATED)
             script_dependencies = metadata["script"].get("dependencies", [])
+            min_python = metadata["script"].get("requires-python", None)
+            if min_python and Version(python_version()) not in SpecifierSet(min_python):
+                sys.exit(MIN_PYTHON_VERSION_ERROR.format(min_python=min_python, python_version=python_version()))
             if script_dependencies:
                 pip.install(["--target", tmp_site_packages] + list(script_dependencies))
             console_script = Path(inline_script).name

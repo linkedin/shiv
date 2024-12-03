@@ -19,12 +19,12 @@ class TestInlineScript:
             }),
             ("test/script/min_python.py", {
                 "script": {
-                    "requires-python": ">=3.11",
+                    "requires-python": ">=3.8",
                 }
             }),
             ("test/script/deps_and_python.py", {
                 "script": {
-                    "requires-python": ">=3.11",
+                    "requires-python": ">=3.8",
                     "dependencies": [
                         "python-dateutil",
                         "rich",
