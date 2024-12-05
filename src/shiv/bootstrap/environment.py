@@ -39,6 +39,7 @@ class Environment:
         no_modify: bool = False,
         reproducible: bool = False,
         script: Optional[str] = None,
+        inline_script: Optional[str] = None,
         preamble: Optional[str] = None,
         root: Optional[str] = None,
     ) -> None:
@@ -50,6 +51,7 @@ class Environment:
         self.no_modify: bool = no_modify
         self.reproducible: bool = reproducible
         self.preamble: Optional[str] = preamble
+        self.inline_script: Optional[str] = inline_script
 
         # properties
         self._entry_point: Optional[str] = entry_point

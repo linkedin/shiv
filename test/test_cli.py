@@ -12,7 +12,7 @@ import pytest
 
 from click.testing import CliRunner
 from shiv.cli import console_script_exists, find_entry_point, main
-from shiv.constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES
+from shiv.constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_OUTFILE, NO_PIP_ARGS_SCRIPT_OR_SITE_PACKAGES
 from shiv.info import main as info_main
 from shiv.pip import install
 
@@ -76,7 +76,7 @@ class TestCLI:
         result = runner([])
 
         assert result.exit_code == 1
-        assert NO_PIP_ARGS_OR_SITE_PACKAGES in result.output
+        assert NO_PIP_ARGS_SCRIPT_OR_SITE_PACKAGES in result.output
 
     def test_no_outfile(self, runner):
         """This should fail with a warning about not providing an outfile"""
@@ -384,3 +384,31 @@ class TestCLI:
         assert proc.returncode == 0
         assert "hello" in proc.stdout.decode()
         assert shiv_root_path.exists()
+
+    @pytest.mark.parametrize(
+        "script_location, expected_output",
+        [
+            ("test/script/deps_and_python.py", ["2003-10-11", "2004-04-11"]),
+            ("test/script/min_python.py", ["hello", "world"]),
+            ("test/script/deps.py", ["foo", "bar"]),
+        ],
+    )
+    def test_inline_script(self, script_location, expected_output, runner, tmp_path):
+        """Test that the --inline-script argument works."""
+
+        output_file = tmp_path / "test.pyz"
+        result = runner(["--inline-script", script_location, "-o", str(output_file)])
+
+        # check that the command successfully completed
+        assert result.exit_code == 0
+
+        # ensure the created file actually exists
+        assert output_file.exists()
+
+        # now run the produced zipapp
+        proc = subprocess.run(
+            [str(output_file)], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, env=os.environ,
+        )
+
+        assert proc.returncode == 0
+        assert all(expected in proc.stdout.decode() for expected in expected_output)
