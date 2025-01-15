@@ -31,13 +31,13 @@ except ImportError:
 # N.B.: `importlib.resources.{contents,is_resource,path}` are deprecated in 3.11 and gone in 3.13.
 if sys.version_info < (3, 11):
     def iter_package_files(package: Union[str, ModuleType]) -> Iterator[Tuple[Path, str]]:
-        for bootstrap_file in importlib_resources.contents(bootstrap):
+        for bootstrap_file in sorted(importlib_resources.contents(package)):
             if importlib_resources.is_resource(bootstrap, bootstrap_file):
                 with importlib_resources.path(bootstrap, bootstrap_file) as path:
                     yield (path, bootstrap_file)
 else:
     def iter_package_files(package: Union[str, ModuleType]) -> Iterator[Tuple[Path, str]]:
-        for resource in importlib_resources.files(package).iterdir():
+        for resource in sorted(importlib_resources.files(package).iterdir(), key=lambda r: r.name):
             if resource.is_file():
                 with importlib_resources.as_file(resource) as path:
                     yield (path, resource.name)
