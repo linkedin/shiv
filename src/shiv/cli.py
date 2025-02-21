@@ -219,14 +219,15 @@ def main(
             shutil.copy(Path(preamble).absolute(), bin_dir / Path(preamble).name)
 
         sources.append(Path(tmp_site_packages).absolute())
+        sources.sort()
+        hashes = {}
 
         if no_modify:
             # if no_modify is specified, we need to build a map of source files and their
             # sha256 hashes, to be checked at runtime:
-            hashes = {}
 
             for source in sources:
-                for path in source.rglob("**/*.py"):
+                for path in sorted(source.rglob("**/*.py")):
                     hashes[str(path.relative_to(source))] = hashlib.sha256(path.read_bytes()).hexdigest()
 
         # if entry_point is a console script, get the callable and null out the console_script variable
