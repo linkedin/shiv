@@ -30,7 +30,7 @@ Choosing a Python Interpreter Path
 
 A good overall interpreter path as passed into :option:`--python` is ``/usr/bin/env python3``.
 If you want to make sure your code runs on the Python version you tested it on,
-include the minor version (e.g. ``… python3.6``) – use what fits your circumstances best.
+include the minor version (e.g. ``… python3.8``) – use what fits your circumstances best.
 
 On Windows, the Python launcher ``py`` knows how to handle shebangs using ``env``,
 so it's overall the best choice if you target multiple platforms with a pure Python zipapp.

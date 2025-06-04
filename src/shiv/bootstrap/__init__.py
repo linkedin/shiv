@@ -180,6 +180,12 @@ def ensure_no_modify(site_packages, hashes):
             )
 
 
+def prepend_pythonpath(env):
+    """Prepend the sys.path with the value of SHIV_PREPEND_PYTHONPATH, if set."""
+    if env.prepend_pythonpath:
+        sys.path.insert(0, env.prepend_pythonpath)
+
+
 def bootstrap():  # pragma: no cover
     """Actually bootstrap our shiv environment."""
 
@@ -217,6 +223,9 @@ def bootstrap():  # pragma: no cover
 
     # reorder to place our site-packages before any others found
     sys.path = sys.path[:index] + sys.path[length:] + sys.path[index:length]
+
+    # Prepend the sys.path if environment variable is set
+    prepend_pythonpath(env)
 
     # determine newly added paths
     new_paths = [p for p in sys.path if p not in sys_path_before]

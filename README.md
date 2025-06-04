@@ -14,9 +14,9 @@ shiv's primary goal is making distributing Python applications fast & easy.
 
 📗 Full documentation can be found [here](http://shiv.readthedocs.io/en/latest/).
 
-### sys requirements
+### System Requirements
 
-- python3.6+
+- Python >= 3.8
 - linux/osx/windows
 
 ### quickstart
