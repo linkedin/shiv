@@ -6,13 +6,17 @@ import time
 
 from configparser import ConfigParser
 from datetime import datetime
+from packaging.version import Version
+from packaging.specifiers import SpecifierSet
 from pathlib import Path
+from platform import python_version
 from tempfile import TemporaryDirectory
 from typing import List, Optional
 
 import click
 
 from . import __version__
+from .inline_script import parse_script_metadata
 from . import builder, pip
 from .bootstrap.environment import Environment
 from .constants import (
@@ -22,9 +26,11 @@ from .constants import (
     DISALLOWED_PIP_ARGS,
     NO_ENTRY_POINT,
     NO_OUTFILE,
-    NO_PIP_ARGS_OR_SITE_PACKAGES,
+    NO_PIP_ARGS_SCRIPT_OR_SITE_PACKAGES,
+    SCRIPT_NOT_ANNOTATED,
     SOURCE_DATE_EPOCH_DEFAULT,
     SOURCE_DATE_EPOCH_ENV,
+    MIN_PYTHON_VERSION_ERROR,
 )
 
 
@@ -103,6 +109,12 @@ def copytree(src: Path, dst: Path) -> None:
     ),
 )
 @click.option(
+    "--inline-script",
+    "-s",
+    help="The path to a PEP-723 inline metadata annotated script to make into the zipapp.",
+    type=click.Path(exists=True),
+)
+@click.option(
     "--site-packages",
     help="The path to an existing site-packages directory to copy into the zipapp.",
     type=click.Path(exists=True),
@@ -161,6 +173,7 @@ def main(
     entry_point: Optional[str],
     console_script: Optional[str],
     python: Optional[str],
+    inline_script: Optional[str],
     site_packages: Optional[str],
     build_id: Optional[str],
     compressed: bool,
@@ -177,8 +190,8 @@ def main(
     as outlined in PEP 441, but with all their dependencies included!
     """
 
-    if not pip_args and not site_packages:
-        sys.exit(NO_PIP_ARGS_OR_SITE_PACKAGES)
+    if not pip_args and not site_packages and not inline_script:
+        sys.exit(NO_PIP_ARGS_SCRIPT_OR_SITE_PACKAGES)
 
     if output_file is None:
         sys.exit(NO_OUTFILE)
@@ -212,6 +225,22 @@ def main(
         if pip_args:
             # Install dependencies into staged site-packages.
             pip.install(["--target", tmp_site_packages] + list(pip_args))
+
+        if inline_script:
+            # Parse the script and add the dependencies to sources
+            metadata = parse_script_metadata(Path(inline_script).read_text())
+            if "script" not in metadata:
+                sys.exit(SCRIPT_NOT_ANNOTATED)
+            script_dependencies = metadata["script"].get("dependencies", [])
+            min_python = metadata["script"].get("requires-python", None)
+            if min_python and Version(python_version()) not in SpecifierSet(min_python):
+                sys.exit(MIN_PYTHON_VERSION_ERROR.format(min_python=min_python, python_version=python_version()))
+            if script_dependencies:
+                pip.install(["--target", tmp_site_packages] + list(script_dependencies))
+            console_script = Path(inline_script).name
+            bin_dir = Path(tmp_site_packages, "bin")
+            bin_dir.mkdir(exist_ok=True)
+            shutil.copy(Path(inline_script).absolute(), bin_dir / console_script)
 
         if preamble:
             bin_dir = Path(tmp_site_packages, "bin")
@@ -252,6 +281,7 @@ def main(
             build_id=build_id,
             entry_point=entry_point,
             script=console_script,
+            inline_script=inline_script,
             compile_pyc=compile_pyc,
             extend_pythonpath=extend_pythonpath,
             shiv_version=__version__,
