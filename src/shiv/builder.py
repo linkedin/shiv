@@ -48,6 +48,10 @@ BINPRM_BUF_SIZE = 128
 # zipapp __main__.py template
 MAIN_TEMPLATE = """\
 # -*- coding: utf-8 -*-
+# add current path to sys.path for module search
+import sys
+sys.path.insert(0, '.')
+
 import {module}
 {module}.{fn}()
 """
