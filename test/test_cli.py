@@ -61,6 +61,18 @@ class TestCLI:
         install(["-t", str(tmpdir), str(package_location)])
         assert find_entry_point([Path(tmpdir)], "hello") == "hello:main"
 
+    def test_find_entry_point_with_colons_in_plugin_names(self, tmp_path):
+        metadata = tmp_path / "example.dist-info"
+        metadata.mkdir()
+        (metadata / "entry_points.txt").write_text(
+            "[console_scripts]\nhello = hello:main\n\n"
+            "[example.formatters]\n"
+            "{:.5f} = example:float_formatter\n"
+            "{:2.3e} = example:exponential_formatter\n"
+        )
+
+        assert find_entry_point([tmp_path], "hello") == "hello:main"
+
     def test_console_script_exists(self, tmp_path, package_location):
         """Test that we can check console_script presence."""
         install_dir = tmp_path / "install"

@@ -39,7 +39,7 @@ def find_entry_point(site_packages_dirs: List[Path], console_script: str) -> str
     :param console_script: A console_script string.
     """
 
-    config_parser = ConfigParser()
+    config_parser = ConfigParser(delimiters=("=",))
 
     for site_packages in site_packages_dirs:
         # noinspection PyTypeChecker
