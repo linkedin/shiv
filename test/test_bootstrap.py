@@ -71,6 +71,35 @@ class TestBootstrap:
         with env_var("FOO", "foo"):
             assert cache_path(mock_zip, '$FOO', uuid) == Path("foo", f"test_{uuid}")
 
+    @pytest.mark.parametrize("suffix", ("", ".pyz"))
+    def test_versioned_archives_have_distinct_extraction_paths(self, tmp_path, suffix):
+        # Regression for #203: using stem drops version components and build IDs.
+        root = tmp_path / "cache"
+        targets = []
+        for version, build_id in (("1.2.3", "build-one"), ("1.2.5", "build-two")):
+            filename = f"app-{version}{suffix}"
+            archive_path = tmp_path / filename
+            with ZipFile(archive_path, "w") as archive:
+                archive.writestr("site-packages/version.txt", version)
+
+            with ZipFile(archive_path) as archive:
+                target = cache_path(archive, str(root), build_id)
+                assert target.name == f"{filename}_{build_id}"
+                with mock.patch.object(archive, "extract", wraps=archive.extract) as extract:
+                    extract_site_packages(archive, target)
+                extract.assert_called_once_with(
+                    "site-packages/version.txt", root / f"{target.name}.tmp"
+                )
+                targets.append(target)
+
+        assert targets[0] != targets[1]
+        assert {path.name for path in root.iterdir()} == {
+            targets[0].name, targets[1].name,
+            f".{targets[0].name}_lock", f".{targets[1].name}_lock",
+        }
+        for target, version in zip(targets, ("1.2.3", "1.2.5")):
+            assert (target / "site-packages/version.txt").read_text() == version
+
     def test_first_sitedir_index(self):
         with mock.patch.object(sys, "path", ["site-packages", "dir", "dir", "dir"]):
             assert get_first_sitedir_index() == 0
