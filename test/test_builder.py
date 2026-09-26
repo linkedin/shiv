@@ -64,6 +64,15 @@ class TestBuilder:
             with pytest.raises(ZipAppError):
                 create_archive(sp, target, sys.executable, "alsjdbas,,,", env)
 
+
+    def test_create_archive_creates_missing_parent_dirs(self, sp, env):
+        """-o into a missing directory must create parents (#231)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            target = Path(tmpdir, "nested", "out", "test.zip")
+            assert not target.parent.exists()
+            create_archive(sp, target, sys.executable, "code:interact", env)
+            assert zipfile.is_zipfile(str(target))
+
     @pytest.mark.skipif(os.name == "nt", reason="windows has no concept of execute permissions")
     def test_archive_permissions(self, sp, env):
         with tempfile.TemporaryDirectory() as tmpdir:
