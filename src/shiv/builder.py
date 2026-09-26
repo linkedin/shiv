@@ -116,6 +116,9 @@ def create_archive(
     timestamp = datetime.strptime(env.built_at, BUILD_AT_TIMESTAMP_FORMAT).replace(tzinfo=timezone.utc).timestamp()
     zipinfo_datetime: Tuple[int, int, int, int, int, int] = time.gmtime(int(timestamp))[0:6]
 
+    # Create leading directories when -o points into a missing path (#231).
+    target.parent.mkdir(parents=True, exist_ok=True)
+
     with target.open(mode="wb") as fd:
 
         # Write shebang.
