@@ -11,7 +11,10 @@ from zipfile import ZipFile
 
 import pytest
 
+from functools import partial
+
 from shiv.bootstrap import (
+    _run_script,
     cache_path,
     current_zipfile,
     ensure_no_modify,
@@ -20,6 +23,7 @@ from shiv.bootstrap import (
     get_first_sitedir_index,
     import_string,
     prepend_pythonpath,
+    run,
 )
 from shiv.bootstrap.environment import Environment
 from shiv.bootstrap.filelock import FileLock
@@ -27,6 +31,19 @@ from shiv.pip import install
 
 
 class TestBootstrap:
+    def test_run_script(self, tmp_path):
+        script_file = tmp_path / "myscript.py"
+        output_file = tmp_path / "output.txt"
+        script_file.write_text(f"from pathlib import Path\nPath({repr(str(output_file))}).write_text('executed')\n")
+
+        ret = _run_script(str(script_file))
+        assert ret is None
+        assert output_file.read_text() == "executed"
+
+        with mock.patch("sys.exit") as mock_exit:
+            run(partial(_run_script, str(script_file)))
+            mock_exit.assert_called_once_with(None)
+
     def test_import_string(self):
         assert import_string("site.addsitedir") == addsitedir
         assert import_string("site:addsitedir") == addsitedir

@@ -38,6 +38,11 @@ def run(module):  # pragma: no cover
     sys.exit(module())
 
 
+def _run_script(script):
+    """Execute a script via runpy without returning its module dictionary to sys.exit."""
+    runpy.run_path(script, run_name="__main__")
+
+
 @contextmanager
 def current_zipfile():
     """A function to vend the current zipfile, if any"""
@@ -262,7 +267,7 @@ def bootstrap():  # pragma: no cover
             run(import_string(env.entry_point))
 
         elif env.script is not None:
-            run(partial(runpy.run_path, str(site_packages / "bin" / env.script), run_name="__main__"))
+            run(partial(_run_script, str(site_packages / "bin" / env.script)))
 
     # all other options exhausted, drop into interactive mode
     execute_interpreter()
