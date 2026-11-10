@@ -21,6 +21,7 @@ DISALLOWED_ARGS: Dict[Tuple[str, ...], str] = {
 }
 
 SOURCE_DATE_EPOCH_ENV = "SOURCE_DATE_EPOCH"
+INVALID_SOURCE_DATE_EPOCH = "\nInvalid SOURCE_DATE_EPOCH value '{value}': must be an integer unix timestamp.\n"
 # This is the timestamp for beginning of the day Jan 1 1980, which is the minimum timestamp
 # value you can use in zip archives
 SOURCE_DATE_EPOCH_DEFAULT = 315554400
