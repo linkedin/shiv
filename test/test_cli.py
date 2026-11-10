@@ -12,7 +12,13 @@ import pytest
 
 from click.testing import CliRunner
 from shiv.cli import console_script_exists, find_entry_point, main
-from shiv.constants import DISALLOWED_ARGS, DISALLOWED_PIP_ARGS, NO_OUTFILE, NO_PIP_ARGS_OR_SITE_PACKAGES
+from shiv.constants import (
+    DISALLOWED_ARGS,
+    DISALLOWED_PIP_ARGS,
+    INVALID_SOURCE_DATE_EPOCH,
+    NO_OUTFILE,
+    NO_PIP_ARGS_OR_SITE_PACKAGES,
+)
 from shiv.info import main as info_main
 from shiv.pip import install
 
@@ -85,6 +91,24 @@ class TestCLI:
 
         assert result.exit_code == 1
         assert NO_OUTFILE in result.output
+
+    def test_invalid_source_date_epoch(self, runner, tmp_path):
+        """A non-integer SOURCE_DATE_EPOCH is a clean error, not a traceback."""
+
+        site_packages = tmp_path / "site-packages"
+        site_packages.mkdir()
+        output_file = tmp_path / "test.pyz"
+
+        result = runner(
+            ["-e", "hello:main", "-o", str(output_file), "--site-packages", str(site_packages)],
+            env={"SOURCE_DATE_EPOCH": "not-a-timestamp"},
+        )
+
+        assert result.exit_code == 1
+        assert isinstance(result.exception, SystemExit)
+        assert INVALID_SOURCE_DATE_EPOCH.format(value="not-a-timestamp") in result.output
+        assert "Traceback" not in result.output
+        assert not output_file.exists()
 
     @pytest.mark.parametrize("arg", [arg for tup in DISALLOWED_ARGS.keys() for arg in tup])
     def test_disallowed_args(self, runner, arg):

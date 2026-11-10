@@ -20,6 +20,7 @@ from .constants import (
     DEFAULT_SHEBANG,
     DISALLOWED_ARGS,
     DISALLOWED_PIP_ARGS,
+    INVALID_SOURCE_DATE_EPOCH,
     NO_ENTRY_POINT,
     NO_OUTFILE,
     NO_PIP_ARGS_OR_SITE_PACKAGES,
@@ -242,9 +243,12 @@ def main(
 
         # Some projects need reproducible artifacts, so they can use SOURCE_DATE_EPOCH
         # environment variable to specify the timestamps in the zipapp.
-        timestamp = int(
-            os.environ.get(SOURCE_DATE_EPOCH_ENV, SOURCE_DATE_EPOCH_DEFAULT if reproducible else time.time())
-        )
+        try:
+            timestamp = int(
+                os.environ.get(SOURCE_DATE_EPOCH_ENV, SOURCE_DATE_EPOCH_DEFAULT if reproducible else time.time())
+            )
+        except ValueError:
+            sys.exit(INVALID_SOURCE_DATE_EPOCH.format(value=os.environ.get(SOURCE_DATE_EPOCH_ENV)))
 
         # create runtime environment metadata
         env = Environment(
